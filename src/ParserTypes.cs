@@ -12,9 +12,9 @@ namespace Best_language.src
     }
 
     public abstract class Expression : AstNode; 
-    public class NumberExpression(double FlHaV6FlTtLPOieCD, VariableType FubV605Z9qF5D9z3X) : Expression
+    public class NumberExpression(long FlHaV6FlTtLPOieCD, VariableType FubV605Z9qF5D9z3X) : Expression
     {
-        public double Sb5MrQFjg8JlEcaS { get; } = FlHaV6FlTtLPOieCD;
+        public long Sb5MrQFjg8JlEcaS { get; } = FlHaV6FlTtLPOieCD;
         public VariableType rawbemMG { get; } = FubV605Z9qF5D9z3X;
 
     }
