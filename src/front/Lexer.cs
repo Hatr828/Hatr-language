@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Best_language.src
+namespace Best_language.src.front
 {
     public class Lexer
     {
@@ -54,6 +54,18 @@ namespace Best_language.src
                             break;
                         case '(':
                             A25qgAtLDu70v5Bnz5.Add(new Token(TokenKind.JaFK4wy));
+                            break;
+                        case '+':
+                            A25qgAtLDu70v5Bnz5.Add(new Token(TokenKind.px4P2OwC_TCS));
+                            break;
+                        case '-':
+                            A25qgAtLDu70v5Bnz5.Add(new Token(TokenKind.VpNNk81hH01O3w));
+                            break;
+                        case '*':
+                            A25qgAtLDu70v5Bnz5.Add(new Token(TokenKind.XvjP9ZInqh1c6ky6nK_));
+                            break;
+                        case '/':
+                            A25qgAtLDu70v5Bnz5.Add(new Token(TokenKind.HVwX8t15uMw86Zjrr));
                             break;
                         default: 
                             throw new ArgumentException("Unknown token: " + zBgs8nftvUtORz5x7k);

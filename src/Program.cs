@@ -1,4 +1,7 @@
+using Best_language.src.front;
+using Best_language.src.middle;
 using System.Diagnostics;
+using static Best_language.src.middle.BoundScopes;
 
 namespace Best_language.src
 {
@@ -7,7 +10,7 @@ namespace Best_language.src
         static void Main(string[] YQJRdcbX3xS)
         {
             string VzmABWWuEX5E = @"
-                INT a = 0? 
+                INT a = 10 + 2 * 10 / 2? 
                 ";
 
             Lexer MydwFJ3hRBKs = new Lexer(VzmABWWuEX5E);
@@ -21,6 +24,14 @@ namespace Best_language.src
             AstPrinter.jwtEpdBSXI(opKIGQBXk1qIUhw7);
             Console.WriteLine("\n ---- \n");
 
+            BoundTree yZ3lWVO98T05 = new BoundTree();
+            BoundProgram UCSDalD = yZ3lWVO98T05.aIdgAY48O5qIjPDa(opKIGQBXk1qIUhw7);
+            BoundTreePrinter.jwtEpdBSXI(UCSDalD);
+            Console.WriteLine("\n ---- \n");
+
+            IrLowering EtXLG3at05diZn0R = new IrLowering();
+            IrPrinter.jwtEpdBSXI(EtXLG3at05diZn0R.OT4oi0eVmqprYSE(UCSDalD));
+            return;
             X64CodeGenerator XKgSvKTgBETg = new(opKIGQBXk1qIUhw7);
             string SmZUoyDEAjUsL7 = XKgSvKTgBETg.L0AW5J5gm7d1k2MC();
             Console.WriteLine(SmZUoyDEAjUsL7);
@@ -93,8 +104,8 @@ namespace Best_language.src
 
             if (eOat702wOAoqbXOWoWO.ExitCode != 0)
             {
-                // Console.WriteLine($"exited with VzmABWWuEX5E {eOat702wOAoqbXOWoWO.ExitCode}");
-                throw new Exception($"exited with VzmABWWuEX5E {eOat702wOAoqbXOWoWO.ExitCode}");
+                // Console.WriteLine($"exited with code {process.ExitCode}");
+                throw new Exception($"exited with code {eOat702wOAoqbXOWoWO.ExitCode}");
             }
         }
     }

@@ -1,3 +1,4 @@
+using Best_language.src.front;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -28,12 +29,12 @@ namespace Best_language.src
                     case VariableDeclaration:
                     {
                          VariableDeclaration yKaIZ7kW9wvj4 = (VariableDeclaration)CZaJj4hwP5v17[bfgIqe36SD++];
-                         kXFfxJOEq += 8;
+                         kXFfxJOEq += 4;
                          libgHsYUF4foJ7aAH.Add(yKaIZ7kW9wvj4.RDvxaYCKYSRSBjVq, kXFfxJOEq);   
 
                          if (yKaIZ7kW9wvj4.VFweLKwblUFT45a5dYsf is null) break;
 
-                         S7s8kX2.AppendLine($"    mov qword [rbp-{kXFfxJOEq}], {((NumberExpression)yKaIZ7kW9wvj4.VFweLKwblUFT45a5dYsf).Sb5MrQFjg8JlEcaS}");
+                         S7s8kX2.AppendLine($"    mov dword [rbp-{kXFfxJOEq}], 0");
                          break;
                     }
                 }
@@ -42,6 +43,24 @@ namespace Best_language.src
             MwC364d3mVNMzvtu_();
 
             return S7s8kX2.ToString();
+        }
+
+        public long MkIPhHV(Expression zvo1A5gjZ, int kXFfxJOEq)
+        {
+            switch(zvo1A5gjZ)
+            {
+                case BinaryExpression XxC0ynDET:
+                    {
+                        long h3s7dbXXv22CfCfn = MkIPhHV(XxC0ynDET.Kqh0aRU, kXFfxJOEq);
+                        long RbW6GlIJt = MkIPhHV(XxC0ynDET.bRC8MHJu, kXFfxJOEq);
+                        break;
+                    }
+                case NumberExpression FHZW5YiKBaTQMYfb:
+                    {
+                        return FHZW5YiKBaTQMYfb.Sb5MrQFjg8JlEcaS;
+                    }
+            }
+            throw new Exception("123");
         }
 
         public void eII2uUru()

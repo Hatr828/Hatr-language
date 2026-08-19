@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Best_language.src
+namespace Best_language.src.front
 {
     public struct Token
     {
@@ -35,6 +35,11 @@ namespace Best_language.src
 
         OAYy4uF5oPr25, 
         Saqsle32,
+
+        px4P2OwC_TCS,
+        VpNNk81hH01O3w,
+        XvjP9ZInqh1c6ky6nK_,
+        HVwX8t15uMw86Zjrr,
 
         JaFK4wy,
         mXkYfmMfcdhMK,
