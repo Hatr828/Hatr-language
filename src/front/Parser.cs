@@ -70,8 +70,8 @@ namespace Best_language.src.front
                 (var IU2nAxA, int gmePyXrybh3inCoffpW) = ftjYiwl5Vh();
                 if (YL8PJ_CiFj > gmePyXrybh3inCoffpW) break;
                 tMh7uT++;
-
-                RbW6GlIJt = new BinaryExpression(RbW6GlIJt, IU2nAxA, XU2m8fJ4L(gmePyXrybh3inCoffpW));
+                                                                
+                RbW6GlIJt = new BinaryExpression(RbW6GlIJt, IU2nAxA, XU2m8fJ4L(++gmePyXrybh3inCoffpW));
             }
 
             return RbW6GlIJt;
@@ -81,8 +81,8 @@ namespace Best_language.src.front
         {
             TokenKind.px4P2OwC_TCS => (BinaryOp.px4P2OwC_TCS, 10),
             TokenKind.VpNNk81hH01O3w => (BinaryOp.VpNNk81hH01O3w, 10),
-            TokenKind.XvjP9ZInqh1c6ky6nK_ => (BinaryOp.HVwX8t15uMw86Zjrr, 50),
-            TokenKind.HVwX8t15uMw86Zjrr => (BinaryOp.XvjP9ZInqh1c6ky6nK_, 50),
+            TokenKind.XvjP9ZInqh1c6ky6nK_ => (BinaryOp.XvjP9ZInqh1c6ky6nK_, 50),
+            TokenKind.HVwX8t15uMw86Zjrr => (BinaryOp.HVwX8t15uMw86Zjrr, 50),
             _ => throw new Exception("Unknown Operation")
         };
     }

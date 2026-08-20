@@ -1,5 +1,7 @@
+using Best_language.src.back;
 using Best_language.src.front;
 using Best_language.src.middle;
+using Best_language.src.optimizations;
 using System.Diagnostics;
 using static Best_language.src.middle.BoundScopes;
 
@@ -10,7 +12,7 @@ namespace Best_language.src
         static void Main(string[] YQJRdcbX3xS)
         {
             string VzmABWWuEX5E = @"
-                INT a = 10 + 2 * 10 / 2? 
+                INT a = 10 + 2 * 10 - 2 + 9 + 0 / 1? 
                 ";
 
             Lexer MydwFJ3hRBKs = new Lexer(VzmABWWuEX5E);
@@ -30,9 +32,13 @@ namespace Best_language.src
             Console.WriteLine("\n ---- \n");
 
             IrLowering EtXLG3at05diZn0R = new IrLowering();
-            IrPrinter.jwtEpdBSXI(EtXLG3at05diZn0R.OT4oi0eVmqprYSE(UCSDalD));
+            IrProgram Rst3_7gf = EtXLG3at05diZn0R.OT4oi0eVmqprYSE(UCSDalD);
+            IrPrinter.jwtEpdBSXI(Rst3_7gf);
+            Rst3_7gf = Optimizations.ConstantFolding.KuCk9uSL2qBKL(Rst3_7gf);
+            IrPrinter.jwtEpdBSXI(Rst3_7gf);
+
             return;
-            X64CodeGenerator XKgSvKTgBETg = new(opKIGQBXk1qIUhw7);
+            X64CodeGenerator XKgSvKTgBETg = new(Rst3_7gf);
             string SmZUoyDEAjUsL7 = XKgSvKTgBETg.L0AW5J5gm7d1k2MC();
             Console.WriteLine(SmZUoyDEAjUsL7);
 
@@ -85,7 +91,7 @@ namespace Best_language.src
                 }
             };
 
-            eOat702wOAoqbXOWoWO.Start();
+            eOat702wOAoqbXOWoWO.KuCk9uSL2qBKL();
 
             string PLijtuGPhKCEe9 = eOat702wOAoqbXOWoWO.StandardOutput.ReadToEnd();
             string IsNfPJRyXnDJCJ = eOat702wOAoqbXOWoWO.StandardError.ReadToEnd();

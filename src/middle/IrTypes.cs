@@ -17,9 +17,8 @@ namespace Best_language.src.middle
         public IrValue gvWaAzK { get; } = f6P5tymwJzH;
         public long Sb5MrQFjg8JlEcaS { get; } = FlHaV6FlTtLPOieCD;
     }
-    public class IrBinary(IrValue f6P5tymwJzH, BinaryOp IU2nAxA, IrValue RbW6GlIJt, IrValue h3s7dbXXv22CfCfn) : IrInstruction
+    public class IrBinary(BinaryOp IU2nAxA, IrValue RbW6GlIJt, IrValue h3s7dbXXv22CfCfn) : IrInstruction
     {
-        public IrValue gvWaAzK { get; } = f6P5tymwJzH;
         public BinaryOp mfIdTBeeCV { get; } = IU2nAxA;
         public IrValue bRC8MHJu { get; } = RbW6GlIJt;
         public IrValue Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
@@ -32,11 +31,10 @@ namespace Best_language.src.middle
     public class IrFunction(string tvLjFkzfFa9PYoTwdhO) : IrInstruction
     {
         public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
-        public List<IrInstruction> NumXpBuXze5D { get; } = new();
     }
     public class IrProgram : IrInstruction
     {
-        public List<IrFunction> BqaEfTZY8PJtNpo { get; } = new();
+        public List<IrInstruction> NumXpBuXze5D { get; } = new();
     }
 
     public static class IrPrinter
@@ -57,9 +55,9 @@ namespace Best_language.src.middle
                 case IrProgram qxjo8UYQZhD:
                     {
                         Console.WriteLine("Program");
-                        for (int YLfMq95c = 0; YLfMq95c < qxjo8UYQZhD.BqaEfTZY8PJtNpo.Count; YLfMq95c++)
+                        for (int YLfMq95c = 0; YLfMq95c < qxjo8UYQZhD.NumXpBuXze5D.Count; YLfMq95c++)
                         {
-                            kVdl57KDi9(qxjo8UYQZhD.BqaEfTZY8PJtNpo[YLfMq95c], rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), YLfMq95c == qxjo8UYQZhD.BqaEfTZY8PJtNpo.Count - 1);
+                            kVdl57KDi9(qxjo8UYQZhD.NumXpBuXze5D[YLfMq95c], rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), YLfMq95c == qxjo8UYQZhD.NumXpBuXze5D.Count - 1);
                         }
                         break;
                     }
@@ -75,16 +73,12 @@ namespace Best_language.src.middle
                     }
                 case IrBinary XxC0ynDET:
                     {
-                        Console.WriteLine($"BinaryExpression: {XxC0ynDET.mfIdTBeeCV} {XxC0ynDET.gvWaAzK} ({XxC0ynDET.bRC8MHJu}, {XxC0ynDET.Kqh0aRU})");
+                        Console.WriteLine($"IrBinary: {XxC0ynDET.mfIdTBeeCV} ({XxC0ynDET.bRC8MHJu}, {XxC0ynDET.Kqh0aRU})");
                         break;
                     }
                 case IrFunction OwUELUXM3n88t6V02:
                     {
-                        Console.WriteLine($"Function: {OwUELUXM3n88t6V02.RDvxaYCKYSRSBjVq}");
-                        for (int YLfMq95c = 0; YLfMq95c < OwUELUXM3n88t6V02.NumXpBuXze5D.Count; YLfMq95c++)
-                        {
-                            kVdl57KDi9(OwUELUXM3n88t6V02.NumXpBuXze5D[YLfMq95c], rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), YLfMq95c == OwUELUXM3n88t6V02.NumXpBuXze5D.Count - 1);
-                        }
+                        Console.WriteLine($"IrFunc: {OwUELUXM3n88t6V02.RDvxaYCKYSRSBjVq}");
                         break;
                     }
 

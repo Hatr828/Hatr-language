@@ -1,13 +1,14 @@
 using Best_language.src.front;
+using Best_language.src.middle;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Best_language.src
+namespace Best_language.src.back
 {
-    class X64CodeGenerator(ProgramNode sMPlZ4JaeZR758e69)
+    class X64CodeGenerator(IrProgram Rst3_7gf)
     {
-        private readonly ProgramNode KptbKzd8GWcSg = sMPlZ4JaeZR758e69;
+        private readonly IrProgram yYZGCwEMnNxRGApcFC = Rst3_7gf;
 
         private readonly Dictionary<string, int> libgHsYUF4foJ7aAH = new();
 
@@ -20,19 +21,16 @@ namespace Best_language.src
             eII2uUru();
             qzV6kOD5yz(128);
             int bfgIqe36SD = 0;
-            var CZaJj4hwP5v17 = KptbKzd8GWcSg.Lt6RjPqqO;
+            var mt9Hp28wUyvEI = yYZGCwEMnNxRGApcFC.NumXpBuXze5D;
 
-            while (bfgIqe36SD < KptbKzd8GWcSg.Lt6RjPqqO.Count)
+            while (bfgIqe36SD < mt9Hp28wUyvEI.Count)
             {
-                switch(CZaJj4hwP5v17[bfgIqe36SD])
+                switch(mt9Hp28wUyvEI[bfgIqe36SD])
                 {
-                    case VariableDeclaration:
+                    case IrVariable:
                     {
-                         VariableDeclaration yKaIZ7kW9wvj4 = (VariableDeclaration)CZaJj4hwP5v17[bfgIqe36SD++];
                          kXFfxJOEq += 4;
-                         libgHsYUF4foJ7aAH.Add(yKaIZ7kW9wvj4.RDvxaYCKYSRSBjVq, kXFfxJOEq);   
-
-                         if (yKaIZ7kW9wvj4.VFweLKwblUFT45a5dYsf is null) break;
+                         libgHsYUF4foJ7aAH.Add("123", kXFfxJOEq);   
 
                          S7s8kX2.AppendLine($"    mov dword [rbp-{kXFfxJOEq}], 0");
                          break;
@@ -41,26 +39,7 @@ namespace Best_language.src
             }
 
             MwC364d3mVNMzvtu_();
-
             return S7s8kX2.ToString();
-        }
-
-        public long MkIPhHV(Expression zvo1A5gjZ, int kXFfxJOEq)
-        {
-            switch(zvo1A5gjZ)
-            {
-                case BinaryExpression XxC0ynDET:
-                    {
-                        long h3s7dbXXv22CfCfn = MkIPhHV(XxC0ynDET.Kqh0aRU, kXFfxJOEq);
-                        long RbW6GlIJt = MkIPhHV(XxC0ynDET.bRC8MHJu, kXFfxJOEq);
-                        break;
-                    }
-                case NumberExpression FHZW5YiKBaTQMYfb:
-                    {
-                        return FHZW5YiKBaTQMYfb.Sb5MrQFjg8JlEcaS;
-                    }
-            }
-            throw new Exception("123");
         }
 
         public void eII2uUru()
