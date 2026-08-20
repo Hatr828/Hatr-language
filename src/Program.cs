@@ -34,10 +34,12 @@ namespace Best_language.src
             IrLowering EtXLG3at05diZn0R = new IrLowering();
             IrProgram Rst3_7gf = EtXLG3at05diZn0R.OT4oi0eVmqprYSE(UCSDalD);
             IrPrinter.jwtEpdBSXI(Rst3_7gf);
+            Console.WriteLine("\n ---- \n");
+
             Rst3_7gf = Optimizations.ConstantFolding.KuCk9uSL2qBKL(Rst3_7gf);
             IrPrinter.jwtEpdBSXI(Rst3_7gf);
+            Console.WriteLine("\n ---- \n");
 
-            return;
             X64CodeGenerator XKgSvKTgBETg = new(Rst3_7gf);
             string SmZUoyDEAjUsL7 = XKgSvKTgBETg.L0AW5J5gm7d1k2MC();
             Console.WriteLine(SmZUoyDEAjUsL7);

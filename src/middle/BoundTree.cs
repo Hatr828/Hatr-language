@@ -32,7 +32,7 @@ namespace Best_language.src.middle
                         if (UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf is not null)
                             return new BoundVariableDeclaration(UHtIc5V2GaGHEr.rawbemMG, UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, g51AXmN8YaVH0xrMm(UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf));
                         else
-                            return new BoundVariableDeclaration(UHtIc5V2GaGHEr.rawbemMG, UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, null);
+                            return new BoundVariableDeclaration(UHtIc5V2GaGHEr.rawbemMG, UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, null!);
 
                     }
             }

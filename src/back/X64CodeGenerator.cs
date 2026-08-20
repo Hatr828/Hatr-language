@@ -10,7 +10,9 @@ namespace Best_language.src.back
     {
         private readonly IrProgram yYZGCwEMnNxRGApcFC = Rst3_7gf;
 
-        private readonly Dictionary<string, int> libgHsYUF4foJ7aAH = new();
+        private readonly Dictionary<IrValue, int> libgHsYUF4foJ7aAH = new();
+
+        private readonly Dictionary<IrValue, long> Al7erL = new();
 
         private StringBuilder S7s8kX2 = new();
 
@@ -25,16 +27,27 @@ namespace Best_language.src.back
 
             while (bfgIqe36SD < mt9Hp28wUyvEI.Count)
             {
-                switch(mt9Hp28wUyvEI[bfgIqe36SD])
+                switch(mt9Hp28wUyvEI[bfgIqe36SD++])
                 {
-                    case IrVariable:
-                    {
-                         kXFfxJOEq += 4;
-                         libgHsYUF4foJ7aAH.Add("123", kXFfxJOEq);   
-
-                         S7s8kX2.AppendLine($"    mov dword [rbp-{kXFfxJOEq}], 0");
-                         break;
-                    }
+                    case IrVariable UHtIc5V2GaGHEr:
+                        {
+                            kXFfxJOEq += 8;
+                            libgHsYUF4foJ7aAH.Add(UHtIc5V2GaGHEr.bRC8MHJu, kXFfxJOEq);
+                            if (Al7erL.TryGetValue(UHtIc5V2GaGHEr.Kqh0aRU, out long kvJv6FdX0Wme2ZUXxy))
+                            {
+                                S7s8kX2.AppendLine($"    mov qword [rbp-{kXFfxJOEq}], {kvJv6FdX0Wme2ZUXxy}");
+                            }
+                            else
+                            {
+                                throw new Exception("Work in progress:)");
+                            }
+                            break;
+                        }
+                    case IrConstant eIk0eR:
+                        {
+                            Al7erL.Add(eIk0eR.bRC8MHJu, eIk0eR.Kqh0aRU);
+                            break;
+                        }
                 }
             }
 

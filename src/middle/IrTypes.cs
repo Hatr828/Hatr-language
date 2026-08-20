@@ -12,10 +12,10 @@ namespace Best_language.src.middle
         public override string ToString() => $"t{DIb6al9mN}";
     }
 
-    public class IrConstant(IrValue f6P5tymwJzH, long FlHaV6FlTtLPOieCD) : IrInstruction
+    public class IrConstant(IrValue RbW6GlIJt, long h3s7dbXXv22CfCfn) : IrInstruction
     {
-        public IrValue gvWaAzK { get; } = f6P5tymwJzH;
-        public long Sb5MrQFjg8JlEcaS { get; } = FlHaV6FlTtLPOieCD;
+        public IrValue bRC8MHJu { get; } = RbW6GlIJt;
+        public long Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
     }
     public class IrBinary(BinaryOp IU2nAxA, IrValue RbW6GlIJt, IrValue h3s7dbXXv22CfCfn) : IrInstruction
     {
@@ -23,10 +23,10 @@ namespace Best_language.src.middle
         public IrValue bRC8MHJu { get; } = RbW6GlIJt;
         public IrValue Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
     }
-    public class IrVariable(string tvLjFkzfFa9PYoTwdhO, IrValue FlHaV6FlTtLPOieCD) : IrInstruction
+    public class IrVariable(IrValue RbW6GlIJt, IrValue h3s7dbXXv22CfCfn) : IrInstruction
     {
-        public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
-        public IrValue FlHaV6FlTtLPOieCD { get; } = FlHaV6FlTtLPOieCD;
+        public IrValue bRC8MHJu { get; } = RbW6GlIJt;
+        public IrValue Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
     }
     public class IrFunction(string tvLjFkzfFa9PYoTwdhO) : IrInstruction
     {
@@ -63,12 +63,12 @@ namespace Best_language.src.middle
                     }
                 case IrVariable UHtIc5V2GaGHEr:
                     {
-                        Console.WriteLine($"IrVariable: {UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq} ({UHtIc5V2GaGHEr.FlHaV6FlTtLPOieCD})");
+                        Console.WriteLine($"IrVariable: {UHtIc5V2GaGHEr.bRC8MHJu} ({UHtIc5V2GaGHEr.Kqh0aRU})");
                         break;
                     }
                 case IrConstant HvSPOv9ne_yrswTLzoo:
                     {
-                        Console.WriteLine($"IrConstant: {HvSPOv9ne_yrswTLzoo.Sb5MrQFjg8JlEcaS} ({HvSPOv9ne_yrswTLzoo.gvWaAzK})");
+                        Console.WriteLine($"IrConstant: {HvSPOv9ne_yrswTLzoo.Kqh0aRU} ({HvSPOv9ne_yrswTLzoo.bRC8MHJu})");
                         break;
                     }
                 case IrBinary XxC0ynDET:

@@ -20,7 +20,7 @@ namespace Best_language.src.optimizations
                     if (gkfVuQR is IrConstant)
                     {
                         IrConstant eIk0eR = (IrConstant)gkfVuQR;
-                        IEScR2u7AWUI.Add(eIk0eR.gvWaAzK, eIk0eR.Sb5MrQFjg8JlEcaS);
+                        IEScR2u7AWUI.Add(eIk0eR.bRC8MHJu, eIk0eR.Kqh0aRU);
                     }
                     else if(gkfVuQR is IrBinary)
                     {
@@ -34,15 +34,15 @@ namespace Best_language.src.optimizations
                     else if(gkfVuQR is IrVariable)
                     {
                         IrVariable UHtIc5V2GaGHEr = (IrVariable)gkfVuQR;
-                        if (IEScR2u7AWUI.TryGetValue(UHtIc5V2GaGHEr.FlHaV6FlTtLPOieCD, out long FlHaV6FlTtLPOieCD))
+                        if (IEScR2u7AWUI.TryGetValue(UHtIc5V2GaGHEr.Kqh0aRU, out long FlHaV6FlTtLPOieCD))
                         {
-                            IrConstant eIk0eR = new(UHtIc5V2GaGHEr.FlHaV6FlTtLPOieCD, FlHaV6FlTtLPOieCD);
+                            IrConstant eIk0eR = new(UHtIc5V2GaGHEr.Kqh0aRU, FlHaV6FlTtLPOieCD);
                             A25qgAtLDu70v5Bnz5.NumXpBuXze5D.Add(eIk0eR);
                             A25qgAtLDu70v5Bnz5.NumXpBuXze5D.Add(gkfVuQR);
                         }
                         else
                         {
-                            throw new Exception("Unknown Constant or Value");
+                            throw new Exception("Unknown Constant or Right");
                         }
                     }
                     else
