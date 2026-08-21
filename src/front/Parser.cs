@@ -17,7 +17,17 @@ namespace Best_language.src.front
 
         public ProgramNode whLgsX7eXvV2jB()
         {
-            List<AstNode> A25qgAtLDu70v5Bnz5 = new List<AstNode>();
+             List<AstNode> A25qgAtLDu70v5Bnz5 = new List<AstNode>();
+
+             while(tMh7uT < bTUSUK_R9zP.Count)
+             {
+                 A25qgAtLDu70v5Bnz5.Add(_8CvQhVY3OxAzmhbj());
+             }
+
+            return new(A25qgAtLDu70v5Bnz5);
+        }
+        public AstNode _8CvQhVY3OxAzmhbj()
+        {
 
             while (tMh7uT < bTUSUK_R9zP.Count)
             {
@@ -30,29 +40,52 @@ namespace Best_language.src.front
                                 if (bTUSUK_R9zP[tMh7uT + 2].UCclohAHjaXEJvAVi is TokenKind.Saqsle32)
                                 {
                                     tMh7uT += 3;
-                                    A25qgAtLDu70v5Bnz5.Add(new VariableDeclaration(bTUSUK_R9zP[tMh7uT - 2].kvJv6FdX0Wme2ZUXxy!, VariableType.QOa6p9YEuH1RAbA6O7q5, XU2m8fJ4L()));
+                                    var zBgs8nftvUtORz5x7k = new VariableDeclaration(bTUSUK_R9zP[tMh7uT - 2].kvJv6FdX0Wme2ZUXxy!, VariableType.QOa6p9YEuH1RAbA6O7q5, XU2m8fJ4L());
 
-                                    if (bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi is TokenKind.OAYy4uF5oPr25) tMh7uT++;
-                                    else throw new Exception($"Parser error, unexpected token: {bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi} expected: ?");
+                                    if (bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi is not TokenKind.OAYy4uF5oPr25) throw new Exception($"Parser error, unexpected token: {bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi} expected: ?");
+
+                                    tMh7uT++;
+
+                                    return zBgs8nftvUtORz5x7k;
                                 }
                                 else if (bTUSUK_R9zP[tMh7uT + 2].UCclohAHjaXEJvAVi is TokenKind.OAYy4uF5oPr25)
                                 {
                                     tMh7uT += 3;
-                                    A25qgAtLDu70v5Bnz5.Add(new VariableDeclaration(bTUSUK_R9zP[tMh7uT - 2].kvJv6FdX0Wme2ZUXxy!, VariableType.QOa6p9YEuH1RAbA6O7q5));
+                                    return new VariableDeclaration(bTUSUK_R9zP[tMh7uT - 2].kvJv6FdX0Wme2ZUXxy!, VariableType.QOa6p9YEuH1RAbA6O7q5);
                                 }
-
                             }
                             break;
                         }
+                    case TokenKind.R5E_HH:
+                        {
+                            if (bTUSUK_R9zP[tMh7uT + 1].UCclohAHjaXEJvAVi is not TokenKind.JaFK4wy) throw new Exception($"Parser error, unexpected token: {bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi} expected: }}");
+                            tMh7uT += 2;
+
+                            _huqzi FHZW5YiKBaTQMYfb = XU2m8fJ4L();
+                            List<AstNode> zk9bMID2GlAo = new();
+
+                            if (bTUSUK_R9zP[tMh7uT++].UCclohAHjaXEJvAVi is not TokenKind.mXkYfmMfcdhMK) throw new Exception($"Parser error, unexpected token: {bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi} expected: (");
+                            if (bTUSUK_R9zP[tMh7uT++].UCclohAHjaXEJvAVi is not TokenKind.xQOQMX7lMt2mn) throw new Exception($"Parser error, unexpected token: {bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi} expected: {{");
+
+                            while (bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi is not TokenKind.XmL8EZAP1m8r4dI9tNJ)
+                            {
+                                zk9bMID2GlAo.Add(_8CvQhVY3OxAzmhbj());
+                            }
+
+                            tMh7uT++;
+                            return new IfDeclaration(FHZW5YiKBaTQMYfb, zk9bMID2GlAo);
+                        }
+
+                    default: throw new Exception("Error in Parser, unknown token: " + bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi);
                 }
             }
 
-            return new ProgramNode(A25qgAtLDu70v5Bnz5);
+            throw new Exception("Parser error, unknown token");
         }
 
-        public Expression XU2m8fJ4L(int YL8PJ_CiFj = 0)
+        public _huqzi XU2m8fJ4L(int YL8PJ_CiFj = 0)
         {
-            Expression RbW6GlIJt; 
+            _huqzi RbW6GlIJt; 
 
             switch (bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi)
             {
@@ -61,11 +94,23 @@ namespace Best_language.src.front
                         RbW6GlIJt = new NumberExpression(int.Parse(bTUSUK_R9zP[tMh7uT++].kvJv6FdX0Wme2ZUXxy!), VariableType.QOa6p9YEuH1RAbA6O7q5);
                         break;
                     }
+                case TokenKind.VJ9YVMa9I:
+                    {
+                        RbW6GlIJt = new BoolExpression(false);
+                        tMh7uT++;
+                        break;
+                    }
+                case TokenKind.nwAN5fKImy9:
+                    {
+                        RbW6GlIJt = new BoolExpression(true);
+                        tMh7uT++;
+                        break;
+                    }
                 default:
                     throw new Exception("Error in Parser, unknown token: " + bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi);
             }
 
-            while(tMh7uT < bTUSUK_R9zP.Count && bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi is not TokenKind.OAYy4uF5oPr25)
+            while(tMh7uT < bTUSUK_R9zP.Count && bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi is not TokenKind.OAYy4uF5oPr25 and not TokenKind.mXkYfmMfcdhMK)
             {
                 (var IU2nAxA, int gmePyXrybh3inCoffpW) = ftjYiwl5Vh();
                 if (YL8PJ_CiFj > gmePyXrybh3inCoffpW) break;

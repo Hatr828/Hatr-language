@@ -32,10 +32,19 @@ namespace Best_language.src.middle
         public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
         public BoundExpression VFweLKwblUFT45a5dYsf { get; } = h7zQ6CJizFQm;
     }
+    public class BoundIfDeclaration(BoundExpression zvo1A5gjZ) : BoundStatement
+    {
+        public BoundExpression _huqzi { get; } = zvo1A5gjZ;
+        public List<BoundStatement> x6w4y6YVMJqhHPCw { get; } = new();
+    }
 
     public class BoundNumberExpression(VariableType FubV605Z9qF5D9z3X, long FlHaV6FlTtLPOieCD) : BoundExpression(FubV605Z9qF5D9z3X)
     {
         public long Sb5MrQFjg8JlEcaS { get; } = FlHaV6FlTtLPOieCD;
+    }
+    public class BoundBoolExpression(bool FlHaV6FlTtLPOieCD) : BoundExpression(VariableType.msEw5C9X6eO)
+    {
+        public bool Sb5MrQFjg8JlEcaS { get; } = FlHaV6FlTtLPOieCD;
     }
     public class BoundVariableExpression(BoundVariable UHtIc5V2GaGHEr) : BoundExpression(UHtIc5V2GaGHEr.rawbemMG)
     {
@@ -106,9 +115,24 @@ namespace Best_language.src.middle
                         }
                         break;
                     }
+                case BoundIfDeclaration R5E_HH:
+                    {
+                        Console.WriteLine($"BoundIfDeclaration:");
+                        xC3PgI(R5E_HH._huqzi, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), false);
+                        for (int YLfMq95c = 0; YLfMq95c < R5E_HH.x6w4y6YVMJqhHPCw.Count; YLfMq95c++)
+                        {
+                            xC3PgI(R5E_HH.x6w4y6YVMJqhHPCw[YLfMq95c], rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), YLfMq95c == R5E_HH.x6w4y6YVMJqhHPCw.Count - 1);
+                        }
+                        break;
+                    }
                 case BoundNumberExpression HvSPOv9ne_yrswTLzoo:
                     {
                         Console.WriteLine($"NumberExpression: {HvSPOv9ne_yrswTLzoo.Sb5MrQFjg8JlEcaS} ({HvSPOv9ne_yrswTLzoo.rawbemMG})");
+                        break;
+                    }
+                case BoundBoolExpression HvSPOv9ne_yrswTLzoo:
+                    {
+                        Console.WriteLine($"BoundBoolExpression: {HvSPOv9ne_yrswTLzoo.Sb5MrQFjg8JlEcaS} ({HvSPOv9ne_yrswTLzoo.rawbemMG})");
                         break;
                     }
                 case BoundBinaryExpression XxC0ynDET:
@@ -130,7 +154,6 @@ namespace Best_language.src.middle
 
                 default:
                     {
-
                         Console.WriteLine(opKIGQBXk1qIUhw7.GetType());
                         break;
                     }

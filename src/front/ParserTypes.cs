@@ -1,3 +1,4 @@
+using Best_language.src.middle;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,17 +12,22 @@ namespace Best_language.src.front
         public List<AstNode> Lt6RjPqqO { get; } = CZaJj4hwP5v17;
     }
 
-    public abstract class Expression : AstNode;
-    public class NumberExpression(long FlHaV6FlTtLPOieCD, VariableType FubV605Z9qF5D9z3X) : Expression
+    public abstract class _huqzi : AstNode;
+    public class NumberExpression(long FlHaV6FlTtLPOieCD, VariableType FubV605Z9qF5D9z3X) : _huqzi
     {
         public long Sb5MrQFjg8JlEcaS { get; } = FlHaV6FlTtLPOieCD;
         public VariableType rawbemMG { get; } = FubV605Z9qF5D9z3X;
     }
-    public class BinaryExpression(Expression RbW6GlIJt, BinaryOp IU2nAxA, Expression h3s7dbXXv22CfCfn) : Expression
+    public class BoolExpression(bool FlHaV6FlTtLPOieCD) : _huqzi
     {
-        public Expression bRC8MHJu { get; } = RbW6GlIJt;
+        public bool Sb5MrQFjg8JlEcaS { get; } = FlHaV6FlTtLPOieCD;
+        public VariableType rawbemMG { get; } = VariableType.msEw5C9X6eO;
+    }
+    public class BinaryExpression(_huqzi RbW6GlIJt, BinaryOp IU2nAxA, _huqzi h3s7dbXXv22CfCfn) : _huqzi
+    {
+        public _huqzi bRC8MHJu { get; } = RbW6GlIJt;
         public BinaryOp mfIdTBeeCV { get; } = IU2nAxA;
-        public Expression Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
+        public _huqzi Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
     }
     public enum BinaryOp
     {
@@ -32,18 +38,23 @@ namespace Best_language.src.front
     }
 
     public abstract class Statement : AstNode;
-
-    public class VariableDeclaration(string tvLjFkzfFa9PYoTwdhO, VariableType FubV605Z9qF5D9z3X, Expression? h7zQ6CJizFQm = null) : Statement
+    public class VariableDeclaration(string tvLjFkzfFa9PYoTwdhO, VariableType FubV605Z9qF5D9z3X, _huqzi? h7zQ6CJizFQm = null) : Statement
     {
         public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
-        public Expression? VFweLKwblUFT45a5dYsf { get; } = h7zQ6CJizFQm;
+        public _huqzi? VFweLKwblUFT45a5dYsf { get; } = h7zQ6CJizFQm;
 
         public VariableType rawbemMG { get; } = FubV605Z9qF5D9z3X;
+    }
+    public class IfDeclaration(_huqzi zvo1A5gjZ, List<AstNode> UYfdaySL) : Statement
+    {
+        public _huqzi _huqzi { get; } = zvo1A5gjZ;
+        public List<AstNode> _gLmRU6 { get; } = UYfdaySL;
     }
 
     public enum VariableType
     {
         QOa6p9YEuH1RAbA6O7q5,
+        msEw5C9X6eO,
         MNMtkkiM1kdY6K3XD
     }
 
@@ -80,10 +91,25 @@ namespace Best_language.src.front
                             }
                             break;
                     }
+                case IfDeclaration R5E_HH:
+                    {
+                        Console.WriteLine($"IfDeclaration:");
+                        uv93COVA_xMa2(R5E_HH._huqzi, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), false);
+                        for (int YLfMq95c = 0; YLfMq95c < R5E_HH._gLmRU6.Count; YLfMq95c++)
+                        {
+                            uv93COVA_xMa2(R5E_HH._gLmRU6[YLfMq95c], rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), YLfMq95c == R5E_HH._gLmRU6.Count - 1);
+                        }
+                        break;
+                    }
                 case NumberExpression HvSPOv9ne_yrswTLzoo:
                     {
                             Console.WriteLine($"NumberExpression: {HvSPOv9ne_yrswTLzoo.Sb5MrQFjg8JlEcaS} ({HvSPOv9ne_yrswTLzoo.rawbemMG})");
                             break;
+                    }
+                case BoolExpression zvo1A5gjZ:
+                    {
+                        Console.WriteLine($"BoolExpression: {zvo1A5gjZ.Sb5MrQFjg8JlEcaS} ({zvo1A5gjZ.rawbemMG})");
+                        break;
                     }
                 case BinaryExpression XxC0ynDET:
                     {
@@ -95,9 +121,8 @@ namespace Best_language.src.front
 
                 default:
                     { 
-                    
-                            Console.WriteLine(opKIGQBXk1qIUhw7.GetType());
-                            break;
+                        Console.WriteLine(opKIGQBXk1qIUhw7.GetType());
+                        break;
                     }
             }
         }

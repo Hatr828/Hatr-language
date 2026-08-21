@@ -2,6 +2,7 @@ using Best_language.src.front;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Best_language.src.middle
 {
@@ -35,17 +36,27 @@ namespace Best_language.src.middle
                             return new BoundVariableDeclaration(UHtIc5V2GaGHEr.rawbemMG, UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, null!);
 
                     }
+                case IfDeclaration FMs8v8WFk7p4PXuibRJ:
+                    {
+                        var R5E_HH = new BoundIfDeclaration(g51AXmN8YaVH0xrMm(FMs8v8WFk7p4PXuibRJ._huqzi));
+                        foreach (var jn5gszuLQk in FMs8v8WFk7p4PXuibRJ._gLmRU6) R5E_HH.x6w4y6YVMJqhHPCw.Add(WZMxUp499S(jn5gszuLQk));
+                        return R5E_HH;
+                    }
             }
             throw new Exception("Failed to BindStatement");
         }
 
-        public BoundExpression g51AXmN8YaVH0xrMm(Expression zvo1A5gjZ)
+        public BoundExpression g51AXmN8YaVH0xrMm(_huqzi zvo1A5gjZ)
         {
             switch (zvo1A5gjZ)
             {
                 case NumberExpression HvSPOv9ne_yrswTLzoo:
                     {
                         return new BoundNumberExpression(HvSPOv9ne_yrswTLzoo.rawbemMG, HvSPOv9ne_yrswTLzoo.Sb5MrQFjg8JlEcaS);
+                    }
+                case BoolExpression FHZW5YiKBaTQMYfb:
+                    {
+                        return new BoundBoolExpression(FHZW5YiKBaTQMYfb.Sb5MrQFjg8JlEcaS);
                     }
                 case BinaryExpression XxC0ynDET:
                     {

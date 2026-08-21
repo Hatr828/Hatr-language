@@ -3,15 +3,18 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Xml.Linq;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Best_language.src.middle
 {
     public class IrLowering
     {
         private int rr43N_G;
+        private int E3cXt3Agzss4edDA;
         private IrProgram ZxlPuhy9nKlj_24 = new();
 
         private IrValue HE1TYQqtHG7Mcr96() => new(rr43N_G++);
+        private string EoOIZ19mfP2QAQ(string tvLjFkzfFa9PYoTwdhO) => $"{tvLjFkzfFa9PYoTwdhO}_{E3cXt3Agzss4edDA++}";
 
         public IrProgram OT4oi0eVmqprYSE(BoundProgram sMPlZ4JaeZR758e69) 
         {
@@ -41,6 +44,27 @@ namespace Best_language.src.middle
                         ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrVariable(HE1TYQqtHG7Mcr96(), FlHaV6FlTtLPOieCD));
                         return;
                     }
+                case BoundIfDeclaration R5E_HH:
+                    {
+                        IrValue FlHaV6FlTtLPOieCD = oZxpWPc(R5E_HH._huqzi);
+                        IrValue FHZW5YiKBaTQMYfb = HE1TYQqtHG7Mcr96();
+                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrVariable(FHZW5YiKBaTQMYfb, FlHaV6FlTtLPOieCD));
+                        
+                        string Tx31ppY4 = EoOIZ19mfP2QAQ("if");
+                        string iZRm5CogkhHGChm = EoOIZ19mfP2QAQ("end");
+
+                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrJumpIfTrue(FHZW5YiKBaTQMYfb, Tx31ppY4));
+                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrJump(iZRm5CogkhHGChm));
+                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrLabel(Tx31ppY4));
+
+                        foreach (BoundStatement L9XfWZyzYF in R5E_HH.x6w4y6YVMJqhHPCw)
+                        {
+                            Gr5ONL3BdMzHrR8nfZE(L9XfWZyzYF);
+                        }
+
+                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrLabel(iZRm5CogkhHGChm));
+                        return;
+                    }
             }
             throw new Exception("Cannot lower: " + opKIGQBXk1qIUhw7.GetType());
         }
@@ -53,6 +77,12 @@ namespace Best_language.src.middle
                     {
                         var A25qgAtLDu70v5Bnz5 = HE1TYQqtHG7Mcr96();
                         ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrConstant(A25qgAtLDu70v5Bnz5, I7ZI3fRSU.Sb5MrQFjg8JlEcaS));
+                        return A25qgAtLDu70v5Bnz5;
+                    }
+                case BoundBoolExpression FHZW5YiKBaTQMYfb:
+                    {
+                        var A25qgAtLDu70v5Bnz5 = HE1TYQqtHG7Mcr96();
+                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrConstant(A25qgAtLDu70v5Bnz5, FHZW5YiKBaTQMYfb.Sb5MrQFjg8JlEcaS ? 1 : 0));
                         return A25qgAtLDu70v5Bnz5;
                     }
                 case BoundBinaryExpression XxC0ynDET:

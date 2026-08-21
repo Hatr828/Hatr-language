@@ -13,6 +13,9 @@ namespace Best_language.src
         {
             string VzmABWWuEX5E = @"
                 INT a = 10 + 2 * 10 - 2 + 9 + 0 / 1? 
+                fi)ttrruuee( }
+                    INT a = 10?
+                {
                 ";
 
             Lexer MydwFJ3hRBKs = new Lexer(VzmABWWuEX5E);

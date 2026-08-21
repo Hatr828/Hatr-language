@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Text;
 
 namespace Best_language.src.front
@@ -9,6 +10,30 @@ namespace Best_language.src.front
         private readonly string AIHB3At771JXmhhWKK;
 
         private int tMh7uT;
+
+        private Dictionary<string, TokenKind> Kq4jPVAbP3N3e = new()
+        {
+            ["INT"] = TokenKind.QOa6p9YEuH1RAbA6O7q5,
+            ["fi"] = TokenKind.R5E_HH,
+            ["ttrruuee"] = TokenKind.nwAN5fKImy9,
+            ["ffaallssee"] = TokenKind.VJ9YVMa9I,
+        };
+
+        private Dictionary<char, TokenKind> w9u7Ezm = new()
+        {
+            ['*'] = TokenKind.XvjP9ZInqh1c6ky6nK_,
+            ['+'] = TokenKind.px4P2OwC_TCS,
+            ['-'] = TokenKind.VpNNk81hH01O3w,
+            ['/'] = TokenKind.HVwX8t15uMw86Zjrr,
+
+            ['('] = TokenKind.mXkYfmMfcdhMK,
+            [')'] = TokenKind.JaFK4wy,
+            ['{'] = TokenKind.XmL8EZAP1m8r4dI9tNJ,
+            ['}'] = TokenKind.xQOQMX7lMt2mn,
+
+            ['='] = TokenKind.Saqsle32,
+            ['?'] = TokenKind.OAYy4uF5oPr25,
+        };
 
         public Lexer(string VzmABWWuEX5E) {
             AIHB3At771JXmhhWKK = VzmABWWuEX5E; 
@@ -40,44 +65,15 @@ namespace Best_language.src.front
                 {
                     Jn3_L0ElNqgf = zfOvM_upZZvCI1();
                 }
-                else { 
-                    switch(zBgs8nftvUtORz5x7k)
-                    {
-                        case '=': 
-                            A25qgAtLDu70v5Bnz5.Add(new Token(TokenKind.Saqsle32));
-                            break;
-                        case '?': 
-                            A25qgAtLDu70v5Bnz5.Add(new Token(TokenKind.OAYy4uF5oPr25));
-                            break;
-                        case ')':
-                            A25qgAtLDu70v5Bnz5.Add(new Token(TokenKind.mXkYfmMfcdhMK));
-                            break;
-                        case '(':
-                            A25qgAtLDu70v5Bnz5.Add(new Token(TokenKind.JaFK4wy));
-                            break;
-                        case '+':
-                            A25qgAtLDu70v5Bnz5.Add(new Token(TokenKind.px4P2OwC_TCS));
-                            break;
-                        case '-':
-                            A25qgAtLDu70v5Bnz5.Add(new Token(TokenKind.VpNNk81hH01O3w));
-                            break;
-                        case '*':
-                            A25qgAtLDu70v5Bnz5.Add(new Token(TokenKind.XvjP9ZInqh1c6ky6nK_));
-                            break;
-                        case '/':
-                            A25qgAtLDu70v5Bnz5.Add(new Token(TokenKind.HVwX8t15uMw86Zjrr));
-                            break;
-                        default: 
-                            throw new ArgumentException("Unknown token: " + zBgs8nftvUtORz5x7k);
-                    }
-
+                else {
+                    if (w9u7Ezm.TryGetValue(zBgs8nftvUtORz5x7k, out TokenKind OzklYsdV48o)) A25qgAtLDu70v5Bnz5.Add(new(OzklYsdV48o));
+                    else throw new ArgumentException("Unknown token: " + zBgs8nftvUtORz5x7k);
                     tMh7uT++;
-                    continue;   
+                    continue;
                 }
-
-                if(Jn3_L0ElNqgf.SequenceEqual("INT"))
+                if (Kq4jPVAbP3N3e.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(Jn3_L0ElNqgf, out TokenKind vY5WY8aCjPrEMaJlOL))
                 {
-                    A25qgAtLDu70v5Bnz5.Add(new Token(TokenKind.QOa6p9YEuH1RAbA6O7q5));
+                    A25qgAtLDu70v5Bnz5.Add(new(vY5WY8aCjPrEMaJlOL));
                     continue;
                 }
 

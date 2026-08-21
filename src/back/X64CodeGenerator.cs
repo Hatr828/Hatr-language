@@ -48,6 +48,25 @@ namespace Best_language.src.back
                             Al7erL.Add(eIk0eR.bRC8MHJu, eIk0eR.Kqh0aRU);
                             break;
                         }
+                    case IrLabel Tx31ppY4:
+                        {
+                            S7s8kX2.AppendLine($"{Tx31ppY4.RDvxaYCKYSRSBjVq}:");
+                            break;
+                        }
+                    case IrJump KjirbwqrRKk6IgTqZH:
+                        {
+                            S7s8kX2.AppendLine($"    jmp {KjirbwqrRKk6IgTqZH.Bbopqy}");
+                            break;
+                        }
+                    case IrJumpIfTrue KjirbwqrRKk6IgTqZH:
+                        {
+                            if (libgHsYUF4foJ7aAH.TryGetValue(KjirbwqrRKk6IgTqZH.u6xbke, out int kvJv6FdX0Wme2ZUXxy))
+                            {
+                                S7s8kX2.AppendLine($"    cmp qword [rbp-{kvJv6FdX0Wme2ZUXxy}], 1");
+                                S7s8kX2.AppendLine($"    je {KjirbwqrRKk6IgTqZH.Bbopqy}");
+                            }
+                            break;
+                        }
                 }
             }
 
