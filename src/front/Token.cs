@@ -32,6 +32,7 @@ namespace Best_language.src.front
     public enum TokenKind
     {
         QOa6p9YEuH1RAbA6O7q5, 
+        msEw5C9X6eO,
         R5E_HH,
         nwAN5fKImy9,
         VJ9YVMa9I,
@@ -43,6 +44,14 @@ namespace Best_language.src.front
         VpNNk81hH01O3w,
         XvjP9ZInqh1c6ky6nK_,
         HVwX8t15uMw86Zjrr,
+
+        dFZBYFCUJWiZYreG5,
+        hJQNxCsE8,
+        Tieags2HzPi132WNHai,
+        wY8aKmHjGo,
+        i3e0fh1jq,
+        X0mFuD,
+        EVNnxDS7mt,
 
         JaFK4wy,
         mXkYfmMfcdhMK,

@@ -33,14 +33,16 @@ namespace Best_language.src.front
             {
                 switch (bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi)
                 {
+                    case TokenKind.msEw5C9X6eO:
                     case TokenKind.QOa6p9YEuH1RAbA6O7q5:
                         {
+                            var FubV605Z9qF5D9z3X = bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi;
                             if (bTUSUK_R9zP[tMh7uT + 1].UCclohAHjaXEJvAVi is TokenKind.zCmKOyOPQ)
                             {
                                 if (bTUSUK_R9zP[tMh7uT + 2].UCclohAHjaXEJvAVi is TokenKind.Saqsle32)
                                 {
                                     tMh7uT += 3;
-                                    var zBgs8nftvUtORz5x7k = new VariableDeclaration(bTUSUK_R9zP[tMh7uT - 2].kvJv6FdX0Wme2ZUXxy!, VariableType.QOa6p9YEuH1RAbA6O7q5, XU2m8fJ4L());
+                                    var zBgs8nftvUtORz5x7k = new VariableDeclaration(bTUSUK_R9zP[tMh7uT - 2].kvJv6FdX0Wme2ZUXxy!, QKG8TsMd(FubV605Z9qF5D9z3X), XU2m8fJ4L());
 
                                     if (bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi is not TokenKind.OAYy4uF5oPr25) throw new Exception($"Parser error, unexpected token: {bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi} expected: ?");
 
@@ -128,7 +130,21 @@ namespace Best_language.src.front
             TokenKind.VpNNk81hH01O3w => (BinaryOp.VpNNk81hH01O3w, 10),
             TokenKind.XvjP9ZInqh1c6ky6nK_ => (BinaryOp.XvjP9ZInqh1c6ky6nK_, 50),
             TokenKind.HVwX8t15uMw86Zjrr => (BinaryOp.HVwX8t15uMw86Zjrr, 50),
+
+            TokenKind.i3e0fh1jq => (BinaryOp.i3e0fh1jq, 5),
+            TokenKind.X0mFuD => (BinaryOp.RpVKAjlPn7QkY5, 5),
+            TokenKind.wY8aKmHjGo => (BinaryOp.wY8aKmHjGo, 5),
+            TokenKind.EVNnxDS7mt => (BinaryOp.yCtPKI, 5),
+            TokenKind.Tieags2HzPi132WNHai => (BinaryOp.Tieags2HzPi132WNHai, 5),
+
+            TokenKind.dFZBYFCUJWiZYreG5 => (BinaryOp.dFZBYFCUJWiZYreG5, 2),
+            TokenKind.hJQNxCsE8 => (BinaryOp.hJQNxCsE8, 1),
             _ => throw new Exception("Unknown Operation")
+        };
+        public VariableType QKG8TsMd(TokenKind UCclohAHjaXEJvAVi) => UCclohAHjaXEJvAVi switch { 
+            TokenKind.msEw5C9X6eO => VariableType.msEw5C9X6eO,
+            TokenKind.QOa6p9YEuH1RAbA6O7q5 => VariableType.QOa6p9YEuH1RAbA6O7q5,
+            _ => throw new Exception("Unknown type")
         };
     }
 }

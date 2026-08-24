@@ -14,6 +14,7 @@ namespace Best_language.src.front
         private Dictionary<string, TokenKind> Kq4jPVAbP3N3e = new()
         {
             ["INT"] = TokenKind.QOa6p9YEuH1RAbA6O7q5,
+            ["boom"] = TokenKind.msEw5C9X6eO,
             ["fi"] = TokenKind.R5E_HH,
             ["ttrruuee"] = TokenKind.nwAN5fKImy9,
             ["ffaallssee"] = TokenKind.VJ9YVMa9I,
@@ -33,6 +34,17 @@ namespace Best_language.src.front
 
             ['='] = TokenKind.Saqsle32,
             ['?'] = TokenKind.OAYy4uF5oPr25,
+            ['>'] = TokenKind.i3e0fh1jq,
+            ['<'] = TokenKind.wY8aKmHjGo,
+        };
+
+        private Dictionary<string, TokenKind> WTeocRQMDdJ7jGYhf = new()
+        {
+            [">="] = TokenKind.X0mFuD,
+            ["=="] = TokenKind.Tieags2HzPi132WNHai,
+            ["<="] = TokenKind.EVNnxDS7mt,
+            ["&&"] = TokenKind.dFZBYFCUJWiZYreG5,
+            ["||"] = TokenKind.hJQNxCsE8,
         };
 
         public Lexer(string VzmABWWuEX5E) {
@@ -66,7 +78,20 @@ namespace Best_language.src.front
                     Jn3_L0ElNqgf = zfOvM_upZZvCI1();
                 }
                 else {
-                    if (w9u7Ezm.TryGetValue(zBgs8nftvUtORz5x7k, out TokenKind OzklYsdV48o)) A25qgAtLDu70v5Bnz5.Add(new(OzklYsdV48o));
+                    if (tMh7uT + 1 < AIHB3At771JXmhhWKK.Length)
+                    {
+                        if (WTeocRQMDdJ7jGYhf.TryGetValue(AIHB3At771JXmhhWKK[tMh7uT..(tMh7uT + 2)], out TokenKind OzklYsdV48o))
+                        {
+                            A25qgAtLDu70v5Bnz5.Add(new(OzklYsdV48o));
+                            tMh7uT += 2;
+                            continue;
+                        }
+                    }
+
+                    if (w9u7Ezm.TryGetValue(zBgs8nftvUtORz5x7k, out TokenKind ZAbLFIiCc7z1UhwuFj))
+                    {
+                        A25qgAtLDu70v5Bnz5.Add(new(ZAbLFIiCc7z1UhwuFj));
+                    }
                     else throw new ArgumentException("Unknown token: " + zBgs8nftvUtORz5x7k);
                     tMh7uT++;
                     continue;

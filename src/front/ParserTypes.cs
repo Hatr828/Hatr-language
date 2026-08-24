@@ -34,7 +34,16 @@ namespace Best_language.src.front
         px4P2OwC_TCS,
         VpNNk81hH01O3w,
         XvjP9ZInqh1c6ky6nK_,
-        HVwX8t15uMw86Zjrr
+        HVwX8t15uMw86Zjrr,
+
+        wY8aKmHjGo,
+        yCtPKI,
+        i3e0fh1jq,
+        RpVKAjlPn7QkY5,
+        Tieags2HzPi132WNHai,
+
+        dFZBYFCUJWiZYreG5,
+        hJQNxCsE8
     }
 
     public abstract class Statement : AstNode;

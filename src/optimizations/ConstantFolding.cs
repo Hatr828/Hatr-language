@@ -59,7 +59,16 @@ namespace Best_language.src.optimizations
                 BinaryOp.px4P2OwC_TCS => RbW6GlIJt + h3s7dbXXv22CfCfn,
                 BinaryOp.VpNNk81hH01O3w => RbW6GlIJt - h3s7dbXXv22CfCfn,
                 BinaryOp.XvjP9ZInqh1c6ky6nK_ => RbW6GlIJt * h3s7dbXXv22CfCfn,
-                BinaryOp.HVwX8t15uMw86Zjrr => RbW6GlIJt / h3s7dbXXv22CfCfn
+                BinaryOp.HVwX8t15uMw86Zjrr => RbW6GlIJt / h3s7dbXXv22CfCfn,
+
+                BinaryOp.wY8aKmHjGo => RbW6GlIJt < h3s7dbXXv22CfCfn ? 1 : 0,
+                BinaryOp.yCtPKI => RbW6GlIJt <= h3s7dbXXv22CfCfn ? 1 : 0,
+                BinaryOp.i3e0fh1jq => RbW6GlIJt > h3s7dbXXv22CfCfn ? 1 : 0,
+                BinaryOp.RpVKAjlPn7QkY5 => RbW6GlIJt >= h3s7dbXXv22CfCfn ? 1 : 0,
+                BinaryOp.Tieags2HzPi132WNHai => RbW6GlIJt == h3s7dbXXv22CfCfn ? 1 : 0,
+
+                BinaryOp.dFZBYFCUJWiZYreG5 => RbW6GlIJt == 1 && h3s7dbXXv22CfCfn == 1 ? 1 : 0,
+                BinaryOp.hJQNxCsE8 => RbW6GlIJt == 1 || h3s7dbXXv22CfCfn == 1 ? 1 : 0,
             };
         }
     }
