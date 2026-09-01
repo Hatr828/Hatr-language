@@ -36,9 +36,9 @@ namespace Best_language.src.optimizations
                         IrVariable UHtIc5V2GaGHEr = (IrVariable)gkfVuQR;
                         if (IEScR2u7AWUI.TryGetValue(UHtIc5V2GaGHEr.Kqh0aRU, out long FlHaV6FlTtLPOieCD))
                         {
-                            IrConstant eIk0eR = new(UHtIc5V2GaGHEr.Kqh0aRU, FlHaV6FlTtLPOieCD);
+                            IrConstant eIk0eR = new(UHtIc5V2GaGHEr.bRC8MHJu, FlHaV6FlTtLPOieCD);
+                            IEScR2u7AWUI.Add(UHtIc5V2GaGHEr.bRC8MHJu, FlHaV6FlTtLPOieCD);
                             A25qgAtLDu70v5Bnz5.NumXpBuXze5D.Add(eIk0eR);
-                            A25qgAtLDu70v5Bnz5.NumXpBuXze5D.Add(gkfVuQR);
                         }
                         else
                         {

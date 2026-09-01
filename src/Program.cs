@@ -13,9 +13,9 @@ namespace Best_language.src
         {
             string VzmABWWuEX5E = @"
                 INT a = 10 + 2 * 10 - 2 + 9 + 0 / 1? 
-                boom b = 10 > 5 && 10 < 4?
-                fi)1 > 2 || 2 == 2( }
-                    INT a = 10?
+                boom b = 10 > 5 && 10 < a?
+                fi)b( }
+                    INT c = 10?
                 {
                 ";
             Lexer MydwFJ3hRBKs = new Lexer(VzmABWWuEX5E);

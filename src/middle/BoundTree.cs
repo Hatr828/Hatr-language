@@ -28,7 +28,8 @@ namespace Best_language.src.middle
             {
                 case VariableDeclaration UHtIc5V2GaGHEr:
                     {
-                        if (oHTP5Aeztv.ULgl9HlV35S8d5ZHHL(UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq)) throw new Exception($"Variable {UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq} already exist");
+                        if (oHTP5Aeztv.ULgl9HlV35S8d5ZHHL(UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, out _)) throw new Exception($"Variable {UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq} already exist");
+                        if (!oHTP5Aeztv.tCBUXJsr53kXoh1u3N(new(UHtIc5V2GaGHEr.rawbemMG, UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq))) throw new Exception($"Error in TryAddVariable");
 
                         if (UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf is not null)
                             return new BoundVariableDeclaration(UHtIc5V2GaGHEr.rawbemMG, UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, g51AXmN8YaVH0xrMm(UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf));
@@ -51,8 +52,13 @@ namespace Best_language.src.middle
             switch (zvo1A5gjZ)
             {
                 case NumberExpression HvSPOv9ne_yrswTLzoo:
-                    {
+                    {                                                           
                         return new BoundNumberExpression(HvSPOv9ne_yrswTLzoo.rawbemMG, HvSPOv9ne_yrswTLzoo.Sb5MrQFjg8JlEcaS);
+                    }
+                case VariableExpression UHtIc5V2GaGHEr:
+                    {
+                        if (!oHTP5Aeztv.ULgl9HlV35S8d5ZHHL(UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, out VariableType FubV605Z9qF5D9z3X)) throw new Exception($"Variable {UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq} not exist");
+                        return new BoundVariableExpression(FubV605Z9qF5D9z3X, UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq);
                     }
                 case BoolExpression FHZW5YiKBaTQMYfb:
                     {

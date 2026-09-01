@@ -1,6 +1,7 @@
 using Best_language.src.front;
 using System;
 using System.Collections.Generic;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -13,7 +14,10 @@ namespace Best_language.src.middle
         private int E3cXt3Agzss4edDA;
         private IrProgram ZxlPuhy9nKlj_24 = new();
 
+        private Dictionary<string, IrValue> nhqaeri73 = new();
+
         private IrValue HE1TYQqtHG7Mcr96() => new(rr43N_G++);
+        private IrValue g1swMJeYxj() => new(rr43N_G-1);
         private string EoOIZ19mfP2QAQ(string tvLjFkzfFa9PYoTwdhO) => $"{tvLjFkzfFa9PYoTwdhO}_{E3cXt3Agzss4edDA++}";
 
         public IrProgram OT4oi0eVmqprYSE(BoundProgram sMPlZ4JaeZR758e69) 
@@ -42,6 +46,7 @@ namespace Best_language.src.middle
 
                         IrValue FlHaV6FlTtLPOieCD = oZxpWPc(UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf);
                         ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrVariable(HE1TYQqtHG7Mcr96(), FlHaV6FlTtLPOieCD));
+                        nhqaeri73.Add(UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, g1swMJeYxj());
                         return;
                     }
                 case BoundIfDeclaration R5E_HH:
@@ -78,6 +83,14 @@ namespace Best_language.src.middle
                         var A25qgAtLDu70v5Bnz5 = HE1TYQqtHG7Mcr96();
                         ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrConstant(A25qgAtLDu70v5Bnz5, I7ZI3fRSU.Sb5MrQFjg8JlEcaS));
                         return A25qgAtLDu70v5Bnz5;
+                    }
+                case BoundVariableExpression UHtIc5V2GaGHEr:
+                    {
+                        if(nhqaeri73.TryGetValue(UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, out IrValue FlHaV6FlTtLPOieCD))
+                        {
+                            return FlHaV6FlTtLPOieCD;
+                        }
+                        throw new Exception("Ir: Unknown variable.");
                     }
                 case BoundBoolExpression FHZW5YiKBaTQMYfb:
                     {

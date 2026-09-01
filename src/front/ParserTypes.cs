@@ -18,6 +18,10 @@ namespace Best_language.src.front
         public long Sb5MrQFjg8JlEcaS { get; } = FlHaV6FlTtLPOieCD;
         public VariableType rawbemMG { get; } = FubV605Z9qF5D9z3X;
     }
+    public class VariableExpression(string tvLjFkzfFa9PYoTwdhO) : _huqzi
+    {
+        public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
+    }
     public class BoolExpression(bool FlHaV6FlTtLPOieCD) : _huqzi
     {
         public bool Sb5MrQFjg8JlEcaS { get; } = FlHaV6FlTtLPOieCD;
@@ -114,6 +118,11 @@ namespace Best_language.src.front
                     {
                             Console.WriteLine($"NumberExpression: {HvSPOv9ne_yrswTLzoo.Sb5MrQFjg8JlEcaS} ({HvSPOv9ne_yrswTLzoo.rawbemMG})");
                             break;
+                    }
+                case VariableExpression UHtIc5V2GaGHEr:
+                    {
+                        Console.WriteLine($"VariableExpression: ({UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq})");
+                        break;
                     }
                 case BoolExpression zvo1A5gjZ:
                     {

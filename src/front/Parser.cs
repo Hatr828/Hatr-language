@@ -96,6 +96,11 @@ namespace Best_language.src.front
                         RbW6GlIJt = new NumberExpression(int.Parse(bTUSUK_R9zP[tMh7uT++].kvJv6FdX0Wme2ZUXxy!), VariableType.QOa6p9YEuH1RAbA6O7q5);
                         break;
                     }
+                case TokenKind.zCmKOyOPQ:
+                    {
+                        RbW6GlIJt = new VariableExpression(bTUSUK_R9zP[tMh7uT++].kvJv6FdX0Wme2ZUXxy!);
+                        break;
+                    }
                 case TokenKind.VJ9YVMa9I:
                     {
                         RbW6GlIJt = new BoolExpression(false);

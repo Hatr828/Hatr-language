@@ -42,13 +42,13 @@ namespace Best_language.src.middle
     {
         public long Sb5MrQFjg8JlEcaS { get; } = FlHaV6FlTtLPOieCD;
     }
+    public class BoundVariableExpression(VariableType FubV605Z9qF5D9z3X, string tvLjFkzfFa9PYoTwdhO) : BoundExpression(FubV605Z9qF5D9z3X)
+    {
+        public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
+    }
     public class BoundBoolExpression(bool FlHaV6FlTtLPOieCD) : BoundExpression(VariableType.msEw5C9X6eO)
     {
         public bool Sb5MrQFjg8JlEcaS { get; } = FlHaV6FlTtLPOieCD;
-    }
-    public class BoundVariableExpression(BoundVariable UHtIc5V2GaGHEr) : BoundExpression(UHtIc5V2GaGHEr.rawbemMG)
-    {
-        public BoundVariable wmYTjdw { get; } = UHtIc5V2GaGHEr;
     }
     public class BoundBinaryExpression(VariableType FubV605Z9qF5D9z3X, BinaryOp IU2nAxA, BoundExpression RbW6GlIJt, BoundExpression h3s7dbXXv22CfCfn) : BoundExpression(FubV605Z9qF5D9z3X)
     {
@@ -65,12 +65,17 @@ namespace Best_language.src.middle
         {
             return nhqaeri73[^1].TryAdd(UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, UHtIc5V2GaGHEr);
         }
-        public bool ULgl9HlV35S8d5ZHHL(string tvLjFkzfFa9PYoTwdhO)
+        public bool ULgl9HlV35S8d5ZHHL(string tvLjFkzfFa9PYoTwdhO, out VariableType FubV605Z9qF5D9z3X)
         {
             for(int YLfMq95c = 1; YLfMq95c <= nhqaeri73.Count; YLfMq95c++)
             {
-                if (nhqaeri73[^YLfMq95c].TryGetValue(tvLjFkzfFa9PYoTwdhO, out _)) return true;
+                if (nhqaeri73[^YLfMq95c].TryGetValue(tvLjFkzfFa9PYoTwdhO, out var UHtIc5V2GaGHEr))
+                {
+                    FubV605Z9qF5D9z3X = UHtIc5V2GaGHEr.rawbemMG;
+                    return true;
+                }
             }
+            FubV605Z9qF5D9z3X = VariableType.QOa6p9YEuH1RAbA6O7q5;
             return false;
         }
         public void TxTcHSOCYZ69AABP()
@@ -128,6 +133,11 @@ namespace Best_language.src.middle
                 case BoundNumberExpression HvSPOv9ne_yrswTLzoo:
                     {
                         Console.WriteLine($"NumberExpression: {HvSPOv9ne_yrswTLzoo.Sb5MrQFjg8JlEcaS} ({HvSPOv9ne_yrswTLzoo.rawbemMG})");
+                        break;
+                    }
+                case BoundVariableExpression HvSPOv9ne_yrswTLzoo:
+                    {
+                        Console.WriteLine($"BoundVariableExpression: {HvSPOv9ne_yrswTLzoo.RDvxaYCKYSRSBjVq} ({HvSPOv9ne_yrswTLzoo.rawbemMG})");
                         break;
                     }
                 case BoundBoolExpression HvSPOv9ne_yrswTLzoo:

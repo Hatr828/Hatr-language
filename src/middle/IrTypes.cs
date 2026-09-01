@@ -87,7 +87,7 @@ namespace Best_language.src.middle
                     }
                 case IrConstant HvSPOv9ne_yrswTLzoo:
                     {
-                        Console.WriteLine($"IrConstant: {HvSPOv9ne_yrswTLzoo.Kqh0aRU} ({HvSPOv9ne_yrswTLzoo.bRC8MHJu})");
+                        Console.WriteLine($"IrConstant: {HvSPOv9ne_yrswTLzoo.bRC8MHJu} ({HvSPOv9ne_yrswTLzoo.Kqh0aRU})");
                         break;
                     }
                 case IrJumpIfTrue KjirbwqrRKk6IgTqZH:
