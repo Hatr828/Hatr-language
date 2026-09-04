@@ -60,7 +60,7 @@ namespace Best_language.src.front
                         }
                     case TokenKind.R5E_HH:
                         {
-                            if (bTUSUK_R9zP[tMh7uT + 1].UCclohAHjaXEJvAVi is not TokenKind.JaFK4wy) throw new Exception($"Parser error, unexpected token: {bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi} expected: }}");
+                            if (bTUSUK_R9zP[tMh7uT + 1].UCclohAHjaXEJvAVi is not TokenKind.JaFK4wy) throw new Exception($"Parser error, unexpected token: {bTUSUK_R9zP[tMh7uT + 1].UCclohAHjaXEJvAVi} expected: }}");
                             tMh7uT += 2;
 
                             _huqzi FHZW5YiKBaTQMYfb = XU2m8fJ4L();
@@ -76,6 +76,18 @@ namespace Best_language.src.front
 
                             tMh7uT++;
                             return new IfDeclaration(FHZW5YiKBaTQMYfb, zk9bMID2GlAo);
+                        }
+                    case TokenKind.lgNzh3UAydkfeRDf2Cu:
+                        {
+                            if (bTUSUK_R9zP[tMh7uT + 1].UCclohAHjaXEJvAVi is not TokenKind.zCmKOyOPQ) throw new Exception($"Parser error, unexpected token: {bTUSUK_R9zP[tMh7uT + 1].UCclohAHjaXEJvAVi} expected: Indent");
+                            if (bTUSUK_R9zP[tMh7uT + 2].UCclohAHjaXEJvAVi is not TokenKind.OAYy4uF5oPr25) throw new Exception($"Parser error, unexpected token: {bTUSUK_R9zP[tMh7uT + 1].UCclohAHjaXEJvAVi} expected: {TokenKind.OAYy4uF5oPr25}");
+                            tMh7uT += 3;
+                            return new GotoStatement(bTUSUK_R9zP[tMh7uT - 2].kvJv6FdX0Wme2ZUXxy!);
+                        }
+                    case TokenKind.zCmKOyOPQ when bTUSUK_R9zP[tMh7uT + 1].UCclohAHjaXEJvAVi is TokenKind.VkPSg0:
+                        {
+                             tMh7uT += 2;
+                            return new GotoDeclaration(bTUSUK_R9zP[tMh7uT - 2].kvJv6FdX0Wme2ZUXxy!);
                         }
 
                     default: throw new Exception("Error in Parser, unknown token: " + bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi);

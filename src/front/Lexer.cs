@@ -18,6 +18,7 @@ namespace Best_language.src.front
             ["fi"] = TokenKind.R5E_HH,
             ["ttrruuee"] = TokenKind.nwAN5fKImy9,
             ["ffaallssee"] = TokenKind.VJ9YVMa9I,
+            ["goat"] = TokenKind.lgNzh3UAydkfeRDf2Cu,
         };
 
         private Dictionary<char, TokenKind> w9u7Ezm = new()
@@ -36,6 +37,8 @@ namespace Best_language.src.front
             ['?'] = TokenKind.OAYy4uF5oPr25,
             ['>'] = TokenKind.i3e0fh1jq,
             ['<'] = TokenKind.wY8aKmHjGo,
+
+            [':'] = TokenKind.VkPSg0,
         };
 
         private Dictionary<string, TokenKind> WTeocRQMDdJ7jGYhf = new()

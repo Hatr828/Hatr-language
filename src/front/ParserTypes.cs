@@ -58,6 +58,14 @@ namespace Best_language.src.front
 
         public VariableType rawbemMG { get; } = FubV605Z9qF5D9z3X;
     }
+    public class GotoStatement(string ZsJRNrW) : Statement
+    {
+        public string AM17m62yJaIBgtiOg { get; } = ZsJRNrW;
+    }
+    public class GotoDeclaration(string tvLjFkzfFa9PYoTwdhO) : Statement
+    {
+        public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
+    }
     public class IfDeclaration(_huqzi zvo1A5gjZ, List<AstNode> UYfdaySL) : Statement
     {
         public _huqzi _huqzi { get; } = zvo1A5gjZ;
@@ -103,6 +111,16 @@ namespace Best_language.src.front
                                 uv93COVA_xMa2(UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), true);
                             }
                             break;
+                    }
+                case GotoDeclaration wtIkAtgRp2_8CQp4OM:
+                    {
+                        Console.WriteLine($"GotoDeclaration: {wtIkAtgRp2_8CQp4OM.RDvxaYCKYSRSBjVq}");
+                        break;
+                    }
+                case GotoStatement wtIkAtgRp2_8CQp4OM:
+                    {
+                        Console.WriteLine($"GotoStatement: {wtIkAtgRp2_8CQp4OM.AM17m62yJaIBgtiOg}");
+                        break;
                     }
                 case IfDeclaration R5E_HH:
                     {

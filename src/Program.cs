@@ -14,9 +14,11 @@ namespace Best_language.src
             string VzmABWWuEX5E = @"
                 INT a = 10 + 2 * 10 - 2 + 9 + 0 / 1? 
                 boom b = 10 > 5 && 10 < a?
-                fi)b( }
-                    INT c = 10?
-                {
+                while:
+                    fi)b( }
+                        INT c = 10?
+                    {
+                goat while?
                 ";
             Lexer MydwFJ3hRBKs = new Lexer(VzmABWWuEX5E);
             var JQ2q_a = MydwFJ3hRBKs.H9EXHFD80i_YR_GCh2Q();

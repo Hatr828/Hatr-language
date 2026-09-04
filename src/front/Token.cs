@@ -36,9 +36,11 @@ namespace Best_language.src.front
         R5E_HH,
         nwAN5fKImy9,
         VJ9YVMa9I,
+        lgNzh3UAydkfeRDf2Cu,
 
         OAYy4uF5oPr25, 
         Saqsle32,
+        VkPSg0,
 
         px4P2OwC_TCS,
         VpNNk81hH01O3w,

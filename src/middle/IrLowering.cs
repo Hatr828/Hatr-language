@@ -70,6 +70,16 @@ namespace Best_language.src.middle
                         ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrLabel(iZRm5CogkhHGChm));
                         return;
                     }
+                case BoundGotoDeclaration XMCTzk:
+                    {
+                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrLabel("user_" + XMCTzk.DIb6al9mN));
+                        return;
+                    }
+                case BoundGotoStatement XMCTzk:
+                    {
+                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrJump("user_" + XMCTzk.K_1l6XsfuG9));
+                        return;
+                    }
             }
             throw new Exception("Cannot lower: " + opKIGQBXk1qIUhw7.GetType());
         }

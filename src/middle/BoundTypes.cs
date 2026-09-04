@@ -37,7 +37,14 @@ namespace Best_language.src.middle
         public BoundExpression _huqzi { get; } = zvo1A5gjZ;
         public List<BoundStatement> x6w4y6YVMJqhHPCw { get; } = new();
     }
-
+    public class BoundGotoDeclaration(int EHUizE_S0) : BoundStatement
+    {
+        public int DIb6al9mN { get; } = EHUizE_S0;
+    }
+    public class BoundGotoStatement(int ZsJRNrW) : BoundStatement
+    {
+        public int K_1l6XsfuG9 { get; } = ZsJRNrW;
+    }
     public class BoundNumberExpression(VariableType FubV605Z9qF5D9z3X, long FlHaV6FlTtLPOieCD) : BoundExpression(FubV605Z9qF5D9z3X)
     {
         public long Sb5MrQFjg8JlEcaS { get; } = FlHaV6FlTtLPOieCD;
@@ -128,6 +135,16 @@ namespace Best_language.src.middle
                         {
                             xC3PgI(R5E_HH.x6w4y6YVMJqhHPCw[YLfMq95c], rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), YLfMq95c == R5E_HH.x6w4y6YVMJqhHPCw.Count - 1);
                         }
+                        break;
+                    }
+                case BoundGotoDeclaration XMCTzk:
+                    {
+                        Console.WriteLine($"BoundGotoDeclaration: {XMCTzk.DIb6al9mN}");
+                        break;
+                    }
+                case BoundGotoStatement XMCTzk:
+                    {
+                        Console.WriteLine($"BoundGotoStatement: {XMCTzk.K_1l6XsfuG9}");
                         break;
                     }
                 case BoundNumberExpression HvSPOv9ne_yrswTLzoo:
