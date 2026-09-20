@@ -12,26 +12,26 @@ namespace Best_language.src.front
         public List<AstNode> Lt6RjPqqO { get; } = CZaJj4hwP5v17;
     }
 
-    public abstract class _huqzi : AstNode;
-    public class NumberExpression(long FlHaV6FlTtLPOieCD, VariableType FubV605Z9qF5D9z3X) : _huqzi
+    public abstract class Expression : AstNode;
+    public class NumberExpression(long FlHaV6FlTtLPOieCD, VariableType FubV605Z9qF5D9z3X) : Expression
     {
         public long Sb5MrQFjg8JlEcaS { get; } = FlHaV6FlTtLPOieCD;
         public VariableType rawbemMG { get; } = FubV605Z9qF5D9z3X;
     }
-    public class VariableExpression(string tvLjFkzfFa9PYoTwdhO) : _huqzi
+    public class VariableExpression(string tvLjFkzfFa9PYoTwdhO) : Expression
     {
         public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
     }
-    public class BoolExpression(bool FlHaV6FlTtLPOieCD) : _huqzi
+    public class BoolExpression(bool FlHaV6FlTtLPOieCD) : Expression
     {
         public bool Sb5MrQFjg8JlEcaS { get; } = FlHaV6FlTtLPOieCD;
         public VariableType rawbemMG { get; } = VariableType.msEw5C9X6eO;
     }
-    public class BinaryExpression(_huqzi RbW6GlIJt, BinaryOp IU2nAxA, _huqzi h3s7dbXXv22CfCfn) : _huqzi
+    public class BinaryExpression(Expression RbW6GlIJt, BinaryOp IU2nAxA, Expression h3s7dbXXv22CfCfn) : Expression
     {
-        public _huqzi bRC8MHJu { get; } = RbW6GlIJt;
+        public Expression bRC8MHJu { get; } = RbW6GlIJt;
         public BinaryOp mfIdTBeeCV { get; } = IU2nAxA;
-        public _huqzi Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
+        public Expression Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
     }
     public enum BinaryOp
     {
@@ -51,12 +51,17 @@ namespace Best_language.src.front
     }
 
     public abstract class Statement : AstNode;
-    public class VariableDeclaration(string tvLjFkzfFa9PYoTwdhO, VariableType FubV605Z9qF5D9z3X, _huqzi? h7zQ6CJizFQm = null) : Statement
+    public class VariableDeclaration(string tvLjFkzfFa9PYoTwdhO, VariableType FubV605Z9qF5D9z3X, Expression? h7zQ6CJizFQm = null) : Statement
     {
         public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
-        public _huqzi? VFweLKwblUFT45a5dYsf { get; } = h7zQ6CJizFQm;
+        public Expression? VFweLKwblUFT45a5dYsf { get; } = h7zQ6CJizFQm;
 
         public VariableType rawbemMG { get; } = FubV605Z9qF5D9z3X;
+    }
+    public class AssignmentStatement(string tvLjFkzfFa9PYoTwdhO, Expression h3s7dbXXv22CfCfn) : Statement
+    {
+        public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
+        public Expression Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
     }
     public class GotoStatement(string ZsJRNrW) : Statement
     {
@@ -66,9 +71,9 @@ namespace Best_language.src.front
     {
         public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
     }
-    public class IfDeclaration(_huqzi zvo1A5gjZ, List<AstNode> UYfdaySL) : Statement
+    public class IfDeclaration(Expression zvo1A5gjZ, List<AstNode> UYfdaySL) : Statement
     {
-        public _huqzi _huqzi { get; } = zvo1A5gjZ;
+        public Expression _huqzi { get; } = zvo1A5gjZ;
         public List<AstNode> _gLmRU6 { get; } = UYfdaySL;
     }
 
@@ -111,6 +116,12 @@ namespace Best_language.src.front
                                 uv93COVA_xMa2(UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), true);
                             }
                             break;
+                    }
+                case AssignmentStatement Ya3KuoBYDAJuy5LuF:
+                    {
+                        Console.WriteLine($"AssignmentStatement: {Ya3KuoBYDAJuy5LuF.RDvxaYCKYSRSBjVq}");
+                        uv93COVA_xMa2(Ya3KuoBYDAJuy5LuF.Kqh0aRU, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), true);
+                        break;
                     }
                 case GotoDeclaration wtIkAtgRp2_8CQp4OM:
                     {

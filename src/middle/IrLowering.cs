@@ -70,14 +70,22 @@ namespace Best_language.src.middle
                         ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrLabel(iZRm5CogkhHGChm));
                         return;
                     }
-                case BoundGotoDeclaration XMCTzk:
+                case BoundGotoDeclaration eV5GbDX:
                     {
-                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrLabel("user_" + XMCTzk.DIb6al9mN));
+                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrLabel("user_" + eV5GbDX.DIb6al9mN));
                         return;
                     }
-                case BoundGotoStatement XMCTzk:
+                case BoundGotoStatement eV5GbDX:
                     {
-                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrJump("user_" + XMCTzk.K_1l6XsfuG9));
+                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrJump("user_" + eV5GbDX.K_1l6XsfuG9));
+                        return;
+                    }
+                case BoundAssignmentStatement Ya3KuoBYDAJuy5LuF:
+                    {
+                        if (nhqaeri73.TryGetValue(Ya3KuoBYDAJuy5LuF.RDvxaYCKYSRSBjVq, out var kvJv6FdX0Wme2ZUXxy))
+                            ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrVariable(kvJv6FdX0Wme2ZUXxy, oZxpWPc(Ya3KuoBYDAJuy5LuF.Kqh0aRU)));
+                        else
+                            throw new Exception("some weird error");
                         return;
                     }
             }

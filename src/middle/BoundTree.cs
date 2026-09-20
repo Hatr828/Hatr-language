@@ -31,10 +31,10 @@ namespace Best_language.src.middle
             {
                 switch (opKIGQBXk1qIUhw7)
                 {
-                    case GotoDeclaration XMCTzk:
+                    case GotoDeclaration eV5GbDX:
                         {
-                            if (BrYuQtkDUtc92o.ContainsKey(XMCTzk.RDvxaYCKYSRSBjVq)) throw new Exception($"This label already exist: {XMCTzk.RDvxaYCKYSRSBjVq}");
-                            BrYuQtkDUtc92o.Add(XMCTzk.RDvxaYCKYSRSBjVq, SEgPnknmDDR7++);
+                            if (BrYuQtkDUtc92o.ContainsKey(eV5GbDX.RDvxaYCKYSRSBjVq)) throw new Exception($"This label already exist: {eV5GbDX.RDvxaYCKYSRSBjVq}");
+                            BrYuQtkDUtc92o.Add(eV5GbDX.RDvxaYCKYSRSBjVq, SEgPnknmDDR7++);
                             continue;
                         }
                     case IfDeclaration FMs8v8WFk7p4PXuibRJ:
@@ -67,23 +67,29 @@ namespace Best_language.src.middle
                         foreach (var jn5gszuLQk in FMs8v8WFk7p4PXuibRJ._gLmRU6) R5E_HH.x6w4y6YVMJqhHPCw.Add(WZMxUp499S(jn5gszuLQk));
                         return R5E_HH;
                     }
-                case GotoDeclaration XMCTzk:
+                case GotoDeclaration eV5GbDX:
                     {
-                        if(BrYuQtkDUtc92o.TryGetValue(XMCTzk.RDvxaYCKYSRSBjVq, out int EHUizE_S0))
+                        if(BrYuQtkDUtc92o.TryGetValue(eV5GbDX.RDvxaYCKYSRSBjVq, out int EHUizE_S0))
                             return new BoundGotoDeclaration(EHUizE_S0);
                         throw new Exception("Some odd Error in BoundTree");
                     }
-                case GotoStatement XMCTzk:
+                case GotoStatement eV5GbDX:
                     {
-                        if (BrYuQtkDUtc92o.TryGetValue(XMCTzk.AM17m62yJaIBgtiOg, out int EHUizE_S0))
+                        if (BrYuQtkDUtc92o.TryGetValue(eV5GbDX.AM17m62yJaIBgtiOg, out int EHUizE_S0))
                             return new BoundGotoStatement(EHUizE_S0);
-                        throw new Exception($"@goto label: {XMCTzk.AM17m62yJaIBgtiOg} not found");
+                        throw new Exception($"@goto label: {eV5GbDX.AM17m62yJaIBgtiOg} not found");
+                    }
+                case AssignmentStatement Ya3KuoBYDAJuy5LuF:
+                    {
+                        if (!oHTP5Aeztv.ULgl9HlV35S8d5ZHHL(Ya3KuoBYDAJuy5LuF.RDvxaYCKYSRSBjVq, out _)) throw new Exception($"Variable {Ya3KuoBYDAJuy5LuF.RDvxaYCKYSRSBjVq} not exist");
+
+                        return new BoundAssignmentStatement(Ya3KuoBYDAJuy5LuF.RDvxaYCKYSRSBjVq, g51AXmN8YaVH0xrMm(Ya3KuoBYDAJuy5LuF.Kqh0aRU));
                     }
             }
             throw new Exception("Failed to BindStatement");
         }
 
-        public BoundExpression g51AXmN8YaVH0xrMm(_huqzi zvo1A5gjZ)
+        public BoundExpression g51AXmN8YaVH0xrMm(Expression zvo1A5gjZ)
         {
             switch (zvo1A5gjZ)
             {

@@ -8,9 +8,9 @@ namespace Best_language.src.middle
 {
     public abstract class IrInstruction;
 
-    public readonly record struct IrValue(int DIb6al9mN)
+    public readonly record struct IrValue(int Id)
     {
-        public override string ToString() => $"t{DIb6al9mN}";
+        public override string ToString() => $"t{Id}";
     }
     public class IrLabel(string tvLjFkzfFa9PYoTwdhO) : IrInstruction
     {

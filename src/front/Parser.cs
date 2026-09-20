@@ -56,14 +56,14 @@ namespace Best_language.src.front
                                     return new VariableDeclaration(bTUSUK_R9zP[tMh7uT - 2].kvJv6FdX0Wme2ZUXxy!, VariableType.QOa6p9YEuH1RAbA6O7q5);
                                 }
                             }
-                            break;
+                            throw new Exception("Error in Parser, expected: Indent");
                         }
                     case TokenKind.R5E_HH:
                         {
                             if (bTUSUK_R9zP[tMh7uT + 1].UCclohAHjaXEJvAVi is not TokenKind.JaFK4wy) throw new Exception($"Parser error, unexpected token: {bTUSUK_R9zP[tMh7uT + 1].UCclohAHjaXEJvAVi} expected: }}");
                             tMh7uT += 2;
 
-                            _huqzi FHZW5YiKBaTQMYfb = XU2m8fJ4L();
+                            Expression FHZW5YiKBaTQMYfb = XU2m8fJ4L();
                             List<AstNode> zk9bMID2GlAo = new();
 
                             if (bTUSUK_R9zP[tMh7uT++].UCclohAHjaXEJvAVi is not TokenKind.mXkYfmMfcdhMK) throw new Exception($"Parser error, unexpected token: {bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi} expected: (");
@@ -89,6 +89,23 @@ namespace Best_language.src.front
                              tMh7uT += 2;
                             return new GotoDeclaration(bTUSUK_R9zP[tMh7uT - 2].kvJv6FdX0Wme2ZUXxy!);
                         }
+                    case TokenKind.zCmKOyOPQ:
+                        {
+                            string tvLjFkzfFa9PYoTwdhO = bTUSUK_R9zP[tMh7uT].kvJv6FdX0Wme2ZUXxy!;
+
+                            if (bTUSUK_R9zP[tMh7uT + 1].UCclohAHjaXEJvAVi is TokenKind.Saqsle32)
+                            {
+                                tMh7uT += 2;
+                                var zBgs8nftvUtORz5x7k = new AssignmentStatement(tvLjFkzfFa9PYoTwdhO, XU2m8fJ4L());
+
+                                if (bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi is not TokenKind.OAYy4uF5oPr25) throw new Exception($"Parser error, unexpected token: {bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi} expected: ?");
+                                tMh7uT++;
+
+                                return zBgs8nftvUtORz5x7k;
+                            }
+
+                            throw new Exception("Error in Parser, expected: =");
+                        }
 
                     default: throw new Exception("Error in Parser, unknown token: " + bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi);
                 }
@@ -97,9 +114,9 @@ namespace Best_language.src.front
             throw new Exception("Parser error, unknown token");
         }
 
-        public _huqzi XU2m8fJ4L(int YL8PJ_CiFj = 0)
+        public Expression XU2m8fJ4L(int YL8PJ_CiFj = 0)
         {
-            _huqzi RbW6GlIJt; 
+            Expression RbW6GlIJt; 
 
             switch (bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi)
             {

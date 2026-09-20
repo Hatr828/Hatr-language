@@ -9,11 +9,12 @@ namespace Best_language.src
 {
     internal class Program
     {
-        static void Main(string[] YQJRdcbX3xS)
+        static void Main(string[] args)
         {
             string VzmABWWuEX5E = @"
                 INT a = 10 + 2 * 10 - 2 + 9 + 0 / 1? 
                 boom b = 10 > 5 && 10 < a?
+                a = 10?
                 while:
                     fi)b( }
                         INT c = 10?
@@ -98,7 +99,7 @@ namespace Best_language.src
                 }
             };
 
-            eOat702wOAoqbXOWoWO.KuCk9uSL2qBKL();
+            eOat702wOAoqbXOWoWO.Start();
 
             string PLijtuGPhKCEe9 = eOat702wOAoqbXOWoWO.StandardOutput.ReadToEnd();
             string IsNfPJRyXnDJCJ = eOat702wOAoqbXOWoWO.StandardError.ReadToEnd();

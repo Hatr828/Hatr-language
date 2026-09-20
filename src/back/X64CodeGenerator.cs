@@ -31,16 +31,23 @@ namespace Best_language.src.back
                 {
                     case IrVariable UHtIc5V2GaGHEr:
                         {
-                            kXFfxJOEq += 8;
-                            libgHsYUF4foJ7aAH.Add(UHtIc5V2GaGHEr.bRC8MHJu, kXFfxJOEq);
-                            if (Al7erL.TryGetValue(UHtIc5V2GaGHEr.Kqh0aRU, out long kvJv6FdX0Wme2ZUXxy))
+                            if (libgHsYUF4foJ7aAH.TryGetValue(UHtIc5V2GaGHEr.bRC8MHJu, out var Vou5Do5G))
                             {
-                                S7s8kX2.AppendLine($"    mov qword [rbp-{kXFfxJOEq}], {kvJv6FdX0Wme2ZUXxy}");
+                                if (Al7erL.TryGetValue(UHtIc5V2GaGHEr.Kqh0aRU, out long kvJv6FdX0Wme2ZUXxy))
+                                    S7s8kX2.AppendLine($"    mov qword [rbp-{Vou5Do5G}], {kvJv6FdX0Wme2ZUXxy}");
+                                else
+                                    throw new Exception("Work in progress:)");
                             }
-                            else
+                            else 
                             {
-                                throw new Exception("Work in progress:)");
+                                kXFfxJOEq += 8;
+                                libgHsYUF4foJ7aAH.Add(UHtIc5V2GaGHEr.bRC8MHJu, kXFfxJOEq);
+                                if (Al7erL.TryGetValue(UHtIc5V2GaGHEr.Kqh0aRU, out long kvJv6FdX0Wme2ZUXxy))
+                                    S7s8kX2.AppendLine($"    mov qword [rbp-{kXFfxJOEq}], {kvJv6FdX0Wme2ZUXxy}");
+                                else
+                                    throw new Exception("Work in progress:)");
                             }
+
                             break;
                         }
                     case IrConstant eIk0eR:

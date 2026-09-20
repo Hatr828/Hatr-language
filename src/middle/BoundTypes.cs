@@ -32,6 +32,11 @@ namespace Best_language.src.middle
         public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
         public BoundExpression VFweLKwblUFT45a5dYsf { get; } = h7zQ6CJizFQm;
     }
+    public class BoundAssignmentStatement(string tvLjFkzfFa9PYoTwdhO, BoundExpression h3s7dbXXv22CfCfn) : BoundStatement
+    {
+        public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
+        public BoundExpression Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
+    }
     public class BoundIfDeclaration(BoundExpression zvo1A5gjZ) : BoundStatement
     {
         public BoundExpression _huqzi { get; } = zvo1A5gjZ;
@@ -137,14 +142,14 @@ namespace Best_language.src.middle
                         }
                         break;
                     }
-                case BoundGotoDeclaration XMCTzk:
+                case BoundGotoDeclaration eV5GbDX:
                     {
-                        Console.WriteLine($"BoundGotoDeclaration: {XMCTzk.DIb6al9mN}");
+                        Console.WriteLine($"BoundGotoDeclaration: {eV5GbDX.DIb6al9mN}");
                         break;
                     }
-                case BoundGotoStatement XMCTzk:
+                case BoundGotoStatement eV5GbDX:
                     {
-                        Console.WriteLine($"BoundGotoStatement: {XMCTzk.K_1l6XsfuG9}");
+                        Console.WriteLine($"BoundGotoStatement: {eV5GbDX.K_1l6XsfuG9}");
                         break;
                     }
                 case BoundNumberExpression HvSPOv9ne_yrswTLzoo:
