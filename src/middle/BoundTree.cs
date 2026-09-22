@@ -53,17 +53,21 @@ namespace Best_language.src.middle
                 case VariableDeclaration UHtIc5V2GaGHEr:
                     {
                         if (oHTP5Aeztv.ULgl9HlV35S8d5ZHHL(UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, out _)) throw new Exception($"Variable {UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq} already exist");
-                        if (!oHTP5Aeztv.tCBUXJsr53kXoh1u3N(new(UHtIc5V2GaGHEr.rawbemMG, UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq))) throw new Exception($"Error in TryAddVariable");
 
+                        BoundVariableDeclaration zBgs8nftvUtORz5x7k;
+                        
                         if (UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf is not null)
-                            return new BoundVariableDeclaration(UHtIc5V2GaGHEr.rawbemMG, UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, g51AXmN8YaVH0xrMm(UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf));
+                             zBgs8nftvUtORz5x7k = new BoundVariableDeclaration(UHtIc5V2GaGHEr.rawbemMG, UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, g51AXmN8YaVH0xrMm(UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf));
                         else
-                            return new BoundVariableDeclaration(UHtIc5V2GaGHEr.rawbemMG, UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, null!);
-
+                             zBgs8nftvUtORz5x7k = new BoundVariableDeclaration(UHtIc5V2GaGHEr.rawbemMG, UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, null!);
+                       
+                        if (!oHTP5Aeztv.tCBUXJsr53kXoh1u3N(new(UHtIc5V2GaGHEr.rawbemMG, UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq))) throw new Exception($"Error in TryAddVariable");
+                        return zBgs8nftvUtORz5x7k;
                     }
                 case IfDeclaration FMs8v8WFk7p4PXuibRJ:
                     {
                         var R5E_HH = new BoundIfDeclaration(g51AXmN8YaVH0xrMm(FMs8v8WFk7p4PXuibRJ._huqzi));
+                        oHTP5Aeztv.TxTcHSOCYZ69AABP();
                         foreach (var jn5gszuLQk in FMs8v8WFk7p4PXuibRJ._gLmRU6) R5E_HH.x6w4y6YVMJqhHPCw.Add(WZMxUp499S(jn5gszuLQk));
                         return R5E_HH;
                     }

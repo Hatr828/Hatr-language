@@ -18,36 +18,39 @@ namespace Best_language.src.back
 
         private int kXFfxJOEq;
 
+        private List<IrInstruction>? mt9Hp28wUyvEI;
+
+        private int bfgIqe36SD;
+
         public string L0AW5J5gm7d1k2MC()
         {
             eII2uUru();
-            qzV6kOD5yz(128);
-            int bfgIqe36SD = 0;
-            var mt9Hp28wUyvEI = yYZGCwEMnNxRGApcFC.NumXpBuXze5D;
+            qzV6kOD5yz();
+            bfgIqe36SD = 0;
+            mt9Hp28wUyvEI = yYZGCwEMnNxRGApcFC.NumXpBuXze5D;
 
             while (bfgIqe36SD < mt9Hp28wUyvEI.Count)
             {
                 switch(mt9Hp28wUyvEI[bfgIqe36SD++])
                 {
+                    case IrBinary XxC0ynDET:
+                        {
+                            fK2NV8z6FbtMILjRf(XxC0ynDET);
+
+                            int S7FJ7HAuO2 = J32YhIfpRYQ(XxC0ynDET.bRC8MHJu);
+                            Al7erL.Remove(XxC0ynDET.bRC8MHJu);
+
+                            S7s8kX2.AppendLine($"    mov qword [rbp-{S7FJ7HAuO2}], rax");
+                            break;
+                        }
                     case IrVariable UHtIc5V2GaGHEr:
                         {
-                            if (libgHsYUF4foJ7aAH.TryGetValue(UHtIc5V2GaGHEr.bRC8MHJu, out var Vou5Do5G))
-                            {
-                                if (Al7erL.TryGetValue(UHtIc5V2GaGHEr.Kqh0aRU, out long kvJv6FdX0Wme2ZUXxy))
-                                    S7s8kX2.AppendLine($"    mov qword [rbp-{Vou5Do5G}], {kvJv6FdX0Wme2ZUXxy}");
-                                else
-                                    throw new Exception("Work in progress:)");
-                            }
-                            else 
-                            {
-                                kXFfxJOEq += 8;
-                                libgHsYUF4foJ7aAH.Add(UHtIc5V2GaGHEr.bRC8MHJu, kXFfxJOEq);
-                                if (Al7erL.TryGetValue(UHtIc5V2GaGHEr.Kqh0aRU, out long kvJv6FdX0Wme2ZUXxy))
-                                    S7s8kX2.AppendLine($"    mov qword [rbp-{kXFfxJOEq}], {kvJv6FdX0Wme2ZUXxy}");
-                                else
-                                    throw new Exception("Work in progress:)");
-                            }
+                            wBv0lHH3Pgrpf(UHtIc5V2GaGHEr.Kqh0aRU, "rax");
 
+                            int S7FJ7HAuO2 = J32YhIfpRYQ(UHtIc5V2GaGHEr.bRC8MHJu);
+                            Al7erL.Remove(UHtIc5V2GaGHEr.bRC8MHJu);
+
+                            S7s8kX2.AppendLine($"    mov qword [rbp-{S7FJ7HAuO2}], rax");
                             break;
                         }
                     case IrConstant eIk0eR:
@@ -67,18 +70,111 @@ namespace Best_language.src.back
                         }
                     case IrJumpIfTrue KjirbwqrRKk6IgTqZH:
                         {
-                            if (libgHsYUF4foJ7aAH.TryGetValue(KjirbwqrRKk6IgTqZH.u6xbke, out int kvJv6FdX0Wme2ZUXxy))
-                            {
-                                S7s8kX2.AppendLine($"    cmp qword [rbp-{kvJv6FdX0Wme2ZUXxy}], 1");
-                                S7s8kX2.AppendLine($"    je {KjirbwqrRKk6IgTqZH.Bbopqy}");
-                            }
+                            wBv0lHH3Pgrpf(KjirbwqrRKk6IgTqZH.u6xbke, "rax");
+                            S7s8kX2.AppendLine("    test rax, rax");
+                            S7s8kX2.AppendLine($"    jnz {KjirbwqrRKk6IgTqZH.Bbopqy}");
                             break;
                         }
                 }
             }
 
             MwC364d3mVNMzvtu_();
+
+            int EmEJggkX0ME65l3W8x = (kXFfxJOEq + 15) & ~15;
+            S7s8kX2.Replace("STACK_SIZE", EmEJggkX0ME65l3W8x.ToString());
+
             return S7s8kX2.ToString();
+        }
+        private void fK2NV8z6FbtMILjRf(IrBinary XxC0ynDET)
+        {
+            wBv0lHH3Pgrpf(XxC0ynDET.bRC8MHJu, "rax");
+            wBv0lHH3Pgrpf(XxC0ynDET.Kqh0aRU, "rcx");
+
+            switch (XxC0ynDET.mfIdTBeeCV)
+            {
+                case BinaryOp.px4P2OwC_TCS:
+                    S7s8kX2.AppendLine("    add rax, rcx");
+                    break;
+
+                case BinaryOp.VpNNk81hH01O3w:
+                    S7s8kX2.AppendLine("    sub rax, rcx");
+                    break;
+
+                case BinaryOp.XvjP9ZInqh1c6ky6nK_:
+                    S7s8kX2.AppendLine("    imul rax, rcx");
+                    break;
+
+                case BinaryOp.HVwX8t15uMw86Zjrr:
+                    S7s8kX2.AppendLine("    cqo");
+                    S7s8kX2.AppendLine("    idiv rcx");
+                    break;
+
+                case BinaryOp.i3e0fh1jq:
+                    xY0C58HW("setg");
+                    break;
+
+                case BinaryOp.RpVKAjlPn7QkY5:
+                    xY0C58HW("setge");
+                    break;
+
+                case BinaryOp.wY8aKmHjGo:
+                    xY0C58HW("setl");
+                    break;
+
+                case BinaryOp.yCtPKI:
+                    xY0C58HW("setle");
+                    break;
+
+                case BinaryOp.Tieags2HzPi132WNHai:
+                    xY0C58HW("sete");
+                    break;
+
+                case BinaryOp.dFZBYFCUJWiZYreG5:
+                    S7s8kX2.AppendLine("    test rax, rax");
+                    S7s8kX2.AppendLine("    setne al");
+                    S7s8kX2.AppendLine("    test rcx, rcx");
+                    S7s8kX2.AppendLine("    setne cl");
+                    S7s8kX2.AppendLine("    and al, cl");
+                    S7s8kX2.AppendLine("    movzx rax, al");
+                    break;
+
+                case BinaryOp.hJQNxCsE8:
+                    S7s8kX2.AppendLine("    or rax, rcx");
+                    S7s8kX2.AppendLine("    setne al");
+                    S7s8kX2.AppendLine("    movzx rax, al");
+                    break;
+
+                default:
+                    throw new NotImplementedException(
+                        $"Unsupported binary operation: {XxC0ynDET.mfIdTBeeCV}");
+            }
+        }
+
+        private void xY0C58HW(string gkfVuQR)
+        {
+            S7s8kX2.AppendLine("    cmp rax, rcx");
+            S7s8kX2.AppendLine($"    {gkfVuQR} al");
+            S7s8kX2.AppendLine("    movzx rax, al");
+        }
+
+        private void wBv0lHH3Pgrpf(IrValue FlHaV6FlTtLPOieCD, string PpMPwZP)
+        {
+            if (libgHsYUF4foJ7aAH.TryGetValue(FlHaV6FlTtLPOieCD, out int S7FJ7HAuO2))
+                S7s8kX2.AppendLine($"    mov {PpMPwZP}, qword [rbp-{S7FJ7HAuO2}]");
+            else if (Al7erL.TryGetValue(FlHaV6FlTtLPOieCD, out long eIk0eR))
+                S7s8kX2.AppendLine($"    mov {PpMPwZP}, {eIk0eR}");
+            else
+                throw new InvalidOperationException($"Unknown IR value: {FlHaV6FlTtLPOieCD}");
+        }
+
+        private int J32YhIfpRYQ(IrValue FlHaV6FlTtLPOieCD)
+        {
+            if (libgHsYUF4foJ7aAH.TryGetValue(FlHaV6FlTtLPOieCD, out int S7FJ7HAuO2))
+                return S7FJ7HAuO2;
+
+            kXFfxJOEq += 8;
+            libgHsYUF4foJ7aAH.Add(FlHaV6FlTtLPOieCD, kXFfxJOEq);
+            return kXFfxJOEq;
         }
 
         public void eII2uUru()
@@ -88,12 +184,12 @@ namespace Best_language.src.back
             S7s8kX2.AppendLine("section .text");
         }
 
-        public void qzV6kOD5yz(int EmEJggkX0ME65l3W8x)
+        public void qzV6kOD5yz()
         {
             S7s8kX2.AppendLine("start: ");
             S7s8kX2.AppendLine("    push rbp");
             S7s8kX2.AppendLine("    mov rbp, rsp");
-            S7s8kX2.AppendLine($"    sub rsp, {EmEJggkX0ME65l3W8x}");
+            S7s8kX2.AppendLine($"    sub rsp, STACK_SIZE");
         }
 
         public void MwC364d3mVNMzvtu_()

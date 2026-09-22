@@ -37,13 +37,12 @@ namespace Best_language.src.optimizations
                         if (IEScR2u7AWUI.TryGetValue(UHtIc5V2GaGHEr.Kqh0aRU, out long FlHaV6FlTtLPOieCD))
                         {
                             IrVariable LaMxRuCzb = new(UHtIc5V2GaGHEr.bRC8MHJu, UHtIc5V2GaGHEr.Kqh0aRU);
-                            IEScR2u7AWUI.TryAdd(UHtIc5V2GaGHEr.bRC8MHJu, FlHaV6FlTtLPOieCD);
                             A25qgAtLDu70v5Bnz5.NumXpBuXze5D.Add(new IrConstant(UHtIc5V2GaGHEr.Kqh0aRU, FlHaV6FlTtLPOieCD));
                             A25qgAtLDu70v5Bnz5.NumXpBuXze5D.Add(LaMxRuCzb);
                         }
                         else
                         {
-                            throw new Exception("Unknown Constant or Right");
+                            A25qgAtLDu70v5Bnz5.NumXpBuXze5D.Add(UHtIc5V2GaGHEr);
                         }
                     }
                     else

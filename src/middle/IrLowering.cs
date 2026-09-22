@@ -17,7 +17,6 @@ namespace Best_language.src.middle
         private Dictionary<string, IrValue> nhqaeri73 = new();
 
         private IrValue HE1TYQqtHG7Mcr96() => new(rr43N_G++);
-        private IrValue g1swMJeYxj() => new(rr43N_G-1);
         private string EoOIZ19mfP2QAQ(string tvLjFkzfFa9PYoTwdhO) => $"{tvLjFkzfFa9PYoTwdhO}_{E3cXt3Agzss4edDA++}";
 
         public IrProgram OT4oi0eVmqprYSE(BoundProgram sMPlZ4JaeZR758e69) 
@@ -42,50 +41,40 @@ namespace Best_language.src.middle
             {
                 case BoundVariableDeclaration UHtIc5V2GaGHEr:
                     {
-                        if (UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf is null) break;
+                        if (UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf is null) return;
 
-                        IrValue FlHaV6FlTtLPOieCD = oZxpWPc(UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf);
-                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrVariable(HE1TYQqtHG7Mcr96(), FlHaV6FlTtLPOieCD));
-                        nhqaeri73.Add(UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, g1swMJeYxj());
+                        var FlHaV6FlTtLPOieCD = oZxpWPc(UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf);
+                        var A25qgAtLDu70v5Bnz5 = PAl_uyom48KJC(FlHaV6FlTtLPOieCD);
+                        nhqaeri73.Add(UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, A25qgAtLDu70v5Bnz5);
                         return;
                     }
                 case BoundIfDeclaration R5E_HH:
                     {
-                        IrValue FlHaV6FlTtLPOieCD = oZxpWPc(R5E_HH._huqzi);
-                        IrValue FHZW5YiKBaTQMYfb = HE1TYQqtHG7Mcr96();
-                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrVariable(FHZW5YiKBaTQMYfb, FlHaV6FlTtLPOieCD));
+                        IrValue _DjEicbSKt = oZxpWPc(R5E_HH._huqzi);
                         
                         string Tx31ppY4 = EoOIZ19mfP2QAQ("if");
                         string iZRm5CogkhHGChm = EoOIZ19mfP2QAQ("end");
 
-                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrJumpIfTrue(FHZW5YiKBaTQMYfb, Tx31ppY4));
-                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrJump(iZRm5CogkhHGChm));
-                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrLabel(Tx31ppY4));
+                        xLbCDLgvWyiM_RS(new IrJumpIfTrue(_DjEicbSKt, Tx31ppY4));
+                        xLbCDLgvWyiM_RS(new IrJump(iZRm5CogkhHGChm));
+                        xLbCDLgvWyiM_RS(new IrLabel(Tx31ppY4));
 
-                        foreach (BoundStatement L9XfWZyzYF in R5E_HH.x6w4y6YVMJqhHPCw)
-                        {
-                            Gr5ONL3BdMzHrR8nfZE(L9XfWZyzYF);
-                        }
+                        foreach (var jn5gszuLQk in R5E_HH.x6w4y6YVMJqhHPCw)
+                            Gr5ONL3BdMzHrR8nfZE(jn5gszuLQk);
 
-                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrLabel(iZRm5CogkhHGChm));
+                        xLbCDLgvWyiM_RS(new IrLabel(iZRm5CogkhHGChm));
                         return;
                     }
                 case BoundGotoDeclaration eV5GbDX:
-                    {
-                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrLabel("user_" + eV5GbDX.DIb6al9mN));
-                        return;
-                    }
+                        xLbCDLgvWyiM_RS(new IrLabel("user_" + eV5GbDX.DIb6al9mN)); return;
                 case BoundGotoStatement eV5GbDX:
-                    {
-                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrJump("user_" + eV5GbDX.K_1l6XsfuG9));
-                        return;
-                    }
+                        xLbCDLgvWyiM_RS(new IrJump("user_" + eV5GbDX.K_1l6XsfuG9)); return;
                 case BoundAssignmentStatement Ya3KuoBYDAJuy5LuF:
                     {
-                        if (nhqaeri73.TryGetValue(Ya3KuoBYDAJuy5LuF.RDvxaYCKYSRSBjVq, out var kvJv6FdX0Wme2ZUXxy))
-                            ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrVariable(kvJv6FdX0Wme2ZUXxy, oZxpWPc(Ya3KuoBYDAJuy5LuF.Kqh0aRU)));
-                        else
-                            throw new Exception("some weird error");
+                        var A25qgAtLDu70v5Bnz5 = _ZnHZc_yO(Ya3KuoBYDAJuy5LuF.RDvxaYCKYSRSBjVq);
+                        var u7ogbwL69cdM = oZxpWPc(Ya3KuoBYDAJuy5LuF.Kqh0aRU);
+
+                        xLbCDLgvWyiM_RS(new IrVariable(A25qgAtLDu70v5Bnz5, u7ogbwL69cdM));
                         return;
                     }
             }
@@ -97,35 +86,47 @@ namespace Best_language.src.middle
             switch(zvo1A5gjZ)
             {
                 case BoundNumberExpression I7ZI3fRSU:
-                    {
-                        var A25qgAtLDu70v5Bnz5 = HE1TYQqtHG7Mcr96();
-                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrConstant(A25qgAtLDu70v5Bnz5, I7ZI3fRSU.Sb5MrQFjg8JlEcaS));
-                        return A25qgAtLDu70v5Bnz5;
-                    }
-                case BoundVariableExpression UHtIc5V2GaGHEr:
-                    {
-                        if(nhqaeri73.TryGetValue(UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, out IrValue FlHaV6FlTtLPOieCD))
-                        {
-                            return FlHaV6FlTtLPOieCD;
-                        }
-                        throw new Exception("Ir: Unknown variable.");
-                    }
+                    return S4GWwj(I7ZI3fRSU.Sb5MrQFjg8JlEcaS);
                 case BoundBoolExpression FHZW5YiKBaTQMYfb:
-                    {
-                        var A25qgAtLDu70v5Bnz5 = HE1TYQqtHG7Mcr96();
-                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrConstant(A25qgAtLDu70v5Bnz5, FHZW5YiKBaTQMYfb.Sb5MrQFjg8JlEcaS ? 1 : 0));
-                        return A25qgAtLDu70v5Bnz5;
-                    }
+                    return S4GWwj(FHZW5YiKBaTQMYfb.Sb5MrQFjg8JlEcaS ? 1 : 0);
+                case BoundVariableExpression UHtIc5V2GaGHEr:
+                    return _ZnHZc_yO(UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq);
                 case BoundBinaryExpression XxC0ynDET:
                     {
                         var RbW6GlIJt = oZxpWPc(XxC0ynDET.bRC8MHJu);
+                        var A25qgAtLDu70v5Bnz5 = PAl_uyom48KJC(RbW6GlIJt);
                         var h3s7dbXXv22CfCfn = oZxpWPc(XxC0ynDET.Kqh0aRU);
-                        ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(new IrBinary(XxC0ynDET.mfIdTBeeCV, RbW6GlIJt, h3s7dbXXv22CfCfn));
 
-                        return RbW6GlIJt;
+                        xLbCDLgvWyiM_RS(new IrBinary(XxC0ynDET.mfIdTBeeCV, A25qgAtLDu70v5Bnz5, h3s7dbXXv22CfCfn));
+
+                        return A25qgAtLDu70v5Bnz5;
                     }
             }
             throw new Exception("Cannot lower: " + zvo1A5gjZ.GetType());
+        }
+        private IrValue S4GWwj(long FlHaV6FlTtLPOieCD)
+        {
+            var f6P5tymwJzH = HE1TYQqtHG7Mcr96();
+            xLbCDLgvWyiM_RS(new IrConstant(f6P5tymwJzH, FlHaV6FlTtLPOieCD));
+            return f6P5tymwJzH;
+        }
+        private IrValue PAl_uyom48KJC(IrValue u7ogbwL69cdM)
+        {
+            var f6P5tymwJzH = HE1TYQqtHG7Mcr96();
+            xLbCDLgvWyiM_RS(new IrVariable(f6P5tymwJzH, u7ogbwL69cdM));
+            return f6P5tymwJzH;
+        }
+
+        private void xLbCDLgvWyiM_RS(IrInstruction gkfVuQR)
+        {
+            ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(gkfVuQR);
+        }
+        private IrValue _ZnHZc_yO(string tvLjFkzfFa9PYoTwdhO)
+        {
+            if (nhqaeri73.TryGetValue(tvLjFkzfFa9PYoTwdhO, out var FlHaV6FlTtLPOieCD))
+                return FlHaV6FlTtLPOieCD;
+
+            throw new InvalidOperationException($"Unknown variable: '{tvLjFkzfFa9PYoTwdhO}'.");
         }
     }
 }

@@ -16,10 +16,12 @@ namespace Best_language.src
                 boom b = 10 > 5 && 10 < a?
                 a = 10?
                 while:
-                    fi)b( }
-                        INT c = 10?
+                    fi)a > 50( }
+                        goat end?
                     {
+                    a = a+1?
                 goat while?
+                end:
                 ";
             Lexer MydwFJ3hRBKs = new Lexer(VzmABWWuEX5E);
             var JQ2q_a = MydwFJ3hRBKs.H9EXHFD80i_YR_GCh2Q();
@@ -42,7 +44,7 @@ namespace Best_language.src
             IrPrinter.jwtEpdBSXI(Rst3_7gf);
             Console.WriteLine("\n ---- \n");
 
-            Rst3_7gf = Optimizations.ConstantFolding.KuCk9uSL2qBKL(Rst3_7gf);
+           // irProgram = Optimizations.ConstantFolding.Start(irProgram);
             IrPrinter.jwtEpdBSXI(Rst3_7gf);
             Console.WriteLine("\n ---- \n");
 
