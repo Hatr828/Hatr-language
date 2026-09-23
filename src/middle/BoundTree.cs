@@ -119,6 +119,12 @@ namespace Best_language.src.middle
 
                         return new BoundBinaryExpression(RbW6GlIJt.rawbemMG, XxC0ynDET.mfIdTBeeCV, RbW6GlIJt, h3s7dbXXv22CfCfn);
                     }
+                case UnaryExpression xi54PsDn5M889REv3:
+                    {
+                        var h3s7dbXXv22CfCfn = g51AXmN8YaVH0xrMm(xi54PsDn5M889REv3.Kqh0aRU);
+
+                        return new BoundUnaryExpression(h3s7dbXXv22CfCfn.rawbemMG, xi54PsDn5M889REv3.mfIdTBeeCV, h3s7dbXXv22CfCfn);
+                    }
             }
             throw new Exception("Failed to BindExpression");
         }

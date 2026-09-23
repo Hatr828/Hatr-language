@@ -116,10 +116,36 @@ namespace Best_language.src.front
 
         public Expression XU2m8fJ4L(int YL8PJ_CiFj = 0)
         {
-            Expression RbW6GlIJt; 
+            Expression RbW6GlIJt;
 
             switch (bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi)
             {
+                case TokenKind.px4P2OwC_TCS:
+                case TokenKind.VpNNk81hH01O3w:
+                    {
+                        BinaryOp IU2nAxA = bTUSUK_R9zP[tMh7uT++].UCclohAHjaXEJvAVi switch
+                        {
+                            TokenKind.px4P2OwC_TCS => BinaryOp.px4P2OwC_TCS,
+                            TokenKind.VpNNk81hH01O3w => BinaryOp.VpNNk81hH01O3w,
+                            _ => throw new Exception("Unknown unary operator.")
+                        };
+
+                        RbW6GlIJt = new UnaryExpression(IU2nAxA, XU2m8fJ4L(100));
+                        break;
+                    }
+                case TokenKind.JaFK4wy:
+                    {
+                        tMh7uT++; 
+                        RbW6GlIJt = XU2m8fJ4L();
+
+                        if (tMh7uT >= bTUSUK_R9zP.Count || bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi != TokenKind.mXkYfmMfcdhMK)
+                        {
+                            throw new Exception("Parser error expected )");
+                        }
+
+                        tMh7uT++;
+                        break;
+                    }
                 case TokenKind.fkkQAsvha:
                     {    
                         RbW6GlIJt = new NumberExpression(int.Parse(bTUSUK_R9zP[tMh7uT++].kvJv6FdX0Wme2ZUXxy!), VariableType.QOa6p9YEuH1RAbA6O7q5);
@@ -158,12 +184,17 @@ namespace Best_language.src.front
             return RbW6GlIJt;
         }
 
-        public (BinaryOp, int) ftjYiwl5Vh() => bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi switch
+        private void iFxJgdC(TokenKind UCclohAHjaXEJvAVi)
+        {
+            if (bTUSUK_R9zP[++tMh7uT].UCclohAHjaXEJvAVi != UCclohAHjaXEJvAVi) throw new Exception($"Requires {UCclohAHjaXEJvAVi}");
+        }
+        private (BinaryOp, int) ftjYiwl5Vh() => bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi switch
         {
             TokenKind.px4P2OwC_TCS => (BinaryOp.px4P2OwC_TCS, 10),
             TokenKind.VpNNk81hH01O3w => (BinaryOp.VpNNk81hH01O3w, 10),
             TokenKind.XvjP9ZInqh1c6ky6nK_ => (BinaryOp.XvjP9ZInqh1c6ky6nK_, 50),
             TokenKind.HVwX8t15uMw86Zjrr => (BinaryOp.HVwX8t15uMw86Zjrr, 50),
+            TokenKind.Dcm_6_V8BembLSz3Xvd => (BinaryOp.Dcm_6_V8BembLSz3Xvd, 50),
 
             TokenKind.i3e0fh1jq => (BinaryOp.i3e0fh1jq, 5),
             TokenKind.X0mFuD => (BinaryOp.RpVKAjlPn7QkY5, 5),

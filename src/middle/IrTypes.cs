@@ -37,6 +37,11 @@ namespace Best_language.src.middle
         public IrValue bRC8MHJu { get; } = RbW6GlIJt;
         public IrValue Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
     }
+    public class IrUnary(BinaryOp IU2nAxA, IrValue h3s7dbXXv22CfCfn) : IrInstruction
+    {
+        public BinaryOp mfIdTBeeCV { get; } = IU2nAxA;
+        public IrValue Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
+    }
     public class IrVariable(IrValue RbW6GlIJt, IrValue h3s7dbXXv22CfCfn) : IrInstruction
     {
         public IrValue bRC8MHJu { get; } = RbW6GlIJt;
@@ -105,6 +110,11 @@ namespace Best_language.src.middle
                         Console.WriteLine($"IrBinary: {XxC0ynDET.mfIdTBeeCV} ({XxC0ynDET.bRC8MHJu}, {XxC0ynDET.Kqh0aRU})");
                         break;
                     }
+                case IrUnary xi54PsDn5M889REv3:
+                    {
+                        Console.WriteLine($"IrUnary: {xi54PsDn5M889REv3.mfIdTBeeCV} ({xi54PsDn5M889REv3.Kqh0aRU})");
+                        break;
+                    }
                 case IrFunction OwUELUXM3n88t6V02:
                     {
                         Console.WriteLine($"IrFunc: {OwUELUXM3n88t6V02.RDvxaYCKYSRSBjVq}");
@@ -113,7 +123,6 @@ namespace Best_language.src.middle
 
                 default:
                     {
-
                         Console.WriteLine(opKIGQBXk1qIUhw7.GetType());
                         break;
                     }

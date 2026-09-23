@@ -101,6 +101,15 @@ namespace Best_language.src.middle
 
                         return A25qgAtLDu70v5Bnz5;
                     }
+                case BoundUnaryExpression xi54PsDn5M889REv3:
+                    {
+                        var h3s7dbXXv22CfCfn = oZxpWPc(xi54PsDn5M889REv3.Kqh0aRU);
+                        var A25qgAtLDu70v5Bnz5 = PAl_uyom48KJC(h3s7dbXXv22CfCfn);
+
+                        xLbCDLgvWyiM_RS(new IrUnary(xi54PsDn5M889REv3.mfIdTBeeCV, A25qgAtLDu70v5Bnz5));
+
+                        return A25qgAtLDu70v5Bnz5;
+                    }
             }
             throw new Exception("Cannot lower: " + zvo1A5gjZ.GetType());
         }

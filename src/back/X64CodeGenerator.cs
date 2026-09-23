@@ -43,6 +43,17 @@ namespace Best_language.src.back
                             S7s8kX2.AppendLine($"    mov qword [rbp-{S7FJ7HAuO2}], rax");
                             break;
                         }
+                    case IrUnary xi54PsDn5M889REv3:
+                        {
+                            if (xi54PsDn5M889REv3.mfIdTBeeCV is BinaryOp.px4P2OwC_TCS) break;
+                            PouZtZpLKPKu8(xi54PsDn5M889REv3);
+
+                            int S7FJ7HAuO2 = J32YhIfpRYQ(xi54PsDn5M889REv3.Kqh0aRU);
+                            Al7erL.Remove(xi54PsDn5M889REv3.Kqh0aRU);
+
+                            S7s8kX2.AppendLine($"    mov qword [rbp-{S7FJ7HAuO2}], rax");
+                            break;
+                        }
                     case IrVariable UHtIc5V2GaGHEr:
                         {
                             wBv0lHH3Pgrpf(UHtIc5V2GaGHEr.Kqh0aRU, "rax");
@@ -109,6 +120,12 @@ namespace Best_language.src.back
                     S7s8kX2.AppendLine("    idiv rcx");
                     break;
 
+                case BinaryOp.Dcm_6_V8BembLSz3Xvd:
+                    S7s8kX2.AppendLine("    cqo");
+                    S7s8kX2.AppendLine("    idiv rcx");
+                    S7s8kX2.AppendLine("    mov rax, rdx");
+                    break;
+
                 case BinaryOp.i3e0fh1jq:
                     xY0C58HW("setg");
                     break;
@@ -145,8 +162,20 @@ namespace Best_language.src.back
                     break;
 
                 default:
-                    throw new NotImplementedException(
-                        $"Unsupported binary operation: {XxC0ynDET.mfIdTBeeCV}");
+                    throw new NotImplementedException($"Unsupported binary operation: {XxC0ynDET.mfIdTBeeCV}");
+            }
+        }
+        private void PouZtZpLKPKu8(IrUnary XxC0ynDET)
+        {
+            wBv0lHH3Pgrpf(XxC0ynDET.Kqh0aRU, "rax");
+
+            switch (XxC0ynDET.mfIdTBeeCV)
+            {
+                case BinaryOp.VpNNk81hH01O3w:
+                    S7s8kX2.AppendLine("    neg rax");
+                    break;
+                default:
+                    throw new NotImplementedException($"Unsupported binary operation: {XxC0ynDET.mfIdTBeeCV}");
             }
         }
 

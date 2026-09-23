@@ -27,6 +27,7 @@ namespace Best_language.src.front
             ['+'] = TokenKind.px4P2OwC_TCS,
             ['-'] = TokenKind.VpNNk81hH01O3w,
             ['/'] = TokenKind.HVwX8t15uMw86Zjrr,
+            ['%'] = TokenKind.Dcm_6_V8BembLSz3Xvd,
 
             ['('] = TokenKind.mXkYfmMfcdhMK,
             [')'] = TokenKind.JaFK4wy,

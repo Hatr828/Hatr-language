@@ -12,16 +12,23 @@ namespace Best_language.src
         static void Main(string[] args)
         {
             string VzmABWWuEX5E = @"
-                INT a = 10 + 2 * 10 - 2 + 9 + 0 / 1? 
-                boom b = 10 > 5 && 10 < a?
-                a = 10?
-                while:
-                    fi)a > 50( }
-                        goat end?
-                    {
-                    a = a+1?
-                goat while?
-                end:
+                INT a1 = 17?
+                INT a2 = 5?
+
+                INT a3 = )a1 + a2(?
+                INT a4 = a1 - a2?
+                INT a5 = a1 * a2?
+                INT a6 = a1 / a2?
+                INT a7 = a1 % a2?
+
+                INT a8 = +a1?
+                INT a9 = -a1?
+
+                INT a10 = -a1 / a2?
+                INT a11 = -a1 % a2?
+
+                INT a12 = a1 + a2 * 3?
+                INT a13 = a1 - a2 - a2?
                 ";
             Lexer MydwFJ3hRBKs = new Lexer(VzmABWWuEX5E);
             var JQ2q_a = MydwFJ3hRBKs.H9EXHFD80i_YR_GCh2Q();

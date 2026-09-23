@@ -1,6 +1,7 @@
 using Best_language.src.middle;
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Text;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -33,12 +34,18 @@ namespace Best_language.src.front
         public BinaryOp mfIdTBeeCV { get; } = IU2nAxA;
         public Expression Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
     }
+    public class UnaryExpression(BinaryOp IU2nAxA, Expression h3s7dbXXv22CfCfn) : Expression
+    {
+        public BinaryOp mfIdTBeeCV { get; } = IU2nAxA;
+        public Expression Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
+    }
     public enum BinaryOp
     {
         px4P2OwC_TCS,
         VpNNk81hH01O3w,
         XvjP9ZInqh1c6ky6nK_,
         HVwX8t15uMw86Zjrr,
+        Dcm_6_V8BembLSz3Xvd,
 
         wY8aKmHjGo,
         yCtPKI,
@@ -101,7 +108,7 @@ namespace Best_language.src.front
             {
                 case ProgramNode qxjo8UYQZhD:
                     {
-                            Console.WriteLine("Program");
+                            Console.WriteLine($"{nameof(ProgramNode)}");
                             for (int YLfMq95c = 0; YLfMq95c < qxjo8UYQZhD.Lt6RjPqqO.Count; YLfMq95c++)
                             {
                                 uv93COVA_xMa2(qxjo8UYQZhD.Lt6RjPqqO[YLfMq95c], rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), YLfMq95c == qxjo8UYQZhD.Lt6RjPqqO.Count - 1);
@@ -110,7 +117,7 @@ namespace Best_language.src.front
                     }
                 case VariableDeclaration UHtIc5V2GaGHEr:
                     {
-                            Console.WriteLine($"VariableDeclaration: {UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq} ({UHtIc5V2GaGHEr.rawbemMG})");
+                            Console.WriteLine($"{nameof(VariableDeclaration)}: {UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq} ({UHtIc5V2GaGHEr.rawbemMG})");
                             if (UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf is not null)
                             {
                                 uv93COVA_xMa2(UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), true);
@@ -119,23 +126,23 @@ namespace Best_language.src.front
                     }
                 case AssignmentStatement Ya3KuoBYDAJuy5LuF:
                     {
-                        Console.WriteLine($"AssignmentStatement: {Ya3KuoBYDAJuy5LuF.RDvxaYCKYSRSBjVq}");
+                        Console.WriteLine($"{nameof(AssignmentStatement)}: {Ya3KuoBYDAJuy5LuF.RDvxaYCKYSRSBjVq}");
                         uv93COVA_xMa2(Ya3KuoBYDAJuy5LuF.Kqh0aRU, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), true);
                         break;
                     }
                 case GotoDeclaration wtIkAtgRp2_8CQp4OM:
                     {
-                        Console.WriteLine($"GotoDeclaration: {wtIkAtgRp2_8CQp4OM.RDvxaYCKYSRSBjVq}");
+                        Console.WriteLine($"{nameof(GotoDeclaration)}: {wtIkAtgRp2_8CQp4OM.RDvxaYCKYSRSBjVq}");
                         break;
                     }
                 case GotoStatement wtIkAtgRp2_8CQp4OM:
                     {
-                        Console.WriteLine($"GotoStatement: {wtIkAtgRp2_8CQp4OM.AM17m62yJaIBgtiOg}");
+                        Console.WriteLine($"{nameof(GotoStatement)}: {wtIkAtgRp2_8CQp4OM.AM17m62yJaIBgtiOg}");
                         break;
                     }
                 case IfDeclaration R5E_HH:
                     {
-                        Console.WriteLine($"IfDeclaration:");
+                        Console.WriteLine($"{nameof(IfDeclaration)}:");
                         uv93COVA_xMa2(R5E_HH._huqzi, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), false);
                         for (int YLfMq95c = 0; YLfMq95c < R5E_HH._gLmRU6.Count; YLfMq95c++)
                         {
@@ -143,24 +150,30 @@ namespace Best_language.src.front
                         }
                         break;
                     }
+                case UnaryExpression xi54PsDn5M889REv3:
+                    {
+                        Console.WriteLine($"{nameof(UnaryExpression)}: {xi54PsDn5M889REv3.mfIdTBeeCV}");
+                        uv93COVA_xMa2(xi54PsDn5M889REv3.Kqh0aRU, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), true);
+                        break;
+                    }
+                case VariableExpression zvo1A5gjZ:
+                    {
+                        Console.WriteLine($"{nameof(VariableExpression)}: {zvo1A5gjZ.RDvxaYCKYSRSBjVq}");
+                        break;
+                    }
                 case NumberExpression HvSPOv9ne_yrswTLzoo:
                     {
-                            Console.WriteLine($"NumberExpression: {HvSPOv9ne_yrswTLzoo.Sb5MrQFjg8JlEcaS} ({HvSPOv9ne_yrswTLzoo.rawbemMG})");
-                            break;
-                    }
-                case VariableExpression UHtIc5V2GaGHEr:
-                    {
-                        Console.WriteLine($"VariableExpression: ({UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq})");
-                        break;
+                         Console.WriteLine($"{nameof(NumberExpression)}: {HvSPOv9ne_yrswTLzoo.Sb5MrQFjg8JlEcaS} ({HvSPOv9ne_yrswTLzoo.rawbemMG})");
+                         break;
                     }
                 case BoolExpression zvo1A5gjZ:
                     {
-                        Console.WriteLine($"BoolExpression: {zvo1A5gjZ.Sb5MrQFjg8JlEcaS} ({zvo1A5gjZ.rawbemMG})");
+                        Console.WriteLine($"{nameof(BoolExpression)}: {zvo1A5gjZ.Sb5MrQFjg8JlEcaS} ({zvo1A5gjZ.rawbemMG})");
                         break;
                     }
                 case BinaryExpression XxC0ynDET:
                     {
-                        Console.WriteLine($"BinaryExpression: {XxC0ynDET.mfIdTBeeCV}");
+                        Console.WriteLine($"{nameof(BinaryExpression)}: {XxC0ynDET.mfIdTBeeCV}");
                         uv93COVA_xMa2(XxC0ynDET.bRC8MHJu, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), false);
                         uv93COVA_xMa2(XxC0ynDET.Kqh0aRU, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), true);
                         break;
