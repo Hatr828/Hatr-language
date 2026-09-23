@@ -45,7 +45,7 @@ namespace Best_language.src.back
                         }
                     case IrUnary xi54PsDn5M889REv3:
                         {
-                            if (xi54PsDn5M889REv3.mfIdTBeeCV is BinaryOp.px4P2OwC_TCS) break;
+                            if (xi54PsDn5M889REv3.mfIdTBeeCV is Operations.px4P2OwC_TCS) break;
                             PouZtZpLKPKu8(xi54PsDn5M889REv3);
 
                             int S7FJ7HAuO2 = J32YhIfpRYQ(xi54PsDn5M889REv3.Kqh0aRU);
@@ -103,50 +103,59 @@ namespace Best_language.src.back
 
             switch (XxC0ynDET.mfIdTBeeCV)
             {
-                case BinaryOp.px4P2OwC_TCS:
+                case Operations.yzkCqYShh:
+                case Operations.px4P2OwC_TCS:
                     S7s8kX2.AppendLine("    add rax, rcx");
                     break;
 
-                case BinaryOp.VpNNk81hH01O3w:
+                case Operations.cJcVwmWsoiUI:
+                case Operations.VpNNk81hH01O3w:
                     S7s8kX2.AppendLine("    sub rax, rcx");
                     break;
 
-                case BinaryOp.XvjP9ZInqh1c6ky6nK_:
+                case Operations.pe3_jLc:
+                case Operations.XvjP9ZInqh1c6ky6nK_:
                     S7s8kX2.AppendLine("    imul rax, rcx");
                     break;
 
-                case BinaryOp.HVwX8t15uMw86Zjrr:
+                case Operations.bEbHtL6r_nWiA4:
+                case Operations.HVwX8t15uMw86Zjrr:
                     S7s8kX2.AppendLine("    cqo");
                     S7s8kX2.AppendLine("    idiv rcx");
                     break;
 
-                case BinaryOp.Dcm_6_V8BembLSz3Xvd:
+                case Operations.SKz7ydBz:
+                case Operations.Dcm_6_V8BembLSz3Xvd:
                     S7s8kX2.AppendLine("    cqo");
                     S7s8kX2.AppendLine("    idiv rcx");
                     S7s8kX2.AppendLine("    mov rax, rdx");
                     break;
 
-                case BinaryOp.i3e0fh1jq:
+                case Operations.i3e0fh1jq:
                     xY0C58HW("setg");
                     break;
 
-                case BinaryOp.RpVKAjlPn7QkY5:
+                case Operations.RpVKAjlPn7QkY5:
                     xY0C58HW("setge");
                     break;
 
-                case BinaryOp.wY8aKmHjGo:
+                case Operations.wY8aKmHjGo:
                     xY0C58HW("setl");
                     break;
 
-                case BinaryOp.yCtPKI:
+                case Operations.yCtPKI:
                     xY0C58HW("setle");
                     break;
 
-                case BinaryOp.Tieags2HzPi132WNHai:
+                case Operations.Tieags2HzPi132WNHai:
                     xY0C58HW("sete");
                     break;
 
-                case BinaryOp.dFZBYFCUJWiZYreG5:
+                case Operations.ggA0QEoXbT2g42XV:
+                    xY0C58HW("setne");
+                    break;
+
+                case Operations.dFZBYFCUJWiZYreG5:
                     S7s8kX2.AppendLine("    test rax, rax");
                     S7s8kX2.AppendLine("    setne al");
                     S7s8kX2.AppendLine("    test rcx, rcx");
@@ -155,10 +164,35 @@ namespace Best_language.src.back
                     S7s8kX2.AppendLine("    movzx rax, al");
                     break;
 
-                case BinaryOp.hJQNxCsE8:
+                case Operations.hJQNxCsE8:
                     S7s8kX2.AppendLine("    or rax, rcx");
                     S7s8kX2.AppendLine("    setne al");
                     S7s8kX2.AppendLine("    movzx rax, al");
+                    break;
+
+                case Operations.JYW1ZlxYZddYZFQz:
+                case Operations.xyQlFLPMo74jLnujD:
+                    S7s8kX2.AppendLine("    and rax, rcx");
+                    break;
+
+                case Operations.Jl_g4z_tM6N7fZ6:
+                case Operations.LoG1nbZ0fIkPU:
+                    S7s8kX2.AppendLine("    or rax, rcx");
+                    break;
+
+                case Operations.BiHitvb7n3O1:
+                case Operations.tOhkYK403y:
+                    S7s8kX2.AppendLine("    xor rax, rcx");
+                    break;
+
+                case Operations.w2UzTMSp9o0T:
+                case Operations.glXuoibfOZtI7SBkfT:
+                    S7s8kX2.AppendLine("    shl rax, cl");
+                    break;
+
+                case Operations.Y51ndI1fZSk8I:
+                case Operations.FsWeBIKdwX:
+                    S7s8kX2.AppendLine("    sar rax, cl");
                     break;
 
                 default:
@@ -171,8 +205,24 @@ namespace Best_language.src.back
 
             switch (XxC0ynDET.mfIdTBeeCV)
             {
-                case BinaryOp.VpNNk81hH01O3w:
+                case Operations.VpNNk81hH01O3w:
                     S7s8kX2.AppendLine("    neg rax");
+                    break;
+                case Operations.V0oF1_Ia:
+                    S7s8kX2.AppendLine("    not rax");
+                    break;
+                case Operations.AXJEUF8:
+                    S7s8kX2.AppendLine("    test rax, rax");
+                    S7s8kX2.AppendLine("    sete al");
+                    S7s8kX2.AppendLine("    movzx rax, al");
+                    break;
+                case Operations.jeuvS6KLpYeMA43v9:
+                case Operations.tmDJZxxjN8YO6gXg:
+                    S7s8kX2.AppendLine("    add rax, 1");
+                    break;
+                case Operations.SaZ45v4KVaHn:
+                case Operations.o1eEDaDB1HpqMTgNI:
+                    S7s8kX2.AppendLine("    sub rax, 1");
                     break;
                 default:
                     throw new NotImplementedException($"Unsupported binary operation: {XxC0ynDET.mfIdTBeeCV}");

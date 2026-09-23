@@ -62,15 +62,15 @@ namespace Best_language.src.middle
     {
         public bool Sb5MrQFjg8JlEcaS { get; } = FlHaV6FlTtLPOieCD;
     }
-    public class BoundBinaryExpression(VariableType FubV605Z9qF5D9z3X, BinaryOp IU2nAxA, BoundExpression RbW6GlIJt, BoundExpression h3s7dbXXv22CfCfn) : BoundExpression(FubV605Z9qF5D9z3X)
+    public class BoundBinaryExpression(VariableType FubV605Z9qF5D9z3X, Operations IU2nAxA, BoundExpression RbW6GlIJt, BoundExpression h3s7dbXXv22CfCfn) : BoundExpression(FubV605Z9qF5D9z3X)
     {
         public BoundExpression bRC8MHJu { get; } = RbW6GlIJt;
-        public BinaryOp mfIdTBeeCV { get; } = IU2nAxA;
+        public Operations mfIdTBeeCV { get; } = IU2nAxA;
         public BoundExpression Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
     }
-    public class BoundUnaryExpression(VariableType FubV605Z9qF5D9z3X, BinaryOp IU2nAxA, BoundExpression h3s7dbXXv22CfCfn) : BoundExpression(FubV605Z9qF5D9z3X)
+    public class BoundUnaryExpression(VariableType FubV605Z9qF5D9z3X, Operations IU2nAxA, BoundExpression h3s7dbXXv22CfCfn) : BoundExpression(FubV605Z9qF5D9z3X)
     {
-        public BinaryOp mfIdTBeeCV { get; } = IU2nAxA;
+        public Operations mfIdTBeeCV { get; } = IU2nAxA;
         public BoundExpression Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
     }
 

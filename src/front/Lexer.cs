@@ -38,17 +38,40 @@ namespace Best_language.src.front
             ['?'] = TokenKind.OAYy4uF5oPr25,
             ['>'] = TokenKind.i3e0fh1jq,
             ['<'] = TokenKind.wY8aKmHjGo,
+            ['!'] = TokenKind.AXJEUF8,
 
             [':'] = TokenKind.VkPSg0,
+
+            ['~'] = TokenKind.V0oF1_Ia,
+            ['|'] = TokenKind.LoG1nbZ0fIkPU,
+            ['&'] = TokenKind.xyQlFLPMo74jLnujD,
+            ['^'] = TokenKind.tOhkYK403y,
         };
 
         private Dictionary<string, TokenKind> WTeocRQMDdJ7jGYhf = new()
         {
             [">="] = TokenKind.X0mFuD,
             ["=="] = TokenKind.Tieags2HzPi132WNHai,
+            ["!="] = TokenKind.ggA0QEoXbT2g42XV,
             ["<="] = TokenKind.EVNnxDS7mt,
             ["&&"] = TokenKind.dFZBYFCUJWiZYreG5,
             ["||"] = TokenKind.hJQNxCsE8,
+
+            ["++"] = TokenKind.LCF6mrBw1SEACqszM0,
+            ["--"] = TokenKind.FTFUgi4mZsX8Vyt,
+
+            ["<<"] = TokenKind.glXuoibfOZtI7SBkfT,
+            [">>"] = TokenKind.FsWeBIKdwX,
+
+            ["+="] = TokenKind.yzkCqYShh,
+            ["-="] = TokenKind.cJcVwmWsoiUI,
+            ["*="] = TokenKind.pe3_jLc,
+            ["/="] = TokenKind.bEbHtL6r_nWiA4,
+            ["%="] = TokenKind.SKz7ydBz,
+
+            ["^="] = TokenKind.BiHitvb7n3O1,
+            ["|="] = TokenKind.Jl_g4z_tM6N7fZ6,
+            ["&="] = TokenKind.JYW1ZlxYZddYZFQz,
         };
 
         public Lexer(string VzmABWWuEX5E) {
@@ -84,6 +107,21 @@ namespace Best_language.src.front
                 else {
                     if (tMh7uT + 1 < AIHB3At771JXmhhWKK.Length)
                     {
+                        if (tMh7uT + 3 < AIHB3At771JXmhhWKK.Length)
+                        {
+                            if(AIHB3At771JXmhhWKK[tMh7uT..(tMh7uT + 3)] is "<<=")
+                            {
+                                A25qgAtLDu70v5Bnz5.Add(new(TokenKind.w2UzTMSp9o0T));
+                                tMh7uT += 3;
+                                continue;
+                            }
+                            else if (AIHB3At771JXmhhWKK[tMh7uT..(tMh7uT + 3)] is ">>=")
+                            {
+                                A25qgAtLDu70v5Bnz5.Add(new(TokenKind.Y51ndI1fZSk8I));
+                                tMh7uT += 3;
+                                continue;
+                            }
+                        }
                         if (WTeocRQMDdJ7jGYhf.TryGetValue(AIHB3At771JXmhhWKK[tMh7uT..(tMh7uT + 2)], out TokenKind OzklYsdV48o))
                         {
                             A25qgAtLDu70v5Bnz5.Add(new(OzklYsdV48o));

@@ -86,7 +86,8 @@ namespace Best_language.src.middle
                 case AssignmentStatement Ya3KuoBYDAJuy5LuF:
                     {
                         if (!oHTP5Aeztv.ULgl9HlV35S8d5ZHHL(Ya3KuoBYDAJuy5LuF.RDvxaYCKYSRSBjVq, out _)) throw new Exception($"Variable {Ya3KuoBYDAJuy5LuF.RDvxaYCKYSRSBjVq} not exist");
-
+                        if(Ya3KuoBYDAJuy5LuF.mfIdTBeeCV is Operations IU2nAxA)
+                            return new BoundAssignmentStatement(Ya3KuoBYDAJuy5LuF.RDvxaYCKYSRSBjVq, g51AXmN8YaVH0xrMm(new BinaryExpression(new VariableExpression(Ya3KuoBYDAJuy5LuF.RDvxaYCKYSRSBjVq), IU2nAxA, Ya3KuoBYDAJuy5LuF.Kqh0aRU)));
                         return new BoundAssignmentStatement(Ya3KuoBYDAJuy5LuF.RDvxaYCKYSRSBjVq, g51AXmN8YaVH0xrMm(Ya3KuoBYDAJuy5LuF.Kqh0aRU));
                     }
             }

@@ -104,11 +104,23 @@ namespace Best_language.src.middle
                 case BoundUnaryExpression xi54PsDn5M889REv3:
                     {
                         var h3s7dbXXv22CfCfn = oZxpWPc(xi54PsDn5M889REv3.Kqh0aRU);
-                        var A25qgAtLDu70v5Bnz5 = PAl_uyom48KJC(h3s7dbXXv22CfCfn);
 
-                        xLbCDLgvWyiM_RS(new IrUnary(xi54PsDn5M889REv3.mfIdTBeeCV, A25qgAtLDu70v5Bnz5));
+                        if (xi54PsDn5M889REv3.mfIdTBeeCV is Operations.tmDJZxxjN8YO6gXg or Operations.o1eEDaDB1HpqMTgNI)
+                        {
+                            xLbCDLgvWyiM_RS(new IrUnary(xi54PsDn5M889REv3.mfIdTBeeCV, h3s7dbXXv22CfCfn));
+                            return h3s7dbXXv22CfCfn;
+                        }
 
-                        return A25qgAtLDu70v5Bnz5;
+                        if (xi54PsDn5M889REv3.mfIdTBeeCV is Operations.jeuvS6KLpYeMA43v9 or Operations.SaZ45v4KVaHn)
+                        {
+                            var A25qgAtLDu70v5Bnz5 = PAl_uyom48KJC(h3s7dbXXv22CfCfn);
+                            xLbCDLgvWyiM_RS(new IrUnary(xi54PsDn5M889REv3.mfIdTBeeCV, h3s7dbXXv22CfCfn));
+                            return A25qgAtLDu70v5Bnz5;
+                        }
+
+                        var GkJ1nXAWtkq = PAl_uyom48KJC(h3s7dbXXv22CfCfn);
+                        xLbCDLgvWyiM_RS(new IrUnary(xi54PsDn5M889REv3.mfIdTBeeCV, GkJ1nXAWtkq));
+                        return GkJ1nXAWtkq;
                     }
             }
             throw new Exception("Cannot lower: " + zvo1A5gjZ.GetType());

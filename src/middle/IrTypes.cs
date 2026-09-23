@@ -31,15 +31,15 @@ namespace Best_language.src.middle
     {
         public string Bbopqy { get; } = LYEVzVGaD;
     }
-    public class IrBinary(BinaryOp IU2nAxA, IrValue RbW6GlIJt, IrValue h3s7dbXXv22CfCfn) : IrInstruction
+    public class IrBinary(Operations IU2nAxA, IrValue RbW6GlIJt, IrValue h3s7dbXXv22CfCfn) : IrInstruction
     {
-        public BinaryOp mfIdTBeeCV { get; } = IU2nAxA;
+        public Operations mfIdTBeeCV { get; } = IU2nAxA;
         public IrValue bRC8MHJu { get; } = RbW6GlIJt;
         public IrValue Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
     }
-    public class IrUnary(BinaryOp IU2nAxA, IrValue h3s7dbXXv22CfCfn) : IrInstruction
+    public class IrUnary(Operations IU2nAxA, IrValue h3s7dbXXv22CfCfn) : IrInstruction
     {
-        public BinaryOp mfIdTBeeCV { get; } = IU2nAxA;
+        public Operations mfIdTBeeCV { get; } = IU2nAxA;
         public IrValue Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
     }
     public class IrVariable(IrValue RbW6GlIJt, IrValue h3s7dbXXv22CfCfn) : IrInstruction
