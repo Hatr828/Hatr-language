@@ -7,197 +7,197 @@ namespace Best_language.src.middle
 {
     public abstract class BoundNode;
     public abstract class BoundStatement : BoundNode;
-    public abstract class BoundExpression(VariableType FubV605Z9qF5D9z3X) : BoundNode
+    public abstract class BoundExpression(VariableType type) : BoundNode
     {
-        public VariableType rawbemMG { get; } = FubV605Z9qF5D9z3X;
+        public VariableType Type { get; } = type;
     }
-    public class BoundVariable(VariableType FubV605Z9qF5D9z3X, string tvLjFkzfFa9PYoTwdhO)
+    public class BoundVariable(VariableType type, string name)
     {
-        public VariableType rawbemMG { get; } = FubV605Z9qF5D9z3X;
-        public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
+        public VariableType Type { get; } = type;
+        public string Name { get; } = name;
     }
-    public class BoundProgram(List<BoundFunction> w_Jpwe7C8bhC) : BoundNode
+    public class BoundProgram(List<BoundFunction> functions) : BoundNode
     {
-        public List<BoundFunction> BqaEfTZY8PJtNpo { get; } = w_Jpwe7C8bhC;
+        public List<BoundFunction> Functions { get; } = functions;
     }
-    public class BoundFunction(VariableType FubV605Z9qF5D9z3X, string tvLjFkzfFa9PYoTwdhO, List<BoundStatement> dDF7r9qO0UZT7CeF) : BoundStatement
+    public class BoundFunction(VariableType type, string name, List<BoundStatement> statements) : BoundStatement
     {
-        public VariableType rawbemMG { get; } = FubV605Z9qF5D9z3X;
-        public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
-        public List<BoundStatement> x6w4y6YVMJqhHPCw { get; } = dDF7r9qO0UZT7CeF;
+        public VariableType Type { get; } = type;
+        public string Name { get; } = name;
+        public List<BoundStatement> Statements { get; } = statements;
     }
-    public class BoundVariableDeclaration(VariableType FubV605Z9qF5D9z3X, string tvLjFkzfFa9PYoTwdhO, BoundExpression h7zQ6CJizFQm) : BoundStatement
+    public class BoundVariableDeclaration(VariableType type, string name, BoundExpression initializer) : BoundStatement
     {
-        public VariableType rawbemMG { get; } = FubV605Z9qF5D9z3X;
-        public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
-        public BoundExpression VFweLKwblUFT45a5dYsf { get; } = h7zQ6CJizFQm;
+        public VariableType Type { get; } = type;
+        public string Name { get; } = name;
+        public BoundExpression Initializer { get; } = initializer;
     }
-    public class BoundAssignmentStatement(string tvLjFkzfFa9PYoTwdhO, BoundExpression h3s7dbXXv22CfCfn) : BoundStatement
+    public class BoundAssignmentStatement(string name, BoundExpression right) : BoundStatement
     {
-        public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
-        public BoundExpression Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
+        public string Name { get; } = name;
+        public BoundExpression Right { get; } = right;
     }
-    public class BoundIfDeclaration(BoundExpression zvo1A5gjZ) : BoundStatement
+    public class BoundIfDeclaration(BoundExpression expression) : BoundStatement
     {
-        public BoundExpression _huqzi { get; } = zvo1A5gjZ;
-        public List<BoundStatement> x6w4y6YVMJqhHPCw { get; } = new();
+        public BoundExpression Expression { get; } = expression;
+        public List<BoundStatement> Statements { get; } = new();
     }
-    public class BoundGotoDeclaration(int EHUizE_S0) : BoundStatement
+    public class BoundGotoDeclaration(int id) : BoundStatement
     {
-        public int DIb6al9mN { get; } = EHUizE_S0;
+        public int Id { get; } = id;
     }
-    public class BoundGotoStatement(int ZsJRNrW) : BoundStatement
+    public class BoundGotoStatement(int to) : BoundStatement
     {
-        public int K_1l6XsfuG9 { get; } = ZsJRNrW;
+        public int ToId { get; } = to;
     }
-    public class BoundNumberExpression(VariableType FubV605Z9qF5D9z3X, long FlHaV6FlTtLPOieCD) : BoundExpression(FubV605Z9qF5D9z3X)
+    public class BoundNumberExpression(VariableType type, long value) : BoundExpression(type)
     {
-        public long Sb5MrQFjg8JlEcaS { get; } = FlHaV6FlTtLPOieCD;
+        public long Value { get; } = value;
     }
-    public class BoundVariableExpression(VariableType FubV605Z9qF5D9z3X, string tvLjFkzfFa9PYoTwdhO) : BoundExpression(FubV605Z9qF5D9z3X)
+    public class BoundVariableExpression(VariableType type, string name) : BoundExpression(type)
     {
-        public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
+        public string Name { get; } = name;
     }
-    public class BoundBoolExpression(bool FlHaV6FlTtLPOieCD) : BoundExpression(VariableType.msEw5C9X6eO)
+    public class BoundBoolExpression(bool value) : BoundExpression(VariableType.Bool)
     {
-        public bool Sb5MrQFjg8JlEcaS { get; } = FlHaV6FlTtLPOieCD;
+        public bool Value { get; } = value;
     }
-    public class BoundBinaryExpression(VariableType FubV605Z9qF5D9z3X, Operations IU2nAxA, BoundExpression RbW6GlIJt, BoundExpression h3s7dbXXv22CfCfn) : BoundExpression(FubV605Z9qF5D9z3X)
+    public class BoundBinaryExpression(VariableType type, Operations op, BoundExpression left, BoundExpression right) : BoundExpression(type)
     {
-        public BoundExpression bRC8MHJu { get; } = RbW6GlIJt;
-        public Operations mfIdTBeeCV { get; } = IU2nAxA;
-        public BoundExpression Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
+        public BoundExpression Left { get; } = left;
+        public Operations Op { get; } = op;
+        public BoundExpression Right { get; } = right;
     }
-    public class BoundUnaryExpression(VariableType FubV605Z9qF5D9z3X, Operations IU2nAxA, BoundExpression h3s7dbXXv22CfCfn) : BoundExpression(FubV605Z9qF5D9z3X)
+    public class BoundUnaryExpression(VariableType type, Operations op, BoundExpression right) : BoundExpression(type)
     {
-        public Operations mfIdTBeeCV { get; } = IU2nAxA;
-        public BoundExpression Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
+        public Operations Op { get; } = op;
+        public BoundExpression Right { get; } = right;
     }
 
     public class BoundScopes
     {
-        private readonly List<Dictionary<string, BoundVariable>> nhqaeri73 = new();
+        private readonly List<Dictionary<string, BoundVariable>> _variables = new();
 
-        public bool tCBUXJsr53kXoh1u3N(BoundVariable UHtIc5V2GaGHEr)
+        public bool TryAddVariable(BoundVariable variable)
         {
-            return nhqaeri73[^1].TryAdd(UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, UHtIc5V2GaGHEr);
+            return _variables[^1].TryAdd(variable.Name, variable);
         }
-        public bool ULgl9HlV35S8d5ZHHL(string tvLjFkzfFa9PYoTwdhO, out VariableType FubV605Z9qF5D9z3X)
+        public bool Lookup(string name, out VariableType type)
         {
-            for(int YLfMq95c = 1; YLfMq95c <= nhqaeri73.Count; YLfMq95c++)
+            for(int i = 1; i <= _variables.Count; i++)
             {
-                if (nhqaeri73[^YLfMq95c].TryGetValue(tvLjFkzfFa9PYoTwdhO, out var UHtIc5V2GaGHEr))
+                if (_variables[^i].TryGetValue(name, out var variable))
                 {
-                    FubV605Z9qF5D9z3X = UHtIc5V2GaGHEr.rawbemMG;
+                    type = variable.Type;
                     return true;
                 }
             }
-            FubV605Z9qF5D9z3X = VariableType.QOa6p9YEuH1RAbA6O7q5;
+            type = VariableType.Int;
             return false;
         }
-        public void TxTcHSOCYZ69AABP()
+        public void AddScope()
         {
-            nhqaeri73.Add(new());
+            _variables.Add(new());
         }
-        public void DAI2vdt2iJMKm()
+        public void RemoveScope()
         {
-            nhqaeri73.RemoveAt(nhqaeri73.Count - 1);
+            _variables.RemoveAt(_variables.Count - 1);
         }
     }
     public static class BoundTreePrinter
     {
-        public static void jwtEpdBSXI(BoundNode AiBZVSsJC2)
+        public static void Print(BoundNode root)
         {
             Console.WriteLine("BoundTree");
-            xC3PgI(AiBZVSsJC2, "", true);
+            PrintBoundTree(root, "", true);
         }
 
-        private static void xC3PgI(BoundNode opKIGQBXk1qIUhw7, string rWl0RkKc, bool m5JMl_D28)
+        private static void PrintBoundTree(BoundNode node, string indent, bool last)
         {
-            Console.Write(rWl0RkKc);
-            Console.Write(m5JMl_D28 ? "└── " : "├── ");
+            Console.Write(indent);
+            Console.Write(last ? "└── " : "├── ");
 
-            switch (opKIGQBXk1qIUhw7)
+            switch (node)
             {
-                case BoundProgram qxjo8UYQZhD:
+                case BoundProgram main:
                     {
                         Console.WriteLine($"{nameof(BoundProgram)}");
-                        for (int YLfMq95c = 0; YLfMq95c < qxjo8UYQZhD.BqaEfTZY8PJtNpo.Count; YLfMq95c++)
+                        for (int i = 0; i < main.Functions.Count; i++)
                         {
-                            xC3PgI(qxjo8UYQZhD.BqaEfTZY8PJtNpo[YLfMq95c], rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), YLfMq95c == qxjo8UYQZhD.BqaEfTZY8PJtNpo.Count - 1);
+                            PrintBoundTree(main.Functions[i], indent + (last ? "    " : "│   "), i == main.Functions.Count - 1);
                         }
                         break;
                     }
-                case BoundVariableDeclaration UHtIc5V2GaGHEr:
+                case BoundVariableDeclaration variable:
                     {
-                        Console.WriteLine($"{nameof(BoundVariableDeclaration)}: {UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq} ({UHtIc5V2GaGHEr.rawbemMG})");
-                        if (UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf is not null)
+                        Console.WriteLine($"{nameof(BoundVariableDeclaration)}: {variable.Name} ({variable.Type})");
+                        if (variable.Initializer is not null)
                         {
-                            xC3PgI(UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), true);
+                            PrintBoundTree(variable.Initializer, indent + (last ? "    " : "│   "), true);
                         }
                         break;
                     }
-                case BoundIfDeclaration R5E_HH:
+                case BoundIfDeclaration If:
                     {
                         Console.WriteLine($"{nameof(BoundIfDeclaration)}:");
-                        xC3PgI(R5E_HH._huqzi, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), false);
-                        for (int YLfMq95c = 0; YLfMq95c < R5E_HH.x6w4y6YVMJqhHPCw.Count; YLfMq95c++)
+                        PrintBoundTree(If.Expression, indent + (last ? "    " : "│   "), false);
+                        for (int i = 0; i < If.Statements.Count; i++)
                         {
-                            xC3PgI(R5E_HH.x6w4y6YVMJqhHPCw[YLfMq95c], rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), YLfMq95c == R5E_HH.x6w4y6YVMJqhHPCw.Count - 1);
+                            PrintBoundTree(If.Statements[i], indent + (last ? "    " : "│   "), i == If.Statements.Count - 1);
                         }
                         break;
                     }
-                case BoundGotoDeclaration eV5GbDX:
+                case BoundGotoDeclaration @goto:
                     {
-                        Console.WriteLine($"{nameof(BoundGotoDeclaration)}: {eV5GbDX.DIb6al9mN}");
+                        Console.WriteLine($"{nameof(BoundGotoDeclaration)}: {@goto.Id}");
                         break;
                     }
-                case BoundGotoStatement eV5GbDX:
+                case BoundGotoStatement @goto:
                     {
-                        Console.WriteLine($"{nameof(BoundGotoStatement)}: {eV5GbDX.K_1l6XsfuG9}");
+                        Console.WriteLine($"{nameof(BoundGotoStatement)}: {@goto.ToId}");
                         break;
                     }
-                case BoundNumberExpression HvSPOv9ne_yrswTLzoo:
+                case BoundNumberExpression number:
                     {
-                        Console.WriteLine($"{nameof(BoundNumberExpression)}: {HvSPOv9ne_yrswTLzoo.Sb5MrQFjg8JlEcaS} ({HvSPOv9ne_yrswTLzoo.rawbemMG})");
+                        Console.WriteLine($"{nameof(BoundNumberExpression)}: {number.Value} ({number.Type})");
                         break;
                     }
-                case BoundVariableExpression HvSPOv9ne_yrswTLzoo:
+                case BoundVariableExpression number:
                     {
-                        Console.WriteLine($"{nameof(BoundVariableExpression)}: {HvSPOv9ne_yrswTLzoo.RDvxaYCKYSRSBjVq} ({HvSPOv9ne_yrswTLzoo.rawbemMG})");
+                        Console.WriteLine($"{nameof(BoundVariableExpression)}: {number.Name} ({number.Type})");
                         break;
                     }
-                case BoundBoolExpression HvSPOv9ne_yrswTLzoo:
+                case BoundBoolExpression number:
                     {
-                        Console.WriteLine($"{nameof(BoundBoolExpression)}: {HvSPOv9ne_yrswTLzoo.Sb5MrQFjg8JlEcaS} ({HvSPOv9ne_yrswTLzoo.rawbemMG})");
+                        Console.WriteLine($"{nameof(BoundBoolExpression)}: {number.Value} ({number.Type})");
                         break;
                     }
-                case BoundBinaryExpression XxC0ynDET:
+                case BoundBinaryExpression binary:
                     {
-                        Console.WriteLine($"{nameof(BoundVariableExpression)}: {XxC0ynDET.mfIdTBeeCV} {XxC0ynDET.rawbemMG}");
-                        xC3PgI(XxC0ynDET.bRC8MHJu, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), false);
-                        xC3PgI(XxC0ynDET.Kqh0aRU, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), true);
+                        Console.WriteLine($"{nameof(BoundVariableExpression)}: {binary.Op} {binary.Type}");
+                        PrintBoundTree(binary.Left, indent + (last ? "    " : "│   "), false);
+                        PrintBoundTree(binary.Right, indent + (last ? "    " : "│   "), true);
                         break;
                     }
-                case BoundUnaryExpression XxC0ynDET:
+                case BoundUnaryExpression binary:
                     {
-                        Console.WriteLine($"{nameof(BoundUnaryExpression)}: {XxC0ynDET.mfIdTBeeCV} {XxC0ynDET.rawbemMG}");
-                        xC3PgI(XxC0ynDET.Kqh0aRU, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), true);
+                        Console.WriteLine($"{nameof(BoundUnaryExpression)}: {binary.Op} {binary.Type}");
+                        PrintBoundTree(binary.Right, indent + (last ? "    " : "│   "), true);
                         break;
                     }
-                case BoundFunction OwUELUXM3n88t6V02:
+                case BoundFunction function:
                     {
-                        Console.WriteLine($"{nameof(BoundFunction)}: {OwUELUXM3n88t6V02.RDvxaYCKYSRSBjVq}");
-                        for (int YLfMq95c = 0; YLfMq95c < OwUELUXM3n88t6V02.x6w4y6YVMJqhHPCw.Count; YLfMq95c++)
+                        Console.WriteLine($"{nameof(BoundFunction)}: {function.Name}");
+                        for (int i = 0; i < function.Statements.Count; i++)
                         {
-                            xC3PgI(OwUELUXM3n88t6V02.x6w4y6YVMJqhHPCw[YLfMq95c], rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), YLfMq95c == OwUELUXM3n88t6V02.x6w4y6YVMJqhHPCw.Count - 1);
+                            PrintBoundTree(function.Statements[i], indent + (last ? "    " : "│   "), i == function.Statements.Count - 1);
                         }
                         break;
                     }
 
                 default:
                     {
-                        Console.WriteLine(opKIGQBXk1qIUhw7.GetType());
+                        Console.WriteLine(node.GetType());
                         break;
                     }
             }

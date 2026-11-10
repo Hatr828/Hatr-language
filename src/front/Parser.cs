@@ -6,257 +6,257 @@ namespace Best_language.src.front
 {
     class Parser
     {
-        private List<Token> bTUSUK_R9zP = new List<Token>();
+        private List<Token> _tokens = new List<Token>();
 
-        private int tMh7uT;
+        private int _idx;
 
-        public Parser(List<Token> JQ2q_a)
+        public Parser(List<Token> tokens)
         {
-            bTUSUK_R9zP = JQ2q_a;
+            _tokens = tokens;
         }
 
-        public ProgramNode whLgsX7eXvV2jB()
+        public ProgramNode GetAstNodes()
         {
-             List<AstNode> A25qgAtLDu70v5Bnz5 = new List<AstNode>();
+             List<AstNode> res = new List<AstNode>();
 
-             while(tMh7uT < bTUSUK_R9zP.Count)
+             while(_idx < _tokens.Count)
              {
-                 A25qgAtLDu70v5Bnz5.Add(_8CvQhVY3OxAzmhbj());
+                 res.Add(GetAstNode());
              }
 
-            return new(A25qgAtLDu70v5Bnz5);
+            return new(res);
         }
-        public AstNode _8CvQhVY3OxAzmhbj()
+        public AstNode GetAstNode()
         {
 
-            while (tMh7uT < bTUSUK_R9zP.Count)
+            while (_idx < _tokens.Count)
             {
-                switch (bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi)
+                switch (_tokens[_idx].kind)
                 {
-                    case TokenKind.msEw5C9X6eO:
-                    case TokenKind.QOa6p9YEuH1RAbA6O7q5:
+                    case TokenKind.Bool:
+                    case TokenKind.Int:
                         {
-                            var FubV605Z9qF5D9z3X = bTUSUK_R9zP[tMh7uT++].UCclohAHjaXEJvAVi;
-                            iFxJgdC(TokenKind.zCmKOyOPQ);
-                            if (bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi is TokenKind.Saqsle32)
+                            var type = _tokens[_idx++].kind;
+                            Requires(TokenKind.Indent);
+                            if (_tokens[_idx].kind is TokenKind.Equals)
                             {
-                                tMh7uT++;
-                                var zBgs8nftvUtORz5x7k = new VariableDeclaration(bTUSUK_R9zP[tMh7uT - 2].kvJv6FdX0Wme2ZUXxy!, QKG8TsMd(FubV605Z9qF5D9z3X), XU2m8fJ4L());
+                                _idx++;
+                                var temp = new VariableDeclaration(_tokens[_idx - 2].val!, GetTypeFromToken(type), GetExpression());
 
-                                iFxJgdC(TokenKind.OAYy4uF5oPr25);
+                                Requires(TokenKind.QuestionMark);
 
-                                return zBgs8nftvUtORz5x7k;
+                                return temp;
                             }
-                            else if (bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi is TokenKind.OAYy4uF5oPr25)
+                            else if (_tokens[_idx].kind is TokenKind.QuestionMark)
                             {
-                                tMh7uT++;
-                                return new VariableDeclaration(bTUSUK_R9zP[tMh7uT - 2].kvJv6FdX0Wme2ZUXxy!, VariableType.QOa6p9YEuH1RAbA6O7q5);
+                                _idx++;
+                                return new VariableDeclaration(_tokens[_idx - 2].val!, VariableType.Int);
                             }
                             break;
                         }
-                    case TokenKind.R5E_HH:
+                    case TokenKind.If:
                         {
-                            tMh7uT++;
-                            iFxJgdC(TokenKind.JaFK4wy);
+                            _idx++;
+                            Requires(TokenKind.LeftParen);
 
-                            Expression FHZW5YiKBaTQMYfb = XU2m8fJ4L();
-                            List<AstNode> zk9bMID2GlAo = new();
+                            Expression ex = GetExpression();
+                            List<AstNode> block = new();
 
-                            iFxJgdC(TokenKind.mXkYfmMfcdhMK);
-                            iFxJgdC(TokenKind.xQOQMX7lMt2mn);
+                            Requires(TokenKind.RightParen);
+                            Requires(TokenKind.LeftBrace);
 
-                            while (bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi is not TokenKind.XmL8EZAP1m8r4dI9tNJ)
+                            while (_tokens[_idx].kind is not TokenKind.RightBrace)
                             {
-                                zk9bMID2GlAo.Add(_8CvQhVY3OxAzmhbj());
+                                block.Add(GetAstNode());
                             }
 
-                            tMh7uT++;
-                            return new IfDeclaration(FHZW5YiKBaTQMYfb, zk9bMID2GlAo);
+                            _idx++;
+                            return new IfDeclaration(ex, block);
                         }
-                    case TokenKind.lgNzh3UAydkfeRDf2Cu:
+                    case TokenKind.Goto:
                         {
-                            tMh7uT++;
-                            iFxJgdC(TokenKind.zCmKOyOPQ);
-                            iFxJgdC(TokenKind.OAYy4uF5oPr25);
-                            return new GotoStatement(bTUSUK_R9zP[tMh7uT - 2].kvJv6FdX0Wme2ZUXxy!);
+                            _idx++;
+                            Requires(TokenKind.Indent);
+                            Requires(TokenKind.QuestionMark);
+                            return new GotoStatement(_tokens[_idx - 2].val!);
                         }
-                    case TokenKind.zCmKOyOPQ when bTUSUK_R9zP[tMh7uT + 1].UCclohAHjaXEJvAVi is TokenKind.VkPSg0:
+                    case TokenKind.Indent when _tokens[_idx + 1].kind is TokenKind.Colon:
                         {
-                             tMh7uT += 2;
-                            return new GotoDeclaration(bTUSUK_R9zP[tMh7uT - 2].kvJv6FdX0Wme2ZUXxy!);
+                             _idx += 2;
+                            return new GotoDeclaration(_tokens[_idx - 2].val!);
                         }
-                    case TokenKind.zCmKOyOPQ:
+                    case TokenKind.Indent:
                         {
-                            string tvLjFkzfFa9PYoTwdhO = bTUSUK_R9zP[tMh7uT].kvJv6FdX0Wme2ZUXxy!;
+                            string name = _tokens[_idx].val!;
 
-                            if (bTUSUK_R9zP[++tMh7uT].UCclohAHjaXEJvAVi is TokenKind.Saqsle32)
+                            if (_tokens[++_idx].kind is TokenKind.Equals)
                             {
-                                tMh7uT++;
-                                var zBgs8nftvUtORz5x7k = new AssignmentStatement(tvLjFkzfFa9PYoTwdhO, null, XU2m8fJ4L());
+                                _idx++;
+                                var temp = new AssignmentStatement(name, null, GetExpression());
 
-                                iFxJgdC(TokenKind.OAYy4uF5oPr25);
+                                Requires(TokenKind.QuestionMark);
 
-                                return zBgs8nftvUtORz5x7k;
+                                return temp;
                             }
-                            var IU2nAxA = _jlUqzof(); tMh7uT++;
-                            var znqK8sSSbcNNHX98uY1 = new AssignmentStatement(tvLjFkzfFa9PYoTwdhO, IU2nAxA, XU2m8fJ4L());
+                            var op = GetOperatorEquals(); _idx++;
+                            var temp2 = new AssignmentStatement(name, op, GetExpression());
 
-                            iFxJgdC(TokenKind.OAYy4uF5oPr25);
-                            return znqK8sSSbcNNHX98uY1;
+                            Requires(TokenKind.QuestionMark);
+                            return temp2;
                         }
 
-                    default: throw new Exception("Error in Parser, unknown token: " + bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi);
+                    default: throw new Exception("Error in Parser, unknown token: " + _tokens[_idx].kind);
                 }
             }
 
             throw new Exception("Parser error, unknown token");
         }
 
-        public Expression XU2m8fJ4L(int YL8PJ_CiFj = 0)
+        public Expression GetExpression(int priority = 0)
         {
-            Expression RbW6GlIJt;
+            Expression left;
 
-            switch (bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi)
+            switch (_tokens[_idx].kind)
             {
-                case TokenKind.px4P2OwC_TCS:
-                case TokenKind.VpNNk81hH01O3w:
-                case TokenKind.AXJEUF8:
-                case TokenKind.V0oF1_Ia:
-                case TokenKind.LCF6mrBw1SEACqszM0:
-                case TokenKind.FTFUgi4mZsX8Vyt:
+                case TokenKind.Plus:
+                case TokenKind.Minus:
+                case TokenKind.Not:
+                case TokenKind.BitNot:
+                case TokenKind.PlusPlus:
+                case TokenKind.MinusMinus:
                 {
-                        Operations IU2nAxA = bTUSUK_R9zP[tMh7uT++].UCclohAHjaXEJvAVi switch
+                        Operations op = _tokens[_idx++].kind switch
                         {
-                            TokenKind.px4P2OwC_TCS => Operations.px4P2OwC_TCS,
-                            TokenKind.VpNNk81hH01O3w => Operations.VpNNk81hH01O3w,
-                            TokenKind.FTFUgi4mZsX8Vyt => Operations.o1eEDaDB1HpqMTgNI,
-                            TokenKind.LCF6mrBw1SEACqszM0 => Operations.tmDJZxxjN8YO6gXg,
-                            TokenKind.V0oF1_Ia => Operations.V0oF1_Ia,
-                            TokenKind.AXJEUF8 => Operations.AXJEUF8,
+                            TokenKind.Plus => Operations.Plus,
+                            TokenKind.Minus => Operations.Minus,
+                            TokenKind.MinusMinus => Operations.MinusMinusLeft,
+                            TokenKind.PlusPlus => Operations.PlusPlusLeft,
+                            TokenKind.BitNot => Operations.BitNot,
+                            TokenKind.Not => Operations.Not,
                             _ => throw new Exception("Unknown unary operator.")
                         };
 
-                        RbW6GlIJt = new UnaryExpression(IU2nAxA, XU2m8fJ4L(100));
+                        left = new UnaryExpression(op, GetExpression(100));
                         break;
                     }
-                case TokenKind.JaFK4wy:
+                case TokenKind.LeftParen:
                     {
-                        tMh7uT++; 
-                        RbW6GlIJt = XU2m8fJ4L();
+                        _idx++; 
+                        left = GetExpression();
 
-                        if (tMh7uT >= bTUSUK_R9zP.Count || bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi != TokenKind.mXkYfmMfcdhMK)
+                        if (_idx >= _tokens.Count || _tokens[_idx].kind != TokenKind.RightParen)
                         {
                             throw new Exception("Parser error expected )");
                         }
 
-                        tMh7uT++;
+                        _idx++;
                         break;
                     }
-                case TokenKind.fkkQAsvha:
+                case TokenKind.Number:
                     {    
-                        RbW6GlIJt = new NumberExpression(int.Parse(bTUSUK_R9zP[tMh7uT++].kvJv6FdX0Wme2ZUXxy!), VariableType.QOa6p9YEuH1RAbA6O7q5);
+                        left = new NumberExpression(int.Parse(_tokens[_idx++].val!), VariableType.Int);
                         break;
                     }
-                case TokenKind.zCmKOyOPQ:
+                case TokenKind.Indent:
                     {
-                        RbW6GlIJt = new VariableExpression(bTUSUK_R9zP[tMh7uT++].kvJv6FdX0Wme2ZUXxy!);
+                        left = new VariableExpression(_tokens[_idx++].val!);
                         break;
                     }
-                case TokenKind.VJ9YVMa9I:
+                case TokenKind.False:
                     {
-                        RbW6GlIJt = new BoolExpression(false);
-                        tMh7uT++;
+                        left = new BoolExpression(false);
+                        _idx++;
                         break;
                     }
-                case TokenKind.nwAN5fKImy9:
+                case TokenKind.True:
                     {
-                        RbW6GlIJt = new BoolExpression(true);
-                        tMh7uT++;
+                        left = new BoolExpression(true);
+                        _idx++;
                         break;
                     }
                 default:
-                    throw new Exception("Error in Parser, unknown token: " + bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi);
+                    throw new Exception("Error in Parser, unknown token: " + _tokens[_idx].kind);
             }
 
-            while(tMh7uT < bTUSUK_R9zP.Count && bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi is not TokenKind.OAYy4uF5oPr25 and not TokenKind.mXkYfmMfcdhMK)
+            while(_idx < _tokens.Count && _tokens[_idx].kind is not TokenKind.QuestionMark and not TokenKind.RightParen)
             {
-                if (bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi is TokenKind.LCF6mrBw1SEACqszM0 or TokenKind.FTFUgi4mZsX8Vyt)
+                if (_tokens[_idx].kind is TokenKind.PlusPlus or TokenKind.MinusMinus)
                 {
-                    var ZOPdtklYsstgjwAX = bTUSUK_R9zP[tMh7uT++].UCclohAHjaXEJvAVi switch
+                    var op2 = _tokens[_idx++].kind switch
                     {
-                        TokenKind.LCF6mrBw1SEACqszM0 => Operations.jeuvS6KLpYeMA43v9,
-                        TokenKind.FTFUgi4mZsX8Vyt => Operations.SaZ45v4KVaHn,
+                        TokenKind.PlusPlus => Operations.PlusPlusRight,
+                        TokenKind.MinusMinus => Operations.MinusMinusRight,
                         _ => throw new Exception()
                     };
 
-                    RbW6GlIJt = new UnaryExpression(ZOPdtklYsstgjwAX, RbW6GlIJt);
+                    left = new UnaryExpression(op2, left);
                     continue;
                 }
 
-                (var IU2nAxA, int gmePyXrybh3inCoffpW) = ftjYiwl5Vh();
-                if (YL8PJ_CiFj > gmePyXrybh3inCoffpW) break;
-                tMh7uT++;
+                (var op, int opPriority) = GetOperatorAndPriority();
+                if (priority > opPriority) break;
+                _idx++;
                                                                 
-                RbW6GlIJt = new BinaryExpression(RbW6GlIJt, IU2nAxA, XU2m8fJ4L(++gmePyXrybh3inCoffpW));
+                left = new BinaryExpression(left, op, GetExpression(++opPriority));
             }
 
-            return RbW6GlIJt;
+            return left;
         }
 
-        private void iFxJgdC(TokenKind UCclohAHjaXEJvAVi)
+        private void Requires(TokenKind kind)
         {
-            if (bTUSUK_R9zP[tMh7uT++].UCclohAHjaXEJvAVi != UCclohAHjaXEJvAVi) throw new Exception($"Requires {UCclohAHjaXEJvAVi}");
+            if (_tokens[_idx++].kind != kind) throw new Exception($"Requires {kind}");
         }
-        private (Operations, int) ftjYiwl5Vh() => bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi switch
+        private (Operations, int) GetOperatorAndPriority() => _tokens[_idx].kind switch
         {
-            TokenKind.XvjP9ZInqh1c6ky6nK_ => (Operations.XvjP9ZInqh1c6ky6nK_, 70),
-            TokenKind.HVwX8t15uMw86Zjrr => (Operations.HVwX8t15uMw86Zjrr, 70),
-            TokenKind.Dcm_6_V8BembLSz3Xvd => (Operations.Dcm_6_V8BembLSz3Xvd, 70),
+            TokenKind.Multiply => (Operations.Multiply, 70),
+            TokenKind.Divide => (Operations.Divide, 70),
+            TokenKind.DivisionRem => (Operations.DivisionRem, 70),
 
-            TokenKind.px4P2OwC_TCS => (Operations.px4P2OwC_TCS, 60),
-            TokenKind.VpNNk81hH01O3w => (Operations.VpNNk81hH01O3w, 60),
+            TokenKind.Plus => (Operations.Plus, 60),
+            TokenKind.Minus => (Operations.Minus, 60),
 
-            TokenKind.glXuoibfOZtI7SBkfT => (Operations.glXuoibfOZtI7SBkfT, 50),
-            TokenKind.FsWeBIKdwX => (Operations.FsWeBIKdwX, 50),
+            TokenKind.LeftShift => (Operations.LeftShift, 50),
+            TokenKind.RightShift => (Operations.RightShift, 50),
 
-            TokenKind.i3e0fh1jq => (Operations.i3e0fh1jq, 40),
-            TokenKind.X0mFuD => (Operations.RpVKAjlPn7QkY5, 40),
-            TokenKind.wY8aKmHjGo => (Operations.wY8aKmHjGo, 40),
-            TokenKind.EVNnxDS7mt => (Operations.yCtPKI, 40),
+            TokenKind.GreaterThan => (Operations.GreaterThan, 40),
+            TokenKind.GreaterThanOrEquals => (Operations.GreaterThanOrEqual, 40),
+            TokenKind.LessThan => (Operations.LessThan, 40),
+            TokenKind.LessThanOrEquals => (Operations.LessThanOrEqual, 40),
 
-            TokenKind.Tieags2HzPi132WNHai => (Operations.Tieags2HzPi132WNHai, 30),
-            TokenKind.ggA0QEoXbT2g42XV => (Operations.ggA0QEoXbT2g42XV, 30),
+            TokenKind.EqualsEquals => (Operations.EqualsEquals, 30),
+            TokenKind.NotEquals => (Operations.NotEquals, 30),
 
-            TokenKind.xyQlFLPMo74jLnujD => (Operations.xyQlFLPMo74jLnujD, 25),
-            TokenKind.tOhkYK403y => (Operations.tOhkYK403y, 20),
-            TokenKind.LoG1nbZ0fIkPU => (Operations.LoG1nbZ0fIkPU, 15),
+            TokenKind.BitAnd => (Operations.BitAnd, 25),
+            TokenKind.BitXor => (Operations.BitXor, 20),
+            TokenKind.BitOr => (Operations.BitOr, 15),
 
-            TokenKind.dFZBYFCUJWiZYreG5 => (Operations.dFZBYFCUJWiZYreG5, 10),
-            TokenKind.hJQNxCsE8 => (Operations.hJQNxCsE8, 5),
+            TokenKind.And => (Operations.And, 10),
+            TokenKind.Or => (Operations.Or, 5),
 
             _ => throw new Exception("Unknown Operation")
         };
 
-        private Operations _jlUqzof() => bTUSUK_R9zP[tMh7uT].UCclohAHjaXEJvAVi switch
+        private Operations GetOperatorEquals() => _tokens[_idx].kind switch
         {
-            TokenKind.yzkCqYShh => Operations.yzkCqYShh,
-            TokenKind.cJcVwmWsoiUI => Operations.cJcVwmWsoiUI,
-            TokenKind.pe3_jLc => Operations.pe3_jLc,
-            TokenKind.bEbHtL6r_nWiA4 => Operations.bEbHtL6r_nWiA4,
-            TokenKind.SKz7ydBz => Operations.SKz7ydBz,
+            TokenKind.PlusEquals => Operations.PlusEquals,
+            TokenKind.MinusEquals => Operations.MinusEquals,
+            TokenKind.MultiplyEquals => Operations.MultiplyEquals,
+            TokenKind.DivideEquals => Operations.DivideEquals,
+            TokenKind.DivisionRemEquals => Operations.DivisionRemEquals,
 
-            TokenKind.JYW1ZlxYZddYZFQz => Operations.JYW1ZlxYZddYZFQz,
-            TokenKind.Jl_g4z_tM6N7fZ6 => Operations.Jl_g4z_tM6N7fZ6,
-            TokenKind.BiHitvb7n3O1 => Operations.BiHitvb7n3O1,
+            TokenKind.BitAndEquals => Operations.BitAndEquals,
+            TokenKind.BitOrEquals => Operations.BitOrEquals,
+            TokenKind.BitXorEquals => Operations.BitXorEquals,
 
-            TokenKind.Y51ndI1fZSk8I => Operations.Y51ndI1fZSk8I,
-            TokenKind.w2UzTMSp9o0T => Operations.w2UzTMSp9o0T,
+            TokenKind.RightShiftEquals => Operations.RightShiftEquals,
+            TokenKind.LeftShiftEquals => Operations.LeftShiftEquals,
 
             _ => throw new Exception("Unknown Operation")
         };
-        public VariableType QKG8TsMd(TokenKind UCclohAHjaXEJvAVi) => UCclohAHjaXEJvAVi switch { 
-            TokenKind.msEw5C9X6eO => VariableType.msEw5C9X6eO,
-            TokenKind.QOa6p9YEuH1RAbA6O7q5 => VariableType.QOa6p9YEuH1RAbA6O7q5,
+        public VariableType GetTypeFromToken(TokenKind kind) => kind switch { 
+            TokenKind.Bool => VariableType.Bool,
+            TokenKind.Int => VariableType.Int,
             _ => throw new Exception("Unknown type")
         };
     }

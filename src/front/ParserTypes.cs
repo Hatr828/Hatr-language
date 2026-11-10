@@ -8,209 +8,209 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace Best_language.src.front
 {
     public abstract class AstNode;
-    public class ProgramNode(List<AstNode> CZaJj4hwP5v17) : AstNode
+    public class ProgramNode(List<AstNode> nodes) : AstNode
     {
-        public List<AstNode> Lt6RjPqqO { get; } = CZaJj4hwP5v17;
+        public List<AstNode> Nodes { get; } = nodes;
     }
 
     public abstract class Expression : AstNode;
-    public class NumberExpression(long FlHaV6FlTtLPOieCD, VariableType FubV605Z9qF5D9z3X) : Expression
+    public class NumberExpression(long value, VariableType type) : Expression
     {
-        public long Sb5MrQFjg8JlEcaS { get; } = FlHaV6FlTtLPOieCD;
-        public VariableType rawbemMG { get; } = FubV605Z9qF5D9z3X;
+        public long Value { get; } = value;
+        public VariableType Type { get; } = type;
     }
-    public class VariableExpression(string tvLjFkzfFa9PYoTwdhO) : Expression
+    public class VariableExpression(string name) : Expression
     {
-        public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
+        public string Name { get; } = name;
     }
-    public class BoolExpression(bool FlHaV6FlTtLPOieCD) : Expression
+    public class BoolExpression(bool value) : Expression
     {
-        public bool Sb5MrQFjg8JlEcaS { get; } = FlHaV6FlTtLPOieCD;
-        public VariableType rawbemMG { get; } = VariableType.msEw5C9X6eO;
+        public bool Value { get; } = value;
+        public VariableType Type { get; } = VariableType.Bool;
     }
-    public class BinaryExpression(Expression RbW6GlIJt, Operations IU2nAxA, Expression h3s7dbXXv22CfCfn) : Expression
+    public class BinaryExpression(Expression left, Operations op, Expression right) : Expression
     {
-        public Expression bRC8MHJu { get; } = RbW6GlIJt;
-        public Operations mfIdTBeeCV { get; } = IU2nAxA;
-        public Expression Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
+        public Expression Left { get; } = left;
+        public Operations Op { get; } = op;
+        public Expression Right { get; } = right;
     }
-    public class UnaryExpression(Operations IU2nAxA, Expression h3s7dbXXv22CfCfn) : Expression
+    public class UnaryExpression(Operations op, Expression right) : Expression
     {
-        public Operations mfIdTBeeCV { get; } = IU2nAxA;
-        public Expression Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
+        public Operations Op { get; } = op;
+        public Expression Right { get; } = right;
     }
     public enum Operations
     {
-        px4P2OwC_TCS,
-        VpNNk81hH01O3w,
-        XvjP9ZInqh1c6ky6nK_,
-        HVwX8t15uMw86Zjrr,
-        Dcm_6_V8BembLSz3Xvd,
+        Plus,
+        Minus,
+        Multiply,
+        Divide,
+        DivisionRem,
 
-        yzkCqYShh,
-        cJcVwmWsoiUI,
-        pe3_jLc,
-        bEbHtL6r_nWiA4,
-        SKz7ydBz,
+        PlusEquals,
+        MinusEquals,
+        MultiplyEquals,
+        DivideEquals,
+        DivisionRemEquals,
 
-        jeuvS6KLpYeMA43v9,
-        tmDJZxxjN8YO6gXg,
-        SaZ45v4KVaHn,
-        o1eEDaDB1HpqMTgNI,
+        PlusPlusRight,
+        PlusPlusLeft,
+        MinusMinusRight,
+        MinusMinusLeft,
 
-        wY8aKmHjGo,
-        yCtPKI,
-        i3e0fh1jq,
-        RpVKAjlPn7QkY5,
-        Tieags2HzPi132WNHai,
-        ggA0QEoXbT2g42XV,
+        LessThan,
+        LessThanOrEqual,
+        GreaterThan,
+        GreaterThanOrEqual,
+        EqualsEquals,
+        NotEquals,
 
-        V0oF1_Ia,
-        tOhkYK403y,
-        xyQlFLPMo74jLnujD,
-        LoG1nbZ0fIkPU,
+        BitNot,
+        BitXor,
+        BitAnd,
+        BitOr,
 
-        JYW1ZlxYZddYZFQz,
-        Jl_g4z_tM6N7fZ6,
-        BiHitvb7n3O1,
+        BitAndEquals,
+        BitOrEquals,
+        BitXorEquals,
 
-        FsWeBIKdwX,
-        glXuoibfOZtI7SBkfT,
-        Y51ndI1fZSk8I,
-        w2UzTMSp9o0T,
+        RightShift,
+        LeftShift,
+        RightShiftEquals,
+        LeftShiftEquals,
 
-        dFZBYFCUJWiZYreG5,
-        hJQNxCsE8,
-        AXJEUF8
+        And,
+        Or,
+        Not
     }
 
     public abstract class Statement : AstNode;
-    public class VariableDeclaration(string tvLjFkzfFa9PYoTwdhO, VariableType FubV605Z9qF5D9z3X, Expression? h7zQ6CJizFQm = null) : Statement
+    public class VariableDeclaration(string name, VariableType type, Expression? initializer = null) : Statement
     {
-        public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
-        public Expression? VFweLKwblUFT45a5dYsf { get; } = h7zQ6CJizFQm;
+        public string Name { get; } = name;
+        public Expression? Initializer { get; } = initializer;
 
-        public VariableType rawbemMG { get; } = FubV605Z9qF5D9z3X;
+        public VariableType Type { get; } = type;
     }
-    public class AssignmentStatement(string tvLjFkzfFa9PYoTwdhO, Operations? IU2nAxA, Expression h3s7dbXXv22CfCfn) : Statement
+    public class AssignmentStatement(string name, Operations? op, Expression right) : Statement
     {
-        public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
+        public string Name { get; } = name;
 
-        public Operations? mfIdTBeeCV = IU2nAxA;
-        public Expression Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
+        public Operations? Op = op;
+        public Expression Right { get; } = right;
     }
-    public class GotoStatement(string ZsJRNrW) : Statement
+    public class GotoStatement(string to) : Statement
     {
-        public string AM17m62yJaIBgtiOg { get; } = ZsJRNrW;
+        public string To { get; } = to;
     }
-    public class GotoDeclaration(string tvLjFkzfFa9PYoTwdhO) : Statement
+    public class GotoDeclaration(string name) : Statement
     {
-        public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
+        public string Name { get; } = name;
     }
-    public class IfDeclaration(Expression zvo1A5gjZ, List<AstNode> UYfdaySL) : Statement
+    public class IfDeclaration(Expression expression, List<AstNode> codeBlock) : Statement
     {
-        public Expression _huqzi { get; } = zvo1A5gjZ;
-        public List<AstNode> _gLmRU6 { get; } = UYfdaySL;
+        public Expression Expression { get; } = expression;
+        public List<AstNode> CodeBlock { get; } = codeBlock;
     }
 
     public enum VariableType
     {
-        QOa6p9YEuH1RAbA6O7q5,
-        msEw5C9X6eO,
-        MNMtkkiM1kdY6K3XD
+        Int,
+        Bool,
+        String
     }
 
     public static class AstPrinter
     {
-        public static void jwtEpdBSXI(AstNode AiBZVSsJC2)
+        public static void Print(AstNode root)
         {
             Console.WriteLine("AST");
-            uv93COVA_xMa2(AiBZVSsJC2, "", true);
+            PrintNode(root, "", true);
         }
 
-        private static void uv93COVA_xMa2(AstNode opKIGQBXk1qIUhw7, string rWl0RkKc, bool m5JMl_D28)
+        private static void PrintNode(AstNode node, string indent, bool last)
         {
-            Console.Write(rWl0RkKc);
-            Console.Write(m5JMl_D28 ? "└── " : "├── ");
+            Console.Write(indent);
+            Console.Write(last ? "└── " : "├── ");
 
-            switch (opKIGQBXk1qIUhw7)
+            switch (node)
             {
-                case ProgramNode qxjo8UYQZhD:
+                case ProgramNode main:
                     {
                             Console.WriteLine($"{nameof(ProgramNode)}");
-                            for (int YLfMq95c = 0; YLfMq95c < qxjo8UYQZhD.Lt6RjPqqO.Count; YLfMq95c++)
+                            for (int i = 0; i < main.Nodes.Count; i++)
                             {
-                                uv93COVA_xMa2(qxjo8UYQZhD.Lt6RjPqqO[YLfMq95c], rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), YLfMq95c == qxjo8UYQZhD.Lt6RjPqqO.Count - 1);
+                                PrintNode(main.Nodes[i], indent + (last ? "    " : "│   "), i == main.Nodes.Count - 1);
                             }
                             break;
                     }
-                case VariableDeclaration UHtIc5V2GaGHEr:
+                case VariableDeclaration variable:
                     {
-                            Console.WriteLine($"{nameof(VariableDeclaration)}: {UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq} ({UHtIc5V2GaGHEr.rawbemMG})");
-                            if (UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf is not null)
+                            Console.WriteLine($"{nameof(VariableDeclaration)}: {variable.Name} ({variable.Type})");
+                            if (variable.Initializer is not null)
                             {
-                                uv93COVA_xMa2(UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), true);
+                                PrintNode(variable.Initializer, indent + (last ? "    " : "│   "), true);
                             }
                             break;
                     }
-                case AssignmentStatement Ya3KuoBYDAJuy5LuF:
+                case AssignmentStatement assignment:
                     {
-                        Console.WriteLine($"{nameof(AssignmentStatement)}: {Ya3KuoBYDAJuy5LuF.RDvxaYCKYSRSBjVq}");
-                        uv93COVA_xMa2(Ya3KuoBYDAJuy5LuF.Kqh0aRU, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), true);
+                        Console.WriteLine($"{nameof(AssignmentStatement)}: {assignment.Name}");
+                        PrintNode(assignment.Right, indent + (last ? "    " : "│   "), true);
                         break;
                     }
-                case GotoDeclaration wtIkAtgRp2_8CQp4OM:
+                case GotoDeclaration got:
                     {
-                        Console.WriteLine($"{nameof(GotoDeclaration)}: {wtIkAtgRp2_8CQp4OM.RDvxaYCKYSRSBjVq}");
+                        Console.WriteLine($"{nameof(GotoDeclaration)}: {got.Name}");
                         break;
                     }
-                case GotoStatement wtIkAtgRp2_8CQp4OM:
+                case GotoStatement got:
                     {
-                        Console.WriteLine($"{nameof(GotoStatement)}: {wtIkAtgRp2_8CQp4OM.AM17m62yJaIBgtiOg}");
+                        Console.WriteLine($"{nameof(GotoStatement)}: {got.To}");
                         break;
                     }
-                case IfDeclaration R5E_HH:
+                case IfDeclaration If:
                     {
                         Console.WriteLine($"{nameof(IfDeclaration)}:");
-                        uv93COVA_xMa2(R5E_HH._huqzi, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), false);
-                        for (int YLfMq95c = 0; YLfMq95c < R5E_HH._gLmRU6.Count; YLfMq95c++)
+                        PrintNode(If.Expression, indent + (last ? "    " : "│   "), false);
+                        for (int i = 0; i < If.CodeBlock.Count; i++)
                         {
-                            uv93COVA_xMa2(R5E_HH._gLmRU6[YLfMq95c], rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), YLfMq95c == R5E_HH._gLmRU6.Count - 1);
+                            PrintNode(If.CodeBlock[i], indent + (last ? "    " : "│   "), i == If.CodeBlock.Count - 1);
                         }
                         break;
                     }
-                case UnaryExpression xi54PsDn5M889REv3:
+                case UnaryExpression unary:
                     {
-                        Console.WriteLine($"{nameof(UnaryExpression)}: {xi54PsDn5M889REv3.mfIdTBeeCV}");
-                        uv93COVA_xMa2(xi54PsDn5M889REv3.Kqh0aRU, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), true);
+                        Console.WriteLine($"{nameof(UnaryExpression)}: {unary.Op}");
+                        PrintNode(unary.Right, indent + (last ? "    " : "│   "), true);
                         break;
                     }
-                case VariableExpression zvo1A5gjZ:
+                case VariableExpression expression:
                     {
-                        Console.WriteLine($"{nameof(VariableExpression)}: {zvo1A5gjZ.RDvxaYCKYSRSBjVq}");
+                        Console.WriteLine($"{nameof(VariableExpression)}: {expression.Name}");
                         break;
                     }
-                case NumberExpression HvSPOv9ne_yrswTLzoo:
+                case NumberExpression number:
                     {
-                         Console.WriteLine($"{nameof(NumberExpression)}: {HvSPOv9ne_yrswTLzoo.Sb5MrQFjg8JlEcaS} ({HvSPOv9ne_yrswTLzoo.rawbemMG})");
+                         Console.WriteLine($"{nameof(NumberExpression)}: {number.Value} ({number.Type})");
                          break;
                     }
-                case BoolExpression zvo1A5gjZ:
+                case BoolExpression expression:
                     {
-                        Console.WriteLine($"{nameof(BoolExpression)}: {zvo1A5gjZ.Sb5MrQFjg8JlEcaS} ({zvo1A5gjZ.rawbemMG})");
+                        Console.WriteLine($"{nameof(BoolExpression)}: {expression.Value} ({expression.Type})");
                         break;
                     }
-                case BinaryExpression XxC0ynDET:
+                case BinaryExpression binary:
                     {
-                        Console.WriteLine($"{nameof(BinaryExpression)}: {XxC0ynDET.mfIdTBeeCV}");
-                        uv93COVA_xMa2(XxC0ynDET.bRC8MHJu, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), false);
-                        uv93COVA_xMa2(XxC0ynDET.Kqh0aRU, rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), true);
+                        Console.WriteLine($"{nameof(BinaryExpression)}: {binary.Op}");
+                        PrintNode(binary.Left, indent + (last ? "    " : "│   "), false);
+                        PrintNode(binary.Right, indent + (last ? "    " : "│   "), true);
                         break;
                     }
 
                 default:
                     { 
-                        Console.WriteLine(opKIGQBXk1qIUhw7.GetType());
+                        Console.WriteLine(node.GetType());
                         break;
                     }
             }

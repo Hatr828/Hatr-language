@@ -7,166 +7,166 @@ namespace Best_language.src.front
 {
     public class Lexer
     {
-        private readonly string AIHB3At771JXmhhWKK;
+        private readonly string _code;
 
-        private int tMh7uT;
+        private int _idx;
 
-        private Dictionary<string, TokenKind> Kq4jPVAbP3N3e = new()
+        private Dictionary<string, TokenKind> _keywords = new()
         {
-            ["INT"] = TokenKind.QOa6p9YEuH1RAbA6O7q5,
-            ["boom"] = TokenKind.msEw5C9X6eO,
-            ["fi"] = TokenKind.R5E_HH,
-            ["ttrruuee"] = TokenKind.nwAN5fKImy9,
-            ["ffaallssee"] = TokenKind.VJ9YVMa9I,
-            ["goat"] = TokenKind.lgNzh3UAydkfeRDf2Cu,
+            ["INT"] = TokenKind.Int,
+            ["boom"] = TokenKind.Bool,
+            ["fi"] = TokenKind.If,
+            ["ttrruuee"] = TokenKind.True,
+            ["ffaallssee"] = TokenKind.False,
+            ["goat"] = TokenKind.Goto,
         };
 
-        private Dictionary<char, TokenKind> w9u7Ezm = new()
+        private Dictionary<char, TokenKind> _chars = new()
         {
-            ['*'] = TokenKind.XvjP9ZInqh1c6ky6nK_,
-            ['+'] = TokenKind.px4P2OwC_TCS,
-            ['-'] = TokenKind.VpNNk81hH01O3w,
-            ['/'] = TokenKind.HVwX8t15uMw86Zjrr,
-            ['%'] = TokenKind.Dcm_6_V8BembLSz3Xvd,
+            ['*'] = TokenKind.Multiply,
+            ['+'] = TokenKind.Plus,
+            ['-'] = TokenKind.Minus,
+            ['/'] = TokenKind.Divide,
+            ['%'] = TokenKind.DivisionRem,
 
-            ['('] = TokenKind.mXkYfmMfcdhMK,
-            [')'] = TokenKind.JaFK4wy,
-            ['{'] = TokenKind.XmL8EZAP1m8r4dI9tNJ,
-            ['}'] = TokenKind.xQOQMX7lMt2mn,
+            ['('] = TokenKind.RightParen,
+            [')'] = TokenKind.LeftParen,
+            ['{'] = TokenKind.RightBrace,
+            ['}'] = TokenKind.LeftBrace,
 
-            ['='] = TokenKind.Saqsle32,
-            ['?'] = TokenKind.OAYy4uF5oPr25,
-            ['>'] = TokenKind.i3e0fh1jq,
-            ['<'] = TokenKind.wY8aKmHjGo,
-            ['!'] = TokenKind.AXJEUF8,
+            ['='] = TokenKind.Equals,
+            ['?'] = TokenKind.QuestionMark,
+            ['>'] = TokenKind.GreaterThan,
+            ['<'] = TokenKind.LessThan,
+            ['!'] = TokenKind.Not,
 
-            [':'] = TokenKind.VkPSg0,
+            [':'] = TokenKind.Colon,
 
-            ['~'] = TokenKind.V0oF1_Ia,
-            ['|'] = TokenKind.LoG1nbZ0fIkPU,
-            ['&'] = TokenKind.xyQlFLPMo74jLnujD,
-            ['^'] = TokenKind.tOhkYK403y,
+            ['~'] = TokenKind.BitNot,
+            ['|'] = TokenKind.BitOr,
+            ['&'] = TokenKind.BitAnd,
+            ['^'] = TokenKind.BitXor,
         };
 
-        private Dictionary<string, TokenKind> WTeocRQMDdJ7jGYhf = new()
+        private Dictionary<string, TokenKind> _doubleChars = new()
         {
-            [">="] = TokenKind.X0mFuD,
-            ["=="] = TokenKind.Tieags2HzPi132WNHai,
-            ["!="] = TokenKind.ggA0QEoXbT2g42XV,
-            ["<="] = TokenKind.EVNnxDS7mt,
-            ["&&"] = TokenKind.dFZBYFCUJWiZYreG5,
-            ["||"] = TokenKind.hJQNxCsE8,
+            [">="] = TokenKind.GreaterThanOrEquals,
+            ["=="] = TokenKind.EqualsEquals,
+            ["!="] = TokenKind.NotEquals,
+            ["<="] = TokenKind.LessThanOrEquals,
+            ["&&"] = TokenKind.And,
+            ["||"] = TokenKind.Or,
 
-            ["++"] = TokenKind.LCF6mrBw1SEACqszM0,
-            ["--"] = TokenKind.FTFUgi4mZsX8Vyt,
+            ["++"] = TokenKind.PlusPlus,
+            ["--"] = TokenKind.MinusMinus,
 
-            ["<<"] = TokenKind.glXuoibfOZtI7SBkfT,
-            [">>"] = TokenKind.FsWeBIKdwX,
+            ["<<"] = TokenKind.LeftShift,
+            [">>"] = TokenKind.RightShift,
 
-            ["+="] = TokenKind.yzkCqYShh,
-            ["-="] = TokenKind.cJcVwmWsoiUI,
-            ["*="] = TokenKind.pe3_jLc,
-            ["/="] = TokenKind.bEbHtL6r_nWiA4,
-            ["%="] = TokenKind.SKz7ydBz,
+            ["+="] = TokenKind.PlusEquals,
+            ["-="] = TokenKind.MinusEquals,
+            ["*="] = TokenKind.MultiplyEquals,
+            ["/="] = TokenKind.DivideEquals,
+            ["%="] = TokenKind.DivisionRemEquals,
 
-            ["^="] = TokenKind.BiHitvb7n3O1,
-            ["|="] = TokenKind.Jl_g4z_tM6N7fZ6,
-            ["&="] = TokenKind.JYW1ZlxYZddYZFQz,
+            ["^="] = TokenKind.BitXorEquals,
+            ["|="] = TokenKind.BitOrEquals,
+            ["&="] = TokenKind.BitAndEquals,
         };
 
-        public Lexer(string VzmABWWuEX5E) {
-            AIHB3At771JXmhhWKK = VzmABWWuEX5E; 
+        public Lexer(string code) {
+            _code = code; 
         }
          
-        public List<Token> H9EXHFD80i_YR_GCh2Q()
+        public List<Token> GetTokens()
         {
-            List<Token> A25qgAtLDu70v5Bnz5 = new List<Token>();
+            List<Token> res = new List<Token>();
 
-            while(tMh7uT < AIHB3At771JXmhhWKK.Length)
+            while(_idx < _code.Length)
             {
-                char zBgs8nftvUtORz5x7k = AIHB3At771JXmhhWKK[tMh7uT];
+                char temp = _code[_idx];
                 
-                if(zBgs8nftvUtORz5x7k is '\n' or ' ' or '\t' or '\r')
+                if(temp is '\n' or ' ' or '\t' or '\r')
                 {
-                    tMh7uT++;
+                    _idx++;
                     continue;
                 }
-                if(zBgs8nftvUtORz5x7k is >= '0' and <= '9')
+                if(temp is >= '0' and <= '9')
                 {
-                    string I7ZI3fRSU = gcxXP2ZLGUmI();
-                    A25qgAtLDu70v5Bnz5.Add(new Token(TokenKind.fkkQAsvha, I7ZI3fRSU));
+                    string num = GetNumber();
+                    res.Add(new Token(TokenKind.Number, num));
                     continue;
                 }
 
-                ReadOnlySpan<char> Jn3_L0ElNqgf;
+                ReadOnlySpan<char> word;
 
-                if (char.IsLetter(zBgs8nftvUtORz5x7k))
+                if (char.IsLetter(temp))
                 {
-                    Jn3_L0ElNqgf = zfOvM_upZZvCI1();
+                    word = GetWord();
                 }
                 else {
-                    if (tMh7uT + 1 < AIHB3At771JXmhhWKK.Length)
+                    if (_idx + 1 < _code.Length)
                     {
-                        if (tMh7uT + 3 < AIHB3At771JXmhhWKK.Length)
+                        if (_idx + 3 < _code.Length)
                         {
-                            if(AIHB3At771JXmhhWKK[tMh7uT..(tMh7uT + 3)] is "<<=")
+                            if(_code[_idx..(_idx + 3)] is "<<=")
                             {
-                                A25qgAtLDu70v5Bnz5.Add(new(TokenKind.w2UzTMSp9o0T));
-                                tMh7uT += 3;
+                                res.Add(new(TokenKind.LeftShiftEquals));
+                                _idx += 3;
                                 continue;
                             }
-                            else if (AIHB3At771JXmhhWKK[tMh7uT..(tMh7uT + 3)] is ">>=")
+                            else if (_code[_idx..(_idx + 3)] is ">>=")
                             {
-                                A25qgAtLDu70v5Bnz5.Add(new(TokenKind.Y51ndI1fZSk8I));
-                                tMh7uT += 3;
+                                res.Add(new(TokenKind.RightShiftEquals));
+                                _idx += 3;
                                 continue;
                             }
                         }
-                        if (WTeocRQMDdJ7jGYhf.TryGetValue(AIHB3At771JXmhhWKK[tMh7uT..(tMh7uT + 2)], out TokenKind OzklYsdV48o))
+                        if (_doubleChars.TryGetValue(_code[_idx..(_idx + 2)], out TokenKind token1))
                         {
-                            A25qgAtLDu70v5Bnz5.Add(new(OzklYsdV48o));
-                            tMh7uT += 2;
+                            res.Add(new(token1));
+                            _idx += 2;
                             continue;
                         }
                     }
 
-                    if (w9u7Ezm.TryGetValue(zBgs8nftvUtORz5x7k, out TokenKind ZAbLFIiCc7z1UhwuFj))
+                    if (_chars.TryGetValue(temp, out TokenKind token2))
                     {
-                        A25qgAtLDu70v5Bnz5.Add(new(ZAbLFIiCc7z1UhwuFj));
+                        res.Add(new(token2));
                     }
-                    else throw new ArgumentException("Unknown token: " + zBgs8nftvUtORz5x7k);
-                    tMh7uT++;
+                    else throw new ArgumentException("Unknown token: " + temp);
+                    _idx++;
                     continue;
                 }
-                if (Kq4jPVAbP3N3e.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(Jn3_L0ElNqgf, out TokenKind vY5WY8aCjPrEMaJlOL))
+                if (_keywords.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(word, out TokenKind token))
                 {
-                    A25qgAtLDu70v5Bnz5.Add(new(vY5WY8aCjPrEMaJlOL));
+                    res.Add(new(token));
                     continue;
                 }
 
-                A25qgAtLDu70v5Bnz5.Add(new Token(TokenKind.zCmKOyOPQ, Jn3_L0ElNqgf.ToString()));
+                res.Add(new Token(TokenKind.Indent, word.ToString()));
             }
 
-            return A25qgAtLDu70v5Bnz5;
+            return res;
         }
-        public string gcxXP2ZLGUmI()
+        public string GetNumber()
         {
-            int tUkKN6keVHe7N9jjD = tMh7uT;
-            while (tMh7uT < AIHB3At771JXmhhWKK.Length && AIHB3At771JXmhhWKK[tMh7uT] is >= '0' and <= '9')
+            int startIdx = _idx;
+            while (_idx < _code.Length && _code[_idx] is >= '0' and <= '9')
             {
-                tMh7uT++;
+                _idx++;
             }
 
-            return AIHB3At771JXmhhWKK[tUkKN6keVHe7N9jjD..tMh7uT];             }
-        public ReadOnlySpan<char> zfOvM_upZZvCI1()
+            return _code[startIdx.._idx];             }
+        public ReadOnlySpan<char> GetWord()
         {
-            int tUkKN6keVHe7N9jjD = tMh7uT;
-            while (tMh7uT < AIHB3At771JXmhhWKK.Length && char.IsLetterOrDigit(AIHB3At771JXmhhWKK[tMh7uT]) || AIHB3At771JXmhhWKK[tMh7uT] is '_')
+            int startIdx = _idx;
+            while (_idx < _code.Length && char.IsLetterOrDigit(_code[_idx]) || _code[_idx] is '_')
             {
-                tMh7uT++;
+                _idx++;
             }
 
-            return AIHB3At771JXmhhWKK.AsSpan(tUkKN6keVHe7N9jjD..tMh7uT);
+            return _code.AsSpan(startIdx.._idx);
         }
     }
 }

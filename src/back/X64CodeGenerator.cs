@@ -6,276 +6,276 @@ using System.Text;
 
 namespace Best_language.src.back
 {
-    class X64CodeGenerator(IrProgram Rst3_7gf)
+    class X64CodeGenerator(IrProgram irProgram)
     {
-        private readonly IrProgram yYZGCwEMnNxRGApcFC = Rst3_7gf;
+        private readonly IrProgram _irProgram = irProgram;
 
-        private readonly Dictionary<IrValue, int> libgHsYUF4foJ7aAH = new();
+        private readonly Dictionary<IrValue, int> _locals = new();
 
-        private readonly Dictionary<IrValue, long> Al7erL = new();
+        private readonly Dictionary<IrValue, long> _constants = new();
 
-        private StringBuilder S7s8kX2 = new();
+        private StringBuilder _sb = new();
 
-        private int kXFfxJOEq;
+        private int offset;
 
-        private List<IrInstruction>? mt9Hp28wUyvEI;
+        private List<IrInstruction>? instructions;
 
-        private int bfgIqe36SD;
+        private int idx;
 
-        public string L0AW5J5gm7d1k2MC()
+        public string GenerateAsm()
         {
-            eII2uUru();
-            qzV6kOD5yz();
-            bfgIqe36SD = 0;
-            mt9Hp28wUyvEI = yYZGCwEMnNxRGApcFC.NumXpBuXze5D;
+            AppendHeader();
+            AppendStartFunc();
+            idx = 0;
+            instructions = _irProgram.Instructions;
 
-            while (bfgIqe36SD < mt9Hp28wUyvEI.Count)
+            while (idx < instructions.Count)
             {
-                switch(mt9Hp28wUyvEI[bfgIqe36SD++])
+                switch(instructions[idx++])
                 {
-                    case IrBinary XxC0ynDET:
+                    case IrBinary binary:
                         {
-                            fK2NV8z6FbtMILjRf(XxC0ynDET);
+                            OperationGen(binary);
 
-                            int S7FJ7HAuO2 = J32YhIfpRYQ(XxC0ynDET.bRC8MHJu);
-                            Al7erL.Remove(XxC0ynDET.bRC8MHJu);
+                            int slot = GetOrCreateSlot(binary.Left);
+                            _constants.Remove(binary.Left);
 
-                            S7s8kX2.AppendLine($"    mov qword [rbp-{S7FJ7HAuO2}], rax");
+                            _sb.AppendLine($"    mov qword [rbp-{slot}], rax");
                             break;
                         }
-                    case IrUnary xi54PsDn5M889REv3:
+                    case IrUnary unary:
                         {
-                            if (xi54PsDn5M889REv3.mfIdTBeeCV is Operations.px4P2OwC_TCS) break;
-                            PouZtZpLKPKu8(xi54PsDn5M889REv3);
+                            if (unary.Op is Operations.Plus) break;
+                            OperationUnaryGen(unary);
 
-                            int S7FJ7HAuO2 = J32YhIfpRYQ(xi54PsDn5M889REv3.Kqh0aRU);
-                            Al7erL.Remove(xi54PsDn5M889REv3.Kqh0aRU);
+                            int slot = GetOrCreateSlot(unary.Right);
+                            _constants.Remove(unary.Right);
 
-                            S7s8kX2.AppendLine($"    mov qword [rbp-{S7FJ7HAuO2}], rax");
+                            _sb.AppendLine($"    mov qword [rbp-{slot}], rax");
                             break;
                         }
-                    case IrVariable UHtIc5V2GaGHEr:
+                    case IrVariable variable:
                         {
-                            wBv0lHH3Pgrpf(UHtIc5V2GaGHEr.Kqh0aRU, "rax");
+                            LoadValue(variable.Right, "rax");
 
-                            int S7FJ7HAuO2 = J32YhIfpRYQ(UHtIc5V2GaGHEr.bRC8MHJu);
-                            Al7erL.Remove(UHtIc5V2GaGHEr.bRC8MHJu);
+                            int slot = GetOrCreateSlot(variable.Left);
+                            _constants.Remove(variable.Left);
 
-                            S7s8kX2.AppendLine($"    mov qword [rbp-{S7FJ7HAuO2}], rax");
+                            _sb.AppendLine($"    mov qword [rbp-{slot}], rax");
                             break;
                         }
-                    case IrConstant eIk0eR:
+                    case IrConstant constant:
                         {
-                            Al7erL.Add(eIk0eR.bRC8MHJu, eIk0eR.Kqh0aRU);
+                            _constants.Add(constant.Left, constant.Right);
                             break;
                         }
-                    case IrLabel Tx31ppY4:
+                    case IrLabel label:
                         {
-                            S7s8kX2.AppendLine($"{Tx31ppY4.RDvxaYCKYSRSBjVq}:");
+                            _sb.AppendLine($"{label.Name}:");
                             break;
                         }
-                    case IrJump KjirbwqrRKk6IgTqZH:
+                    case IrJump jump:
                         {
-                            S7s8kX2.AppendLine($"    jmp {KjirbwqrRKk6IgTqZH.Bbopqy}");
+                            _sb.AppendLine($"    jmp {jump.Target}");
                             break;
                         }
-                    case IrJumpIfTrue KjirbwqrRKk6IgTqZH:
+                    case IrJumpIfTrue jump:
                         {
-                            wBv0lHH3Pgrpf(KjirbwqrRKk6IgTqZH.u6xbke, "rax");
-                            S7s8kX2.AppendLine("    test rax, rax");
-                            S7s8kX2.AppendLine($"    jnz {KjirbwqrRKk6IgTqZH.Bbopqy}");
+                            LoadValue(jump.Condition, "rax");
+                            _sb.AppendLine("    test rax, rax");
+                            _sb.AppendLine($"    jnz {jump.Target}");
                             break;
                         }
                 }
             }
 
-            MwC364d3mVNMzvtu_();
+            AppendEndFunc();
 
-            int EmEJggkX0ME65l3W8x = (kXFfxJOEq + 15) & ~15;
-            S7s8kX2.Replace("STACK_SIZE", EmEJggkX0ME65l3W8x.ToString());
+            int stackSize = (offset + 15) & ~15;
+            _sb.Replace("STACK_SIZE", stackSize.ToString());
 
-            return S7s8kX2.ToString();
+            return _sb.ToString();
         }
-        private void fK2NV8z6FbtMILjRf(IrBinary XxC0ynDET)
+        private void OperationGen(IrBinary binary)
         {
-            wBv0lHH3Pgrpf(XxC0ynDET.bRC8MHJu, "rax");
-            wBv0lHH3Pgrpf(XxC0ynDET.Kqh0aRU, "rcx");
+            LoadValue(binary.Left, "rax");
+            LoadValue(binary.Right, "rcx");
 
-            switch (XxC0ynDET.mfIdTBeeCV)
+            switch (binary.Op)
             {
-                case Operations.yzkCqYShh:
-                case Operations.px4P2OwC_TCS:
-                    S7s8kX2.AppendLine("    add rax, rcx");
+                case Operations.PlusEquals:
+                case Operations.Plus:
+                    _sb.AppendLine("    add rax, rcx");
                     break;
 
-                case Operations.cJcVwmWsoiUI:
-                case Operations.VpNNk81hH01O3w:
-                    S7s8kX2.AppendLine("    sub rax, rcx");
+                case Operations.MinusEquals:
+                case Operations.Minus:
+                    _sb.AppendLine("    sub rax, rcx");
                     break;
 
-                case Operations.pe3_jLc:
-                case Operations.XvjP9ZInqh1c6ky6nK_:
-                    S7s8kX2.AppendLine("    imul rax, rcx");
+                case Operations.MultiplyEquals:
+                case Operations.Multiply:
+                    _sb.AppendLine("    imul rax, rcx");
                     break;
 
-                case Operations.bEbHtL6r_nWiA4:
-                case Operations.HVwX8t15uMw86Zjrr:
-                    S7s8kX2.AppendLine("    cqo");
-                    S7s8kX2.AppendLine("    idiv rcx");
+                case Operations.DivideEquals:
+                case Operations.Divide:
+                    _sb.AppendLine("    cqo");
+                    _sb.AppendLine("    idiv rcx");
                     break;
 
-                case Operations.SKz7ydBz:
-                case Operations.Dcm_6_V8BembLSz3Xvd:
-                    S7s8kX2.AppendLine("    cqo");
-                    S7s8kX2.AppendLine("    idiv rcx");
-                    S7s8kX2.AppendLine("    mov rax, rdx");
+                case Operations.DivisionRemEquals:
+                case Operations.DivisionRem:
+                    _sb.AppendLine("    cqo");
+                    _sb.AppendLine("    idiv rcx");
+                    _sb.AppendLine("    mov rax, rdx");
                     break;
 
-                case Operations.i3e0fh1jq:
-                    xY0C58HW("setg");
+                case Operations.GreaterThan:
+                    Compare("setg");
                     break;
 
-                case Operations.RpVKAjlPn7QkY5:
-                    xY0C58HW("setge");
+                case Operations.GreaterThanOrEqual:
+                    Compare("setge");
                     break;
 
-                case Operations.wY8aKmHjGo:
-                    xY0C58HW("setl");
+                case Operations.LessThan:
+                    Compare("setl");
                     break;
 
-                case Operations.yCtPKI:
-                    xY0C58HW("setle");
+                case Operations.LessThanOrEqual:
+                    Compare("setle");
                     break;
 
-                case Operations.Tieags2HzPi132WNHai:
-                    xY0C58HW("sete");
+                case Operations.EqualsEquals:
+                    Compare("sete");
                     break;
 
-                case Operations.ggA0QEoXbT2g42XV:
-                    xY0C58HW("setne");
+                case Operations.NotEquals:
+                    Compare("setne");
                     break;
 
-                case Operations.dFZBYFCUJWiZYreG5:
-                    S7s8kX2.AppendLine("    test rax, rax");
-                    S7s8kX2.AppendLine("    setne al");
-                    S7s8kX2.AppendLine("    test rcx, rcx");
-                    S7s8kX2.AppendLine("    setne cl");
-                    S7s8kX2.AppendLine("    and al, cl");
-                    S7s8kX2.AppendLine("    movzx rax, al");
+                case Operations.And:
+                    _sb.AppendLine("    test rax, rax");
+                    _sb.AppendLine("    setne al");
+                    _sb.AppendLine("    test rcx, rcx");
+                    _sb.AppendLine("    setne cl");
+                    _sb.AppendLine("    and al, cl");
+                    _sb.AppendLine("    movzx rax, al");
                     break;
 
-                case Operations.hJQNxCsE8:
-                    S7s8kX2.AppendLine("    or rax, rcx");
-                    S7s8kX2.AppendLine("    setne al");
-                    S7s8kX2.AppendLine("    movzx rax, al");
+                case Operations.Or:
+                    _sb.AppendLine("    or rax, rcx");
+                    _sb.AppendLine("    setne al");
+                    _sb.AppendLine("    movzx rax, al");
                     break;
 
-                case Operations.JYW1ZlxYZddYZFQz:
-                case Operations.xyQlFLPMo74jLnujD:
-                    S7s8kX2.AppendLine("    and rax, rcx");
+                case Operations.BitAndEquals:
+                case Operations.BitAnd:
+                    _sb.AppendLine("    and rax, rcx");
                     break;
 
-                case Operations.Jl_g4z_tM6N7fZ6:
-                case Operations.LoG1nbZ0fIkPU:
-                    S7s8kX2.AppendLine("    or rax, rcx");
+                case Operations.BitOrEquals:
+                case Operations.BitOr:
+                    _sb.AppendLine("    or rax, rcx");
                     break;
 
-                case Operations.BiHitvb7n3O1:
-                case Operations.tOhkYK403y:
-                    S7s8kX2.AppendLine("    xor rax, rcx");
+                case Operations.BitXorEquals:
+                case Operations.BitXor:
+                    _sb.AppendLine("    xor rax, rcx");
                     break;
 
-                case Operations.w2UzTMSp9o0T:
-                case Operations.glXuoibfOZtI7SBkfT:
-                    S7s8kX2.AppendLine("    shl rax, cl");
+                case Operations.LeftShiftEquals:
+                case Operations.LeftShift:
+                    _sb.AppendLine("    shl rax, cl");
                     break;
 
-                case Operations.Y51ndI1fZSk8I:
-                case Operations.FsWeBIKdwX:
-                    S7s8kX2.AppendLine("    sar rax, cl");
+                case Operations.RightShiftEquals:
+                case Operations.RightShift:
+                    _sb.AppendLine("    sar rax, cl");
                     break;
 
                 default:
-                    throw new NotImplementedException($"Unsupported binary operation: {XxC0ynDET.mfIdTBeeCV}");
+                    throw new NotImplementedException($"Unsupported binary operation: {binary.Op}");
             }
         }
-        private void PouZtZpLKPKu8(IrUnary XxC0ynDET)
+        private void OperationUnaryGen(IrUnary binary)
         {
-            wBv0lHH3Pgrpf(XxC0ynDET.Kqh0aRU, "rax");
+            LoadValue(binary.Right, "rax");
 
-            switch (XxC0ynDET.mfIdTBeeCV)
+            switch (binary.Op)
             {
-                case Operations.VpNNk81hH01O3w:
-                    S7s8kX2.AppendLine("    neg rax");
+                case Operations.Minus:
+                    _sb.AppendLine("    neg rax");
                     break;
-                case Operations.V0oF1_Ia:
-                    S7s8kX2.AppendLine("    not rax");
+                case Operations.BitNot:
+                    _sb.AppendLine("    not rax");
                     break;
-                case Operations.AXJEUF8:
-                    S7s8kX2.AppendLine("    test rax, rax");
-                    S7s8kX2.AppendLine("    sete al");
-                    S7s8kX2.AppendLine("    movzx rax, al");
+                case Operations.Not:
+                    _sb.AppendLine("    test rax, rax");
+                    _sb.AppendLine("    sete al");
+                    _sb.AppendLine("    movzx rax, al");
                     break;
-                case Operations.jeuvS6KLpYeMA43v9:
-                case Operations.tmDJZxxjN8YO6gXg:
-                    S7s8kX2.AppendLine("    add rax, 1");
+                case Operations.PlusPlusRight:
+                case Operations.PlusPlusLeft:
+                    _sb.AppendLine("    add rax, 1");
                     break;
-                case Operations.SaZ45v4KVaHn:
-                case Operations.o1eEDaDB1HpqMTgNI:
-                    S7s8kX2.AppendLine("    sub rax, 1");
+                case Operations.MinusMinusRight:
+                case Operations.MinusMinusLeft:
+                    _sb.AppendLine("    sub rax, 1");
                     break;
                 default:
-                    throw new NotImplementedException($"Unsupported binary operation: {XxC0ynDET.mfIdTBeeCV}");
+                    throw new NotImplementedException($"Unsupported binary operation: {binary.Op}");
             }
         }
 
-        private void xY0C58HW(string gkfVuQR)
+        private void Compare(string instruction)
         {
-            S7s8kX2.AppendLine("    cmp rax, rcx");
-            S7s8kX2.AppendLine($"    {gkfVuQR} al");
-            S7s8kX2.AppendLine("    movzx rax, al");
+            _sb.AppendLine("    cmp rax, rcx");
+            _sb.AppendLine($"    {instruction} al");
+            _sb.AppendLine("    movzx rax, al");
         }
 
-        private void wBv0lHH3Pgrpf(IrValue FlHaV6FlTtLPOieCD, string PpMPwZP)
+        private void LoadValue(IrValue value, string register)
         {
-            if (libgHsYUF4foJ7aAH.TryGetValue(FlHaV6FlTtLPOieCD, out int S7FJ7HAuO2))
-                S7s8kX2.AppendLine($"    mov {PpMPwZP}, qword [rbp-{S7FJ7HAuO2}]");
-            else if (Al7erL.TryGetValue(FlHaV6FlTtLPOieCD, out long eIk0eR))
-                S7s8kX2.AppendLine($"    mov {PpMPwZP}, {eIk0eR}");
+            if (_locals.TryGetValue(value, out int slot))
+                _sb.AppendLine($"    mov {register}, qword [rbp-{slot}]");
+            else if (_constants.TryGetValue(value, out long constant))
+                _sb.AppendLine($"    mov {register}, {constant}");
             else
-                throw new InvalidOperationException($"Unknown IR value: {FlHaV6FlTtLPOieCD}");
+                throw new InvalidOperationException($"Unknown IR value: {value}");
         }
 
-        private int J32YhIfpRYQ(IrValue FlHaV6FlTtLPOieCD)
+        private int GetOrCreateSlot(IrValue value)
         {
-            if (libgHsYUF4foJ7aAH.TryGetValue(FlHaV6FlTtLPOieCD, out int S7FJ7HAuO2))
-                return S7FJ7HAuO2;
+            if (_locals.TryGetValue(value, out int slot))
+                return slot;
 
-            kXFfxJOEq += 8;
-            libgHsYUF4foJ7aAH.Add(FlHaV6FlTtLPOieCD, kXFfxJOEq);
-            return kXFfxJOEq;
+            offset += 8;
+            _locals.Add(value, offset);
+            return offset;
         }
 
-        public void eII2uUru()
+        public void AppendHeader()
         {
-            S7s8kX2.AppendLine("global  start");
-            S7s8kX2.AppendLine("extern ExitProcess");
-            S7s8kX2.AppendLine("section .text");
+            _sb.AppendLine("global  start");
+            _sb.AppendLine("extern ExitProcess");
+            _sb.AppendLine("section .text");
         }
 
-        public void qzV6kOD5yz()
+        public void AppendStartFunc()
         {
-            S7s8kX2.AppendLine("start: ");
-            S7s8kX2.AppendLine("    push rbp");
-            S7s8kX2.AppendLine("    mov rbp, rsp");
-            S7s8kX2.AppendLine($"    sub rsp, STACK_SIZE");
+            _sb.AppendLine("start: ");
+            _sb.AppendLine("    push rbp");
+            _sb.AppendLine("    mov rbp, rsp");
+            _sb.AppendLine($"    sub rsp, STACK_SIZE");
         }
 
-        public void MwC364d3mVNMzvtu_()
+        public void AppendEndFunc()
         {
-            S7s8kX2.AppendLine("    xor ecx, ecx");
-            S7s8kX2.AppendLine("    sub rsp, 32");
-            S7s8kX2.AppendLine("    call ExitProcess");
+            _sb.AppendLine("    xor ecx, ecx");
+            _sb.AppendLine("    sub rsp, 32");
+            _sb.AppendLine("    call ExitProcess");
 
         }
     }

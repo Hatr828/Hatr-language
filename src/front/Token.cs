@@ -6,87 +6,87 @@ namespace Best_language.src.front
 {
     public struct Token
     {
-        public TokenKind UCclohAHjaXEJvAVi;
-        public string? kvJv6FdX0Wme2ZUXxy;
+        public TokenKind kind;
+        public string? val;
 
-        public Token(TokenKind UCclohAHjaXEJvAVi, string kvJv6FdX0Wme2ZUXxy)
+        public Token(TokenKind kind, string val)
         {
-            this.UCclohAHjaXEJvAVi = UCclohAHjaXEJvAVi;
-            this.kvJv6FdX0Wme2ZUXxy = kvJv6FdX0Wme2ZUXxy;
+            this.kind = kind;
+            this.val = val;
         }
-        public Token(TokenKind UCclohAHjaXEJvAVi)
+        public Token(TokenKind kind)
         {
-            this.UCclohAHjaXEJvAVi = UCclohAHjaXEJvAVi;
+            this.kind = kind;
         }
 
         public override string ToString()
         {
-            if (kvJv6FdX0Wme2ZUXxy is null)
-                return UCclohAHjaXEJvAVi.ToString();
+            if (val is null)
+                return kind.ToString();
             else
-                return UCclohAHjaXEJvAVi + $"({kvJv6FdX0Wme2ZUXxy})";
+                return kind + $"({val})";
         }
 
     }
 
     public enum TokenKind
     {
-        QOa6p9YEuH1RAbA6O7q5, 
-        msEw5C9X6eO,
-        R5E_HH,
-        nwAN5fKImy9,
-        VJ9YVMa9I,
-        lgNzh3UAydkfeRDf2Cu,
+        Int, 
+        Bool,
+        If,
+        True,
+        False,
+        Goto,
 
-        OAYy4uF5oPr25, 
-        Saqsle32,
-        VkPSg0,
-        AXJEUF8,
+        QuestionMark, 
+        Equals,
+        Colon,
+        Not,
 
-        px4P2OwC_TCS,
-        VpNNk81hH01O3w,
-        XvjP9ZInqh1c6ky6nK_,
-        HVwX8t15uMw86Zjrr,
-        Dcm_6_V8BembLSz3Xvd,
+        Plus,
+        Minus,
+        Multiply,
+        Divide,
+        DivisionRem,
 
-        yzkCqYShh,
-        cJcVwmWsoiUI,
-        pe3_jLc,
-        bEbHtL6r_nWiA4,
-        SKz7ydBz,
+        PlusEquals,
+        MinusEquals,
+        MultiplyEquals,
+        DivideEquals,
+        DivisionRemEquals,
 
-        LCF6mrBw1SEACqszM0,
-        FTFUgi4mZsX8Vyt,
+        PlusPlus,
+        MinusMinus,
 
-        V0oF1_Ia,
-        tOhkYK403y,
-        xyQlFLPMo74jLnujD,
-        LoG1nbZ0fIkPU,
+        BitNot,
+        BitXor,
+        BitAnd,
+        BitOr,
 
-        JYW1ZlxYZddYZFQz,
-        Jl_g4z_tM6N7fZ6,
-        BiHitvb7n3O1,
+        BitAndEquals,
+        BitOrEquals,
+        BitXorEquals,
 
-        FsWeBIKdwX,
-        glXuoibfOZtI7SBkfT,
-        Y51ndI1fZSk8I,
-        w2UzTMSp9o0T,
+        RightShift,
+        LeftShift,
+        RightShiftEquals,
+        LeftShiftEquals,
 
-        dFZBYFCUJWiZYreG5,
-        hJQNxCsE8,
-        Tieags2HzPi132WNHai,
-        ggA0QEoXbT2g42XV,
-        wY8aKmHjGo,
-        i3e0fh1jq,
-        X0mFuD,
-        EVNnxDS7mt,
+        And,
+        Or,
+        EqualsEquals,
+        NotEquals,
+        LessThan,
+        GreaterThan,
+        GreaterThanOrEquals,
+        LessThanOrEquals,
 
-        JaFK4wy,
-        mXkYfmMfcdhMK,
-        xQOQMX7lMt2mn, 
-        XmL8EZAP1m8r4dI9tNJ,
+        LeftParen,
+        RightParen,
+        LeftBrace, 
+        RightBrace,
 
-        zCmKOyOPQ,
-        fkkQAsvha,
+        Indent,
+        Number,
     }
 }

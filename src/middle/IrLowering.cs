@@ -10,144 +10,144 @@ namespace Best_language.src.middle
 {
     public class IrLowering
     {
-        private int rr43N_G;
-        private int E3cXt3Agzss4edDA;
-        private IrProgram ZxlPuhy9nKlj_24 = new();
+        private int _nextId;
+        private int _nextLebelId;
+        private IrProgram _currentProgram = new();
 
-        private Dictionary<string, IrValue> nhqaeri73 = new();
+        private Dictionary<string, IrValue> _variables = new();
 
-        private IrValue HE1TYQqtHG7Mcr96() => new(rr43N_G++);
-        private string EoOIZ19mfP2QAQ(string tvLjFkzfFa9PYoTwdhO) => $"{tvLjFkzfFa9PYoTwdhO}_{E3cXt3Agzss4edDA++}";
+        private IrValue NewIrValue() => new(_nextId++);
+        private string NewLabelName(string name) => $"{name}_{_nextLebelId++}";
 
-        public IrProgram OT4oi0eVmqprYSE(BoundProgram sMPlZ4JaeZR758e69) 
+        public IrProgram Lower(BoundProgram mainNode) 
         {
-            foreach (BoundFunction OwUELUXM3n88t6V02 in sMPlZ4JaeZR758e69.BqaEfTZY8PJtNpo)
+            foreach (BoundFunction function in mainNode.Functions)
             {
                 
-                foreach (BoundStatement L9XfWZyzYF in OwUELUXM3n88t6V02.x6w4y6YVMJqhHPCw)
+                foreach (BoundStatement st in function.Statements)
                 {
-                    Gr5ONL3BdMzHrR8nfZE(L9XfWZyzYF);
+                    LowerNode(st);
                 }
 
-                return ZxlPuhy9nKlj_24;
+                return _currentProgram;
             }
 
             throw new Exception("BoundProgram is empty");
         }
 
-        public void Gr5ONL3BdMzHrR8nfZE(BoundStatement opKIGQBXk1qIUhw7)
+        public void LowerNode(BoundStatement node)
         {
-            switch(opKIGQBXk1qIUhw7)
+            switch(node)
             {
-                case BoundVariableDeclaration UHtIc5V2GaGHEr:
+                case BoundVariableDeclaration variable:
                     {
-                        if (UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf is null) return;
+                        if (variable.Initializer is null) return;
 
-                        var FlHaV6FlTtLPOieCD = oZxpWPc(UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf);
-                        var A25qgAtLDu70v5Bnz5 = PAl_uyom48KJC(FlHaV6FlTtLPOieCD);
-                        nhqaeri73.Add(UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, A25qgAtLDu70v5Bnz5);
+                        var value = LowerExpression(variable.Initializer);
+                        var res = EmitCopy(value);
+                        _variables.Add(variable.Name, res);
                         return;
                     }
-                case BoundIfDeclaration R5E_HH:
+                case BoundIfDeclaration If:
                     {
-                        IrValue _DjEicbSKt = oZxpWPc(R5E_HH._huqzi);
+                        IrValue condition = LowerExpression(If.Expression);
                         
-                        string Tx31ppY4 = EoOIZ19mfP2QAQ("if");
-                        string iZRm5CogkhHGChm = EoOIZ19mfP2QAQ("end");
+                        string label = NewLabelName("if");
+                        string label2 = NewLabelName("end");
 
-                        xLbCDLgvWyiM_RS(new IrJumpIfTrue(_DjEicbSKt, Tx31ppY4));
-                        xLbCDLgvWyiM_RS(new IrJump(iZRm5CogkhHGChm));
-                        xLbCDLgvWyiM_RS(new IrLabel(Tx31ppY4));
+                        Emit(new IrJumpIfTrue(condition, label));
+                        Emit(new IrJump(label2));
+                        Emit(new IrLabel(label));
 
-                        foreach (var jn5gszuLQk in R5E_HH.x6w4y6YVMJqhHPCw)
-                            Gr5ONL3BdMzHrR8nfZE(jn5gszuLQk);
+                        foreach (var statement in If.Statements)
+                            LowerNode(statement);
 
-                        xLbCDLgvWyiM_RS(new IrLabel(iZRm5CogkhHGChm));
+                        Emit(new IrLabel(label2));
                         return;
                     }
-                case BoundGotoDeclaration eV5GbDX:
-                        xLbCDLgvWyiM_RS(new IrLabel("user_" + eV5GbDX.DIb6al9mN)); return;
-                case BoundGotoStatement eV5GbDX:
-                        xLbCDLgvWyiM_RS(new IrJump("user_" + eV5GbDX.K_1l6XsfuG9)); return;
-                case BoundAssignmentStatement Ya3KuoBYDAJuy5LuF:
+                case BoundGotoDeclaration @goto:
+                        Emit(new IrLabel("user_" + @goto.Id)); return;
+                case BoundGotoStatement @goto:
+                        Emit(new IrJump("user_" + @goto.ToId)); return;
+                case BoundAssignmentStatement assignment:
                     {
-                        var A25qgAtLDu70v5Bnz5 = _ZnHZc_yO(Ya3KuoBYDAJuy5LuF.RDvxaYCKYSRSBjVq);
-                        var u7ogbwL69cdM = oZxpWPc(Ya3KuoBYDAJuy5LuF.Kqh0aRU);
+                        var res = ResolveVariable(assignment.Name);
+                        var source = LowerExpression(assignment.Right);
 
-                        xLbCDLgvWyiM_RS(new IrVariable(A25qgAtLDu70v5Bnz5, u7ogbwL69cdM));
+                        Emit(new IrVariable(res, source));
                         return;
                     }
             }
-            throw new Exception("Cannot lower: " + opKIGQBXk1qIUhw7.GetType());
+            throw new Exception("Cannot lower: " + node.GetType());
         }
 
-        public IrValue oZxpWPc(BoundExpression zvo1A5gjZ)
+        public IrValue LowerExpression(BoundExpression expression)
         {
-            switch(zvo1A5gjZ)
+            switch(expression)
             {
-                case BoundNumberExpression I7ZI3fRSU:
-                    return S4GWwj(I7ZI3fRSU.Sb5MrQFjg8JlEcaS);
-                case BoundBoolExpression FHZW5YiKBaTQMYfb:
-                    return S4GWwj(FHZW5YiKBaTQMYfb.Sb5MrQFjg8JlEcaS ? 1 : 0);
-                case BoundVariableExpression UHtIc5V2GaGHEr:
-                    return _ZnHZc_yO(UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq);
-                case BoundBinaryExpression XxC0ynDET:
+                case BoundNumberExpression num:
+                    return EmitConstant(num.Value);
+                case BoundBoolExpression ex:
+                    return EmitConstant(ex.Value ? 1 : 0);
+                case BoundVariableExpression variable:
+                    return ResolveVariable(variable.Name);
+                case BoundBinaryExpression binary:
                     {
-                        var RbW6GlIJt = oZxpWPc(XxC0ynDET.bRC8MHJu);
-                        var A25qgAtLDu70v5Bnz5 = PAl_uyom48KJC(RbW6GlIJt);
-                        var h3s7dbXXv22CfCfn = oZxpWPc(XxC0ynDET.Kqh0aRU);
+                        var left = LowerExpression(binary.Left);
+                        var res = EmitCopy(left);
+                        var right = LowerExpression(binary.Right);
 
-                        xLbCDLgvWyiM_RS(new IrBinary(XxC0ynDET.mfIdTBeeCV, A25qgAtLDu70v5Bnz5, h3s7dbXXv22CfCfn));
+                        Emit(new IrBinary(binary.Op, res, right));
 
-                        return A25qgAtLDu70v5Bnz5;
+                        return res;
                     }
-                case BoundUnaryExpression xi54PsDn5M889REv3:
+                case BoundUnaryExpression unary:
                     {
-                        var h3s7dbXXv22CfCfn = oZxpWPc(xi54PsDn5M889REv3.Kqh0aRU);
+                        var right = LowerExpression(unary.Right);
 
-                        if (xi54PsDn5M889REv3.mfIdTBeeCV is Operations.tmDJZxxjN8YO6gXg or Operations.o1eEDaDB1HpqMTgNI)
+                        if (unary.Op is Operations.PlusPlusLeft or Operations.MinusMinusLeft)
                         {
-                            xLbCDLgvWyiM_RS(new IrUnary(xi54PsDn5M889REv3.mfIdTBeeCV, h3s7dbXXv22CfCfn));
-                            return h3s7dbXXv22CfCfn;
+                            Emit(new IrUnary(unary.Op, right));
+                            return right;
                         }
 
-                        if (xi54PsDn5M889REv3.mfIdTBeeCV is Operations.jeuvS6KLpYeMA43v9 or Operations.SaZ45v4KVaHn)
+                        if (unary.Op is Operations.PlusPlusRight or Operations.MinusMinusRight)
                         {
-                            var A25qgAtLDu70v5Bnz5 = PAl_uyom48KJC(h3s7dbXXv22CfCfn);
-                            xLbCDLgvWyiM_RS(new IrUnary(xi54PsDn5M889REv3.mfIdTBeeCV, h3s7dbXXv22CfCfn));
-                            return A25qgAtLDu70v5Bnz5;
+                            var res = EmitCopy(right);
+                            Emit(new IrUnary(unary.Op, right));
+                            return res;
                         }
 
-                        var GkJ1nXAWtkq = PAl_uyom48KJC(h3s7dbXXv22CfCfn);
-                        xLbCDLgvWyiM_RS(new IrUnary(xi54PsDn5M889REv3.mfIdTBeeCV, GkJ1nXAWtkq));
-                        return GkJ1nXAWtkq;
+                        var res2 = EmitCopy(right);
+                        Emit(new IrUnary(unary.Op, res2));
+                        return res2;
                     }
             }
-            throw new Exception("Cannot lower: " + zvo1A5gjZ.GetType());
+            throw new Exception("Cannot lower: " + expression.GetType());
         }
-        private IrValue S4GWwj(long FlHaV6FlTtLPOieCD)
+        private IrValue EmitConstant(long value)
         {
-            var f6P5tymwJzH = HE1TYQqtHG7Mcr96();
-            xLbCDLgvWyiM_RS(new IrConstant(f6P5tymwJzH, FlHaV6FlTtLPOieCD));
-            return f6P5tymwJzH;
+            var result = NewIrValue();
+            Emit(new IrConstant(result, value));
+            return result;
         }
-        private IrValue PAl_uyom48KJC(IrValue u7ogbwL69cdM)
+        private IrValue EmitCopy(IrValue source)
         {
-            var f6P5tymwJzH = HE1TYQqtHG7Mcr96();
-            xLbCDLgvWyiM_RS(new IrVariable(f6P5tymwJzH, u7ogbwL69cdM));
-            return f6P5tymwJzH;
+            var result = NewIrValue();
+            Emit(new IrVariable(result, source));
+            return result;
         }
 
-        private void xLbCDLgvWyiM_RS(IrInstruction gkfVuQR)
+        private void Emit(IrInstruction instruction)
         {
-            ZxlPuhy9nKlj_24.NumXpBuXze5D.Add(gkfVuQR);
+            _currentProgram.Instructions.Add(instruction);
         }
-        private IrValue _ZnHZc_yO(string tvLjFkzfFa9PYoTwdhO)
+        private IrValue ResolveVariable(string name)
         {
-            if (nhqaeri73.TryGetValue(tvLjFkzfFa9PYoTwdhO, out var FlHaV6FlTtLPOieCD))
-                return FlHaV6FlTtLPOieCD;
+            if (_variables.TryGetValue(name, out var value))
+                return value;
 
-            throw new InvalidOperationException($"Unknown variable: '{tvLjFkzfFa9PYoTwdhO}'.");
+            throw new InvalidOperationException($"Unknown variable: '{name}'.");
         }
     }
 }

@@ -12,118 +12,118 @@ namespace Best_language.src.middle
     {
         public override string ToString() => $"t{Id}";
     }
-    public class IrLabel(string tvLjFkzfFa9PYoTwdhO) : IrInstruction
+    public class IrLabel(string name) : IrInstruction
     {
-        public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
+        public string Name { get; } = name;
     }
 
-    public class IrConstant(IrValue RbW6GlIJt, long h3s7dbXXv22CfCfn) : IrInstruction
+    public class IrConstant(IrValue left, long right) : IrInstruction
     {
-        public IrValue bRC8MHJu { get; } = RbW6GlIJt;
-        public long Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
+        public IrValue Left { get; } = left;
+        public long Right { get; } = right;
     }
-    public class IrJumpIfTrue(IrValue _DjEicbSKt, string LYEVzVGaD) : IrInstruction
+    public class IrJumpIfTrue(IrValue condition, string target) : IrInstruction
     {
-        public string Bbopqy { get; } = LYEVzVGaD;
-        public IrValue u6xbke { get; } = _DjEicbSKt;
+        public string Target { get; } = target;
+        public IrValue Condition { get; } = condition;
     }
-    public class IrJump(string LYEVzVGaD) : IrInstruction
+    public class IrJump(string target) : IrInstruction
     {
-        public string Bbopqy { get; } = LYEVzVGaD;
+        public string Target { get; } = target;
     }
-    public class IrBinary(Operations IU2nAxA, IrValue RbW6GlIJt, IrValue h3s7dbXXv22CfCfn) : IrInstruction
+    public class IrBinary(Operations op, IrValue left, IrValue right) : IrInstruction
     {
-        public Operations mfIdTBeeCV { get; } = IU2nAxA;
-        public IrValue bRC8MHJu { get; } = RbW6GlIJt;
-        public IrValue Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
+        public Operations Op { get; } = op;
+        public IrValue Left { get; } = left;
+        public IrValue Right { get; } = right;
     }
-    public class IrUnary(Operations IU2nAxA, IrValue h3s7dbXXv22CfCfn) : IrInstruction
+    public class IrUnary(Operations op, IrValue right) : IrInstruction
     {
-        public Operations mfIdTBeeCV { get; } = IU2nAxA;
-        public IrValue Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
+        public Operations Op { get; } = op;
+        public IrValue Right { get; } = right;
     }
-    public class IrVariable(IrValue RbW6GlIJt, IrValue h3s7dbXXv22CfCfn) : IrInstruction
+    public class IrVariable(IrValue left, IrValue right) : IrInstruction
     {
-        public IrValue bRC8MHJu { get; } = RbW6GlIJt;
-        public IrValue Kqh0aRU { get; } = h3s7dbXXv22CfCfn;
+        public IrValue Left { get; } = left;
+        public IrValue Right { get; } = right;
     }
-    public class IrFunction(string tvLjFkzfFa9PYoTwdhO) : IrInstruction
+    public class IrFunction(string name) : IrInstruction
     {
-        public string RDvxaYCKYSRSBjVq { get; } = tvLjFkzfFa9PYoTwdhO;
+        public string Name { get; } = name;
     }
     public class IrProgram : IrInstruction
     {
-        public List<IrInstruction> NumXpBuXze5D { get; } = new();
+        public List<IrInstruction> Instructions { get; } = new();
     }
 
     public static class IrPrinter
     {
-        public static void jwtEpdBSXI(IrProgram AiBZVSsJC2)
+        public static void Print(IrProgram root)
         {
             Console.WriteLine("Ir");
-            kVdl57KDi9(AiBZVSsJC2, "", true);
+            PrintIr(root, "", true);
         }
 
-        private static void kVdl57KDi9(IrInstruction opKIGQBXk1qIUhw7, string rWl0RkKc, bool m5JMl_D28)
+        private static void PrintIr(IrInstruction node, string indent, bool last)
         {
-            Console.Write(rWl0RkKc);
-            Console.Write(m5JMl_D28 ? "└── " : "├── ");
+            Console.Write(indent);
+            Console.Write(last ? "└── " : "├── ");
 
-            switch (opKIGQBXk1qIUhw7)
+            switch (node)
             {
-                case IrProgram qxjo8UYQZhD:
+                case IrProgram main:
                     {
                         Console.WriteLine("Program");
-                        for (int YLfMq95c = 0; YLfMq95c < qxjo8UYQZhD.NumXpBuXze5D.Count; YLfMq95c++)
+                        for (int i = 0; i < main.Instructions.Count; i++)
                         {
-                            kVdl57KDi9(qxjo8UYQZhD.NumXpBuXze5D[YLfMq95c], rWl0RkKc + (m5JMl_D28 ? "    " : "│   "), YLfMq95c == qxjo8UYQZhD.NumXpBuXze5D.Count - 1);
+                            PrintIr(main.Instructions[i], indent + (last ? "    " : "│   "), i == main.Instructions.Count - 1);
                         }
                         break;
                     }
-                case IrVariable UHtIc5V2GaGHEr:
+                case IrVariable variable:
                     {
-                        Console.WriteLine($"IrVariable: {UHtIc5V2GaGHEr.bRC8MHJu} ({UHtIc5V2GaGHEr.Kqh0aRU})");
+                        Console.WriteLine($"IrVariable: {variable.Left} ({variable.Right})");
                         break;
                     }
-                case IrLabel Tx31ppY4:
+                case IrLabel label:
                     {
-                        Console.WriteLine(Tx31ppY4.RDvxaYCKYSRSBjVq + ":");
+                        Console.WriteLine(label.Name + ":");
                         break;
                     }
-                case IrConstant HvSPOv9ne_yrswTLzoo:
+                case IrConstant number:
                     {
-                        Console.WriteLine($"IrConstant: {HvSPOv9ne_yrswTLzoo.bRC8MHJu} ({HvSPOv9ne_yrswTLzoo.Kqh0aRU})");
+                        Console.WriteLine($"IrConstant: {number.Left} ({number.Right})");
                         break;
                     }
-                case IrJumpIfTrue KjirbwqrRKk6IgTqZH:
+                case IrJumpIfTrue jump:
                     {
-                        Console.WriteLine($"IrJumpIfTrue: {KjirbwqrRKk6IgTqZH.u6xbke} {KjirbwqrRKk6IgTqZH.Bbopqy}");
+                        Console.WriteLine($"IrJumpIfTrue: {jump.Condition} {jump.Target}");
                         break;
                     }
-                case IrJump KjirbwqrRKk6IgTqZH:
+                case IrJump jump:
                     {
-                        Console.WriteLine($"IrJump: {KjirbwqrRKk6IgTqZH.Bbopqy}");
+                        Console.WriteLine($"IrJump: {jump.Target}");
                         break;
                     }
-                case IrBinary XxC0ynDET:
+                case IrBinary binary:
                     {
-                        Console.WriteLine($"IrBinary: {XxC0ynDET.mfIdTBeeCV} ({XxC0ynDET.bRC8MHJu}, {XxC0ynDET.Kqh0aRU})");
+                        Console.WriteLine($"IrBinary: {binary.Op} ({binary.Left}, {binary.Right})");
                         break;
                     }
-                case IrUnary xi54PsDn5M889REv3:
+                case IrUnary unary:
                     {
-                        Console.WriteLine($"IrUnary: {xi54PsDn5M889REv3.mfIdTBeeCV} ({xi54PsDn5M889REv3.Kqh0aRU})");
+                        Console.WriteLine($"IrUnary: {unary.Op} ({unary.Right})");
                         break;
                     }
-                case IrFunction OwUELUXM3n88t6V02:
+                case IrFunction function:
                     {
-                        Console.WriteLine($"IrFunc: {OwUELUXM3n88t6V02.RDvxaYCKYSRSBjVq}");
+                        Console.WriteLine($"IrFunc: {function.Name}");
                         break;
                     }
 
                 default:
                     {
-                        Console.WriteLine(opKIGQBXk1qIUhw7.GetType());
+                        Console.WriteLine(node.GetType());
                         break;
                     }
             }

@@ -10,65 +10,65 @@ namespace Best_language.src.optimizations
     {
         public static class ConstantFolding
         {
-            public static IrProgram KuCk9uSL2qBKL(IrProgram Rst3_7gf)
+            public static IrProgram Start(IrProgram irProgram)
             {
-                Dictionary<IrValue, long> IEScR2u7AWUI = new();
-                IrProgram A25qgAtLDu70v5Bnz5 = new();
+                Dictionary<IrValue, long> constants = new();
+                IrProgram res = new();
 
-                foreach (var gkfVuQR in Rst3_7gf.NumXpBuXze5D)
+                foreach (var instruction in irProgram.Instructions)
                 {
-                    if (gkfVuQR is IrConstant)
+                    if (instruction is IrConstant)
                     {
-                        IrConstant eIk0eR = (IrConstant)gkfVuQR;
-                        IEScR2u7AWUI.Add(eIk0eR.bRC8MHJu, eIk0eR.Kqh0aRU);
+                        IrConstant constant = (IrConstant)instruction;
+                        constants.Add(constant.Left, constant.Right);
                     }
-                    else if(gkfVuQR is IrBinary)
+                    else if(instruction is IrBinary)
                     {
-                        IrBinary XxC0ynDET = (IrBinary)gkfVuQR;
-                        if(IEScR2u7AWUI.TryGetValue(XxC0ynDET.bRC8MHJu, out long RbW6GlIJt) && IEScR2u7AWUI.TryGetValue(XxC0ynDET.Kqh0aRU, out long h3s7dbXXv22CfCfn))
+                        IrBinary binary = (IrBinary)instruction;
+                        if(constants.TryGetValue(binary.Left, out long left) && constants.TryGetValue(binary.Right, out long right))
                         {
-                            IEScR2u7AWUI.Remove(XxC0ynDET.bRC8MHJu);
-                            IEScR2u7AWUI.Add(XxC0ynDET.bRC8MHJu, nv4T8pJPC(RbW6GlIJt, XxC0ynDET.mfIdTBeeCV, h3s7dbXXv22CfCfn)); 
+                            constants.Remove(binary.Left);
+                            constants.Add(binary.Left, Combine(left, binary.Op, right)); 
                         }
                     }
-                    else if(gkfVuQR is IrVariable)
+                    else if(instruction is IrVariable)
                     {
-                        IrVariable UHtIc5V2GaGHEr = (IrVariable)gkfVuQR;
-                        if (IEScR2u7AWUI.TryGetValue(UHtIc5V2GaGHEr.Kqh0aRU, out long FlHaV6FlTtLPOieCD))
+                        IrVariable variable = (IrVariable)instruction;
+                        if (constants.TryGetValue(variable.Right, out long value))
                         {
-                            IrVariable LaMxRuCzb = new(UHtIc5V2GaGHEr.bRC8MHJu, UHtIc5V2GaGHEr.Kqh0aRU);
-                            A25qgAtLDu70v5Bnz5.NumXpBuXze5D.Add(new IrConstant(UHtIc5V2GaGHEr.Kqh0aRU, FlHaV6FlTtLPOieCD));
-                            A25qgAtLDu70v5Bnz5.NumXpBuXze5D.Add(LaMxRuCzb);
+                            IrVariable v = new(variable.Left, variable.Right);
+                            res.Instructions.Add(new IrConstant(variable.Right, value));
+                            res.Instructions.Add(v);
                         }
                         else
                         {
-                            A25qgAtLDu70v5Bnz5.NumXpBuXze5D.Add(UHtIc5V2GaGHEr);
+                            res.Instructions.Add(variable);
                         }
                     }
                     else
                     {
-                        A25qgAtLDu70v5Bnz5.NumXpBuXze5D.Add(gkfVuQR);
+                        res.Instructions.Add(instruction);
                     }
                 }
 
-                return A25qgAtLDu70v5Bnz5;
+                return res;
             }
 
-            private static long nv4T8pJPC(long RbW6GlIJt, Operations IU2nAxA, long h3s7dbXXv22CfCfn) => IU2nAxA switch
+            private static long Combine(long left, Operations op, long right) => op switch
             {
-                Operations.px4P2OwC_TCS => RbW6GlIJt + h3s7dbXXv22CfCfn,
-                Operations.VpNNk81hH01O3w => RbW6GlIJt - h3s7dbXXv22CfCfn,
-                Operations.XvjP9ZInqh1c6ky6nK_ => RbW6GlIJt * h3s7dbXXv22CfCfn,
-                Operations.HVwX8t15uMw86Zjrr => RbW6GlIJt / h3s7dbXXv22CfCfn,
+                Operations.Plus => left + right,
+                Operations.Minus => left - right,
+                Operations.Multiply => left * right,
+                Operations.Divide => left / right,
 
-                Operations.wY8aKmHjGo => RbW6GlIJt < h3s7dbXXv22CfCfn ? 1 : 0,
-                Operations.yCtPKI => RbW6GlIJt <= h3s7dbXXv22CfCfn ? 1 : 0,
-                Operations.i3e0fh1jq => RbW6GlIJt > h3s7dbXXv22CfCfn ? 1 : 0,
-                Operations.RpVKAjlPn7QkY5 => RbW6GlIJt >= h3s7dbXXv22CfCfn ? 1 : 0,
-                Operations.Tieags2HzPi132WNHai => RbW6GlIJt == h3s7dbXXv22CfCfn ? 1 : 0,
+                Operations.LessThan => left < right ? 1 : 0,
+                Operations.LessThanOrEqual => left <= right ? 1 : 0,
+                Operations.GreaterThan => left > right ? 1 : 0,
+                Operations.GreaterThanOrEqual => left >= right ? 1 : 0,
+                Operations.EqualsEquals => left == right ? 1 : 0,
 
-                Operations.dFZBYFCUJWiZYreG5 => RbW6GlIJt == 1 && h3s7dbXXv22CfCfn == 1 ? 1 : 0,
-                Operations.hJQNxCsE8 => RbW6GlIJt == 1 || h3s7dbXXv22CfCfn == 1 ? 1 : 0,
+                Operations.And => left == 1 && right == 1 ? 1 : 0,
+                Operations.Or => left == 1 || right == 1 ? 1 : 0,
             };
         }
     }

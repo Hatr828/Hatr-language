@@ -8,123 +8,123 @@ namespace Best_language.src.middle
 {
     public class BoundTree
     {
-        private BoundScopes oHTP5Aeztv = new();
-        private Dictionary<string, int> BrYuQtkDUtc92o = new();
-        private int SEgPnknmDDR7;
+        private BoundScopes scopes = new();
+        private Dictionary<string, int> _gotoLabels = new();
+        private int _labelId;
 
-        public BoundProgram aIdgAY48O5qIjPDa(ProgramNode sMPlZ4JaeZR758e69)
+        public BoundProgram BindProgram(ProgramNode mainNode)
         {
-            _V8O8UDwiawCrf9(sMPlZ4JaeZR758e69.Lt6RjPqqO);
+            PreProcessAst(mainNode.Nodes);
 
-            List<BoundStatement> dDF7r9qO0UZT7CeF = new();
-            oHTP5Aeztv.TxTcHSOCYZ69AABP();
+            List<BoundStatement> statements = new();
+            scopes.AddScope();
 
-            foreach (AstNode opKIGQBXk1qIUhw7 in sMPlZ4JaeZR758e69.Lt6RjPqqO)
+            foreach (AstNode node in mainNode.Nodes)
             {
-                dDF7r9qO0UZT7CeF.Add(WZMxUp499S(opKIGQBXk1qIUhw7));
+                statements.Add(BindStatement(node));
             }
-            return new BoundProgram(new List<BoundFunction>() { new BoundFunction(VariableType.QOa6p9YEuH1RAbA6O7q5, "main", dDF7r9qO0UZT7CeF) });
+            return new BoundProgram(new List<BoundFunction>() { new BoundFunction(VariableType.Int, "main", statements) });
         }
-        private void _V8O8UDwiawCrf9(List<AstNode> CZaJj4hwP5v17)
+        private void PreProcessAst(List<AstNode> nodes)
         {
-            foreach (AstNode opKIGQBXk1qIUhw7 in CZaJj4hwP5v17)
+            foreach (AstNode node in nodes)
             {
-                switch (opKIGQBXk1qIUhw7)
+                switch (node)
                 {
-                    case GotoDeclaration eV5GbDX:
+                    case GotoDeclaration @goto:
                         {
-                            if (BrYuQtkDUtc92o.ContainsKey(eV5GbDX.RDvxaYCKYSRSBjVq)) throw new Exception($"This label already exist: {eV5GbDX.RDvxaYCKYSRSBjVq}");
-                            BrYuQtkDUtc92o.Add(eV5GbDX.RDvxaYCKYSRSBjVq, SEgPnknmDDR7++);
+                            if (_gotoLabels.ContainsKey(@goto.Name)) throw new Exception($"This label already exist: {@goto.Name}");
+                            _gotoLabels.Add(@goto.Name, _labelId++);
                             continue;
                         }
-                    case IfDeclaration FMs8v8WFk7p4PXuibRJ:
+                    case IfDeclaration ifDeclaration:
                         {
-                            _V8O8UDwiawCrf9(FMs8v8WFk7p4PXuibRJ._gLmRU6);
+                            PreProcessAst(ifDeclaration.CodeBlock);
                             continue;
                         }
                 }
             }
         }
 
-        public BoundStatement WZMxUp499S(AstNode opKIGQBXk1qIUhw7)
+        public BoundStatement BindStatement(AstNode node)
         {
-            switch (opKIGQBXk1qIUhw7)
+            switch (node)
             {
-                case VariableDeclaration UHtIc5V2GaGHEr:
+                case VariableDeclaration variable:
                     {
-                        if (oHTP5Aeztv.ULgl9HlV35S8d5ZHHL(UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, out _)) throw new Exception($"Variable {UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq} already exist");
+                        if (scopes.Lookup(variable.Name, out _)) throw new Exception($"Variable {variable.Name} already exist");
 
-                        BoundVariableDeclaration zBgs8nftvUtORz5x7k;
+                        BoundVariableDeclaration temp;
                         
-                        if (UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf is not null)
-                             zBgs8nftvUtORz5x7k = new BoundVariableDeclaration(UHtIc5V2GaGHEr.rawbemMG, UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, g51AXmN8YaVH0xrMm(UHtIc5V2GaGHEr.VFweLKwblUFT45a5dYsf));
+                        if (variable.Initializer is not null)
+                             temp = new BoundVariableDeclaration(variable.Type, variable.Name, BindExpression(variable.Initializer));
                         else
-                             zBgs8nftvUtORz5x7k = new BoundVariableDeclaration(UHtIc5V2GaGHEr.rawbemMG, UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, null!);
+                             temp = new BoundVariableDeclaration(variable.Type, variable.Name, null!);
                        
-                        if (!oHTP5Aeztv.tCBUXJsr53kXoh1u3N(new(UHtIc5V2GaGHEr.rawbemMG, UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq))) throw new Exception($"Error in TryAddVariable");
-                        return zBgs8nftvUtORz5x7k;
+                        if (!scopes.TryAddVariable(new(variable.Type, variable.Name))) throw new Exception($"Error in TryAddVariable");
+                        return temp;
                     }
-                case IfDeclaration FMs8v8WFk7p4PXuibRJ:
+                case IfDeclaration ifDeclaration:
                     {
-                        var R5E_HH = new BoundIfDeclaration(g51AXmN8YaVH0xrMm(FMs8v8WFk7p4PXuibRJ._huqzi));
-                        oHTP5Aeztv.TxTcHSOCYZ69AABP();
-                        foreach (var jn5gszuLQk in FMs8v8WFk7p4PXuibRJ._gLmRU6) R5E_HH.x6w4y6YVMJqhHPCw.Add(WZMxUp499S(jn5gszuLQk));
-                        return R5E_HH;
+                        var If = new BoundIfDeclaration(BindExpression(ifDeclaration.Expression));
+                        scopes.AddScope();
+                        foreach (var statement in ifDeclaration.CodeBlock) If.Statements.Add(BindStatement(statement));
+                        return If;
                     }
-                case GotoDeclaration eV5GbDX:
+                case GotoDeclaration @goto:
                     {
-                        if(BrYuQtkDUtc92o.TryGetValue(eV5GbDX.RDvxaYCKYSRSBjVq, out int EHUizE_S0))
-                            return new BoundGotoDeclaration(EHUizE_S0);
+                        if(_gotoLabels.TryGetValue(@goto.Name, out int id))
+                            return new BoundGotoDeclaration(id);
                         throw new Exception("Some odd Error in BoundTree");
                     }
-                case GotoStatement eV5GbDX:
+                case GotoStatement @goto:
                     {
-                        if (BrYuQtkDUtc92o.TryGetValue(eV5GbDX.AM17m62yJaIBgtiOg, out int EHUizE_S0))
-                            return new BoundGotoStatement(EHUizE_S0);
-                        throw new Exception($"@goto label: {eV5GbDX.AM17m62yJaIBgtiOg} not found");
+                        if (_gotoLabels.TryGetValue(@goto.To, out int id))
+                            return new BoundGotoStatement(id);
+                        throw new Exception($"@goto label: {@goto.To} not found");
                     }
-                case AssignmentStatement Ya3KuoBYDAJuy5LuF:
+                case AssignmentStatement assignment:
                     {
-                        if (!oHTP5Aeztv.ULgl9HlV35S8d5ZHHL(Ya3KuoBYDAJuy5LuF.RDvxaYCKYSRSBjVq, out _)) throw new Exception($"Variable {Ya3KuoBYDAJuy5LuF.RDvxaYCKYSRSBjVq} not exist");
-                        if(Ya3KuoBYDAJuy5LuF.mfIdTBeeCV is Operations IU2nAxA)
-                            return new BoundAssignmentStatement(Ya3KuoBYDAJuy5LuF.RDvxaYCKYSRSBjVq, g51AXmN8YaVH0xrMm(new BinaryExpression(new VariableExpression(Ya3KuoBYDAJuy5LuF.RDvxaYCKYSRSBjVq), IU2nAxA, Ya3KuoBYDAJuy5LuF.Kqh0aRU)));
-                        return new BoundAssignmentStatement(Ya3KuoBYDAJuy5LuF.RDvxaYCKYSRSBjVq, g51AXmN8YaVH0xrMm(Ya3KuoBYDAJuy5LuF.Kqh0aRU));
+                        if (!scopes.Lookup(assignment.Name, out _)) throw new Exception($"Variable {assignment.Name} not exist");
+                        if(assignment.Op is Operations op)
+                            return new BoundAssignmentStatement(assignment.Name, BindExpression(new BinaryExpression(new VariableExpression(assignment.Name), op, assignment.Right)));
+                        return new BoundAssignmentStatement(assignment.Name, BindExpression(assignment.Right));
                     }
             }
             throw new Exception("Failed to BindStatement");
         }
 
-        public BoundExpression g51AXmN8YaVH0xrMm(Expression zvo1A5gjZ)
+        public BoundExpression BindExpression(Expression expression)
         {
-            switch (zvo1A5gjZ)
+            switch (expression)
             {
-                case NumberExpression HvSPOv9ne_yrswTLzoo:
+                case NumberExpression number:
                     {                                                           
-                        return new BoundNumberExpression(HvSPOv9ne_yrswTLzoo.rawbemMG, HvSPOv9ne_yrswTLzoo.Sb5MrQFjg8JlEcaS);
+                        return new BoundNumberExpression(number.Type, number.Value);
                     }
-                case VariableExpression UHtIc5V2GaGHEr:
+                case VariableExpression variable:
                     {
-                        if (!oHTP5Aeztv.ULgl9HlV35S8d5ZHHL(UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq, out VariableType FubV605Z9qF5D9z3X)) throw new Exception($"Variable {UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq} not exist");
-                        return new BoundVariableExpression(FubV605Z9qF5D9z3X, UHtIc5V2GaGHEr.RDvxaYCKYSRSBjVq);
+                        if (!scopes.Lookup(variable.Name, out VariableType type)) throw new Exception($"Variable {variable.Name} not exist");
+                        return new BoundVariableExpression(type, variable.Name);
                     }
-                case BoolExpression FHZW5YiKBaTQMYfb:
+                case BoolExpression ex:
                     {
-                        return new BoundBoolExpression(FHZW5YiKBaTQMYfb.Sb5MrQFjg8JlEcaS);
+                        return new BoundBoolExpression(ex.Value);
                     }
-                case BinaryExpression XxC0ynDET:
+                case BinaryExpression binary:
                     {
-                        var RbW6GlIJt = g51AXmN8YaVH0xrMm(XxC0ynDET.bRC8MHJu);
-                        var h3s7dbXXv22CfCfn = g51AXmN8YaVH0xrMm(XxC0ynDET.Kqh0aRU);
+                        var left = BindExpression(binary.Left);
+                        var right = BindExpression(binary.Right);
 
-                        if (RbW6GlIJt.rawbemMG != h3s7dbXXv22CfCfn.rawbemMG) throw new Exception("Types of both sides should be the same");
+                        if (left.Type != right.Type) throw new Exception("Types of both sides should be the same");
 
-                        return new BoundBinaryExpression(RbW6GlIJt.rawbemMG, XxC0ynDET.mfIdTBeeCV, RbW6GlIJt, h3s7dbXXv22CfCfn);
+                        return new BoundBinaryExpression(left.Type, binary.Op, left, right);
                     }
-                case UnaryExpression xi54PsDn5M889REv3:
+                case UnaryExpression unary:
                     {
-                        var h3s7dbXXv22CfCfn = g51AXmN8YaVH0xrMm(xi54PsDn5M889REv3.Kqh0aRU);
+                        var right = BindExpression(unary.Right);
 
-                        return new BoundUnaryExpression(h3s7dbXXv22CfCfn.rawbemMG, xi54PsDn5M889REv3.mfIdTBeeCV, h3s7dbXXv22CfCfn);
+                        return new BoundUnaryExpression(right.Type, unary.Op, right);
                     }
             }
             throw new Exception("Failed to BindExpression");

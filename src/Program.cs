@@ -11,81 +11,80 @@ namespace Best_language.src
     {
         static void Main(string[] args)
         {
-            string VzmABWWuEX5E = @"
+            string code = @"
                 INT a1 = 0?
 
                 a1 += 12 - 1 * )2 + 3(?
                 ";
-            Lexer MydwFJ3hRBKs = new Lexer(VzmABWWuEX5E);   
-            var JQ2q_a = MydwFJ3hRBKs.H9EXHFD80i_YR_GCh2Q();
-
-            Console.WriteLine(string.Join(",", JQ2q_a));
+            Lexer lexer = new Lexer(code);   
+            var tokens = lexer.GetTokens();
+            Console.WriteLine(string.Join(",", tokens));
             Console.WriteLine("\n ---- \n");
 
-            Parser uLM1gml1kEO3 = new Parser(JQ2q_a);
-            ProgramNode opKIGQBXk1qIUhw7 = uLM1gml1kEO3.whLgsX7eXvV2jB();
-            AstPrinter.jwtEpdBSXI(opKIGQBXk1qIUhw7);
+            Parser parser = new Parser(tokens);
+            ProgramNode node = parser.GetAstNodes();
+            AstPrinter.Print(node);
             Console.WriteLine("\n ---- \n");
 
-            BoundTree yZ3lWVO98T05 = new BoundTree();
-            BoundProgram UCSDalD = yZ3lWVO98T05.aIdgAY48O5qIjPDa(opKIGQBXk1qIUhw7);
-            BoundTreePrinter.jwtEpdBSXI(UCSDalD);
+            BoundTree boundTree = new BoundTree();
+            BoundProgram boundProgram = boundTree.BindProgram(node);
+            BoundTreePrinter.Print(boundProgram);
             Console.WriteLine("\n ---- \n");
 
-            IrLowering EtXLG3at05diZn0R = new IrLowering();
-            IrProgram Rst3_7gf = EtXLG3at05diZn0R.OT4oi0eVmqprYSE(UCSDalD);
-            IrPrinter.jwtEpdBSXI(Rst3_7gf);
+            IrLowering ir = new IrLowering();
+            IrProgram irProgram = ir.Lower(boundProgram);
+            IrPrinter.Print(irProgram);
             Console.WriteLine("\n ---- \n");
 
            // irProgram = Optimizations.ConstantFolding.Start(irProgram);
-            IrPrinter.jwtEpdBSXI(Rst3_7gf);
+            IrPrinter.Print(irProgram);
             Console.WriteLine("\n ---- \n");
 
-            X64CodeGenerator XKgSvKTgBETg = new(Rst3_7gf);
-            string SmZUoyDEAjUsL7 = XKgSvKTgBETg.L0AW5J5gm7d1k2MC();
-            Console.WriteLine(SmZUoyDEAjUsL7);
+            X64CodeGenerator codeGen = new(irProgram);
+            string assembly = codeGen.GenerateAsm();
+            Console.WriteLine(assembly);
 
             Console.WriteLine("\n ---- \n");
-            nog7stNGq8naXB_X(SmZUoyDEAjUsL7);
+            BuildAndRun(assembly);
         }
 
-        static void nog7stNGq8naXB_X(string SmZUoyDEAjUsL7)
+        static void BuildAndRun(string assembly)
         {
-            string dgetfxSOJos7pGHqamwZ = "program.asm";
-            string LVLlyGzAPYetecY2SI = "program.obj";
-            string kSVMw3I8 = "program.exe";
+            string asmPath = "program.asm";
+            string objPath = "program.obj";
+            string exePath = "program.exe";
 
             try
             {
-                File.WriteAllText(dgetfxSOJos7pGHqamwZ, SmZUoyDEAjUsL7);
+                File.WriteAllText(asmPath, assembly);
 
-                Y39Ww74Fe("nasm", "-f win64 program.asm -o program.obj");
+                RunProcess("nasm", "-f win64 program.asm -o program.obj");
 
-                Y39Ww74Fe("x86_64-w64-mingw32-clang", "-nostartfiles program.obj -Wl,-e,start -lkernel32 -o program.exe");
+                RunProcess("x86_64-w64-mingw32-clang", "-nostartfiles program.obj -Wl,-e,start -lkernel32 -o program.exe");
 
-                Y39Ww74Fe(Path.GetFullPath(kSVMw3I8), "");
+                RunProcess(Path.GetFullPath(exePath), "");
             }
             finally
             {
-                if (File.Exists(dgetfxSOJos7pGHqamwZ))
-                    File.Delete(dgetfxSOJos7pGHqamwZ);
+                if (File.Exists(asmPath))
+                    File.Delete(asmPath);
 
-                if (File.Exists(LVLlyGzAPYetecY2SI))
-                    File.Delete(LVLlyGzAPYetecY2SI);
+                if (File.Exists(objPath))
+                    File.Delete(objPath);
 
-                if (File.Exists(kSVMw3I8))
-                    File.Delete(kSVMw3I8);
+                if (File.Exists(exePath))
+                    File.Delete(exePath);
             }
         }
 
-        static void Y39Ww74Fe(string yOsz14WEklEAKLu1OHoh, string SDbuttzJEPr)
+        static void RunProcess(string fileName, string arguments)
         {
-            var eOat702wOAoqbXOWoWO = new Process
+            var process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = yOsz14WEklEAKLu1OHoh,
-                    Arguments = SDbuttzJEPr,
+                    FileName = fileName,
+                    Arguments = arguments,
 
                     UseShellExecute = false,
 
@@ -94,27 +93,27 @@ namespace Best_language.src
                 }
             };
 
-            eOat702wOAoqbXOWoWO.Start();
+            process.Start();
 
-            string PLijtuGPhKCEe9 = eOat702wOAoqbXOWoWO.StandardOutput.ReadToEnd();
-            string IsNfPJRyXnDJCJ = eOat702wOAoqbXOWoWO.StandardError.ReadToEnd();
+            string output = process.StandardOutput.ReadToEnd();
+            string error = process.StandardError.ReadToEnd();
 
-            eOat702wOAoqbXOWoWO.WaitForExit();
+            process.WaitForExit();
 
-            if (!string.IsNullOrWhiteSpace(PLijtuGPhKCEe9))
+            if (!string.IsNullOrWhiteSpace(output))
             {
-                Console.WriteLine(PLijtuGPhKCEe9);
+                Console.WriteLine(output);
             }
 
-            if (!string.IsNullOrWhiteSpace(IsNfPJRyXnDJCJ))
+            if (!string.IsNullOrWhiteSpace(error))
             {
-                Console.Error.WriteLine(IsNfPJRyXnDJCJ);
+                Console.Error.WriteLine(error);
             }
 
-            if (eOat702wOAoqbXOWoWO.ExitCode != 0)
+            if (process.ExitCode != 0)
             {
                 // Console.WriteLine($"exited with code {process.ExitCode}");
-                throw new Exception($"exited with code {eOat702wOAoqbXOWoWO.ExitCode}");
+                throw new Exception($"exited with code {process.ExitCode}");
             }
         }
     }
