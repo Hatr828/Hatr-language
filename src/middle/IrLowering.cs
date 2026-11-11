@@ -2,6 +2,7 @@ using Best_language.src.front;
 using System;
 using System.Collections.Generic;
 using System.Net.NetworkInformation;
+using System.Reflection.Emit;
 using System.Text;
 using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -51,18 +52,42 @@ namespace Best_language.src.middle
                 case BoundIfDeclaration If:
                     {
                         IrValue condition = LowerExpression(If.Expression);
-                        
-                        string label = NewLabelName("if");
-                        string label2 = NewLabelName("end");
 
-                        Emit(new IrJumpIfTrue(condition, label));
-                        Emit(new IrJump(label2));
-                        Emit(new IrLabel(label));
+                        List<string> labels = new();
+                        for(int i = 0; i < If.ElseIfs?.Count; i++) labels.Add(NewLabelName("elseIf"));
+                        string ifLabel = NewLabelName("if");
+                        string endLabel = NewLabelName("end");
+                        string elseLabel = NewLabelName("else");
 
+                        Emit(new IrJumpIfTrue(condition, ifLabel));
+
+                        for (int i = 0; i < If.ElseIfs?.Count; i++) Emit(new IrJumpIfTrue(LowerExpression(If.ElseIfs[i].Expression), labels[i]));
+                        if(If.Else is not null) Emit(new IrJump(elseLabel));
+                        Emit(new IrJump(endLabel)); //end label if there is no else and everything before is false. Redundant if there is else, possible size reduction for asm and therefore for .exe.
+
+                        //if part
+                        Emit(new IrLabel(ifLabel));
                         foreach (var statement in If.Statements)
                             LowerNode(statement);
+                        Emit(new IrJump(endLabel));
 
-                        Emit(new IrLabel(label2));
+                        // elseIfs parts
+                        for (int i = 0; i < If.ElseIfs?.Count; i++)
+                        {
+                            Emit(new IrLabel(labels[i]));
+                            foreach (var statement in If.ElseIfs[i].Statements)
+                                LowerNode(statement);
+                            Emit(new IrJump(endLabel));
+                        }
+                        // else part
+                        if (If.Else is not null)
+                        {
+                            Emit(new IrLabel(elseLabel));
+                            foreach (var statement in If.Else.Statements)
+                                LowerNode(statement);
+                        }
+                        // end label
+                        Emit(new IrLabel(endLabel));
                         return;
                     }
                 case BoundGotoDeclaration @goto:

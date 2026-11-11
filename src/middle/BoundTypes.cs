@@ -2,10 +2,16 @@ using Best_language.src.front;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Xml.Linq;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Best_language.src.middle
 {
-    public abstract class BoundNode;
+    public abstract class BoundNode
+    {
+        public abstract string DName { get; }
+        public abstract IEnumerable<BoundNode> Children { get; }
+    }
     public abstract class BoundStatement : BoundNode;
     public abstract class BoundExpression(VariableType type) : BoundNode
     {
@@ -19,59 +25,157 @@ namespace Best_language.src.middle
     public class BoundProgram(List<BoundFunction> functions) : BoundNode
     {
         public List<BoundFunction> Functions { get; } = functions;
+        public override string DName => $"{nameof(BoundProgram)}";
+        public override IEnumerable<BoundNode> Children
+        {
+            get
+            {
+                foreach (BoundNode node in Functions) yield return node;
+            }       
+        }
     }
     public class BoundFunction(VariableType type, string name, List<BoundStatement> statements) : BoundStatement
     {
         public VariableType Type { get; } = type;
         public string Name { get; } = name;
         public List<BoundStatement> Statements { get; } = statements;
+        public override string DName => $"{nameof(BoundFunction)}: {Name} ({Type})";
+        public override IEnumerable<BoundNode> Children
+        {
+            get
+            {
+                foreach (BoundNode node in Statements) yield return node;
+            }
+        }
     }
     public class BoundVariableDeclaration(VariableType type, string name, BoundExpression initializer) : BoundStatement
     {
         public VariableType Type { get; } = type;
         public string Name { get; } = name;
         public BoundExpression Initializer { get; } = initializer;
+        public override string DName => $"{nameof(BoundVariableDeclaration)}: {Name} ({Type})";
+        public override IEnumerable<BoundNode> Children
+        {
+            get
+            {
+                yield return Initializer;
+            }
+        }
     }
     public class BoundAssignmentStatement(string name, BoundExpression right) : BoundStatement
     {
         public string Name { get; } = name;
         public BoundExpression Right { get; } = right;
+        public override string DName => $"{nameof(BoundAssignmentStatement)}: {Name}";
+        public override IEnumerable<BoundNode> Children
+        {
+            get
+            {
+                yield return Right;
+            }
+        }
     }
     public class BoundIfDeclaration(BoundExpression expression) : BoundStatement
     {
         public BoundExpression Expression { get; } = expression;
         public List<BoundStatement> Statements { get; } = new();
+        public List<BoundElseIfDeclaration>? ElseIfs { get; set; }
+        public BoundElseDeclaration? Else { get; set; }
+        public override string DName => $"{nameof(BoundIfDeclaration)}";
+        public override IEnumerable<BoundNode> Children
+        {
+            get
+            {
+                yield return Expression;
+                foreach (BoundNode node in Statements) yield return node;
+                foreach (BoundNode node in ElseIfs ?? []) yield return node;
+                if(Else is not null) yield return Else;
+            }
+        }
+    }
+    public class BoundElseIfDeclaration(BoundExpression expression) : BoundStatement
+    {
+        public BoundExpression Expression { get; } = expression;
+        public List<BoundStatement> Statements { get; } = new();
+        public override string DName => $"{nameof(BoundElseIfDeclaration)}";
+        public override IEnumerable<BoundNode> Children
+        {
+            get
+            {
+                yield return Expression;
+                foreach (BoundNode node in Statements) yield return node;
+            }
+        }
+    }
+    public class BoundElseDeclaration : BoundStatement
+    {
+        public List<BoundStatement> Statements { get; } = new();
+        public override string DName => $"{nameof(BoundElseDeclaration)}";
+        public override IEnumerable<BoundNode> Children
+        {
+            get
+            {
+                foreach (BoundNode node in Statements ?? []) yield return node;
+            }
+        }
     }
     public class BoundGotoDeclaration(int id) : BoundStatement
     {
         public int Id { get; } = id;
+        public override string DName => $"{nameof(BoundGotoDeclaration)}: {Id}";
+        public override IEnumerable<BoundNode> Children => [];
     }
     public class BoundGotoStatement(int to) : BoundStatement
     {
         public int ToId { get; } = to;
+        public override string DName => $"{nameof(BoundGotoStatement)}: {ToId}";
+        public override IEnumerable<BoundNode> Children => [];
     }
     public class BoundNumberExpression(VariableType type, long value) : BoundExpression(type)
     {
         public long Value { get; } = value;
+        public override string DName => $"{nameof(BoundNumberExpression)}: {Value}";
+        public override IEnumerable<BoundNode> Children => [];
     }
     public class BoundVariableExpression(VariableType type, string name) : BoundExpression(type)
     {
         public string Name { get; } = name;
+        public override string DName => $"{nameof(BoundVariableExpression)}: {Name}";
+        public override IEnumerable<BoundNode> Children => [];
     }
     public class BoundBoolExpression(bool value) : BoundExpression(VariableType.Bool)
     {
         public bool Value { get; } = value;
+        public override string DName => $"{nameof(BoundBoolExpression)}: {Value}";
+        public override IEnumerable<BoundNode> Children => [];
     }
     public class BoundBinaryExpression(VariableType type, Operations op, BoundExpression left, BoundExpression right) : BoundExpression(type)
     {
         public BoundExpression Left { get; } = left;
         public Operations Op { get; } = op;
         public BoundExpression Right { get; } = right;
+        public override string DName => $"{nameof(BoundBinaryExpression)}: {Op}";
+        public override IEnumerable<BoundNode> Children
+        {
+            get
+            {
+                yield return Left;
+                yield return Right;
+            }
+        }
     }
     public class BoundUnaryExpression(VariableType type, Operations op, BoundExpression right) : BoundExpression(type)
     {
         public Operations Op { get; } = op;
         public BoundExpression Right { get; } = right;
+        public override string DName => $"{nameof(BoundUnaryExpression)}: {Op}";
+        public override IEnumerable<BoundNode> Children
+        {
+            get
+            {
+                yield return Right;
+            }
+        }
     }
 
     public class BoundScopes
@@ -106,100 +210,26 @@ namespace Best_language.src.middle
     }
     public static class BoundTreePrinter
     {
-        public static void Print(BoundNode root)
-        {
-            Console.WriteLine("BoundTree");
-            PrintBoundTree(root, "", true);
-        }
-
-        private static void PrintBoundTree(BoundNode node, string indent, bool last)
+        public static void Print(BoundNode node, string indent = "", bool last = true)
         {
             Console.Write(indent);
             Console.Write(last ? "└── " : "├── ");
+            Console.WriteLine(node.DName);
 
-            switch (node)
+            indent += last ? "    " : "│   ";
+
+            var children = node.Children.GetEnumerator();
+
+            if (!children.MoveNext()) return;
+
+            while (true)
             {
-                case BoundProgram main:
-                    {
-                        Console.WriteLine($"{nameof(BoundProgram)}");
-                        for (int i = 0; i < main.Functions.Count; i++)
-                        {
-                            PrintBoundTree(main.Functions[i], indent + (last ? "    " : "│   "), i == main.Functions.Count - 1);
-                        }
-                        break;
-                    }
-                case BoundVariableDeclaration variable:
-                    {
-                        Console.WriteLine($"{nameof(BoundVariableDeclaration)}: {variable.Name} ({variable.Type})");
-                        if (variable.Initializer is not null)
-                        {
-                            PrintBoundTree(variable.Initializer, indent + (last ? "    " : "│   "), true);
-                        }
-                        break;
-                    }
-                case BoundIfDeclaration If:
-                    {
-                        Console.WriteLine($"{nameof(BoundIfDeclaration)}:");
-                        PrintBoundTree(If.Expression, indent + (last ? "    " : "│   "), false);
-                        for (int i = 0; i < If.Statements.Count; i++)
-                        {
-                            PrintBoundTree(If.Statements[i], indent + (last ? "    " : "│   "), i == If.Statements.Count - 1);
-                        }
-                        break;
-                    }
-                case BoundGotoDeclaration @goto:
-                    {
-                        Console.WriteLine($"{nameof(BoundGotoDeclaration)}: {@goto.Id}");
-                        break;
-                    }
-                case BoundGotoStatement @goto:
-                    {
-                        Console.WriteLine($"{nameof(BoundGotoStatement)}: {@goto.ToId}");
-                        break;
-                    }
-                case BoundNumberExpression number:
-                    {
-                        Console.WriteLine($"{nameof(BoundNumberExpression)}: {number.Value} ({number.Type})");
-                        break;
-                    }
-                case BoundVariableExpression number:
-                    {
-                        Console.WriteLine($"{nameof(BoundVariableExpression)}: {number.Name} ({number.Type})");
-                        break;
-                    }
-                case BoundBoolExpression number:
-                    {
-                        Console.WriteLine($"{nameof(BoundBoolExpression)}: {number.Value} ({number.Type})");
-                        break;
-                    }
-                case BoundBinaryExpression binary:
-                    {
-                        Console.WriteLine($"{nameof(BoundVariableExpression)}: {binary.Op} {binary.Type}");
-                        PrintBoundTree(binary.Left, indent + (last ? "    " : "│   "), false);
-                        PrintBoundTree(binary.Right, indent + (last ? "    " : "│   "), true);
-                        break;
-                    }
-                case BoundUnaryExpression binary:
-                    {
-                        Console.WriteLine($"{nameof(BoundUnaryExpression)}: {binary.Op} {binary.Type}");
-                        PrintBoundTree(binary.Right, indent + (last ? "    " : "│   "), true);
-                        break;
-                    }
-                case BoundFunction function:
-                    {
-                        Console.WriteLine($"{nameof(BoundFunction)}: {function.Name}");
-                        for (int i = 0; i < function.Statements.Count; i++)
-                        {
-                            PrintBoundTree(function.Statements[i], indent + (last ? "    " : "│   "), i == function.Statements.Count - 1);
-                        }
-                        break;
-                    }
+                BoundNode child = children.Current;
+                bool hasNext = children.MoveNext();
 
-                default:
-                    {
-                        Console.WriteLine(node.GetType());
-                        break;
-                    }
+                Print(child, indent, !hasNext);
+
+                if (!hasNext) break;
             }
         }
     }

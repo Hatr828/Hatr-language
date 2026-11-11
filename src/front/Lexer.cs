@@ -16,6 +16,8 @@ namespace Best_language.src.front
             ["INT"] = TokenKind.Int,
             ["boom"] = TokenKind.Bool,
             ["fi"] = TokenKind.If,
+            ["elfi"] = TokenKind.ElseIf,
+            ["elf"] = TokenKind.Else,
             ["ttrruuee"] = TokenKind.True,
             ["ffaallssee"] = TokenKind.False,
             ["goat"] = TokenKind.Goto,

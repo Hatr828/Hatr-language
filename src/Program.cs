@@ -15,6 +15,12 @@ namespace Best_language.src
                 INT a1 = 0?
 
                 a1 += 12 - 1 * )2 + 3(?
+
+                fi)ttrruuee(   }
+
+                {
+                elfi)ttrruuee( } {
+                elf } a1 += 12 - 1 * )2 + 3(? {
                 ";
             Lexer lexer = new Lexer(code);   
             var tokens = lexer.GetTokens();

@@ -2,6 +2,7 @@ using Best_language.src.front;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Best_language.src.middle
@@ -69,6 +70,29 @@ namespace Best_language.src.middle
                         var If = new BoundIfDeclaration(BindExpression(ifDeclaration.Expression));
                         scopes.AddScope();
                         foreach (var statement in ifDeclaration.CodeBlock) If.Statements.Add(BindStatement(statement));
+                        scopes.RemoveScope();
+
+                        if(ifDeclaration.ElseIfs is not null)
+                        {
+                            If.ElseIfs ??= new();
+                            foreach (var elseIf in ifDeclaration.ElseIfs) If.ElseIfs.Add((BoundElseIfDeclaration)BindStatement(elseIf));
+                        }
+                        if (ifDeclaration.Else is not null)
+                        {
+                            scopes.AddScope();
+                            If.Else ??= new();
+                            foreach (var statement in ifDeclaration.Else.CodeBlock) If.Else.Statements.Add(BindStatement(statement));
+                            scopes.RemoveScope();
+                        }
+
+                        return If;
+                    }
+                case ElseIfDeclaration elseIfDeclaration:
+                    {
+                        var If = new BoundElseIfDeclaration(BindExpression(elseIfDeclaration.Expression));
+                        scopes.AddScope();
+                        foreach (var statement in elseIfDeclaration.CodeBlock) If.Statements.Add(BindStatement(statement));
+                        scopes.RemoveScope();
                         return If;
                     }
                 case GotoDeclaration @goto:

@@ -33,10 +33,12 @@ namespace Best_language.src.front
     {
         Int, 
         Bool,
-        If,
         True,
         False,
         Goto,
+        If,
+        ElseIf,
+        Else,
 
         QuestionMark, 
         Equals,

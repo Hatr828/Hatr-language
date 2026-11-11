@@ -54,6 +54,21 @@ namespace Best_language.src.front
                             }
                             break;
                         }
+                    case TokenKind.ElseIf:
+                        {
+                            _idx++;
+                            Requires(TokenKind.LeftParen);
+
+                            Expression ex = GetExpression();
+                            List<AstNode> block = new();
+
+                            Requires(TokenKind.RightParen);
+                            Requires(TokenKind.LeftBrace);
+
+                            GetBlockCode(block);
+
+                            return new ElseIfDeclaration(ex, block);
+                        }
                     case TokenKind.If:
                         {
                             _idx++;
@@ -65,13 +80,26 @@ namespace Best_language.src.front
                             Requires(TokenKind.RightParen);
                             Requires(TokenKind.LeftBrace);
 
-                            while (_tokens[_idx].kind is not TokenKind.RightBrace)
+                            GetBlockCode(block);
+
+                            if(_tokens[_idx].kind is not TokenKind.ElseIf and not TokenKind.Else) return new IfDeclaration(ex, block);
+
+                            var @if = new IfDeclaration(ex, block);
+
+                            while (_tokens[_idx].kind is TokenKind.ElseIf)
                             {
-                                block.Add(GetAstNode());
+                                @if.ElseIfs ??= new();
+                                @if.ElseIfs.Add((ElseIfDeclaration)GetAstNode());
                             }
 
+                            if (_tokens[_idx].kind is not TokenKind.Else) return @if;
+                            @if.Else = new();
                             _idx++;
-                            return new IfDeclaration(ex, block);
+
+                            Requires(TokenKind.LeftBrace);
+                            GetBlockCode(@if.Else.CodeBlock);
+
+                            return @if;
                         }
                     case TokenKind.Goto:
                         {
@@ -206,6 +234,14 @@ namespace Best_language.src.front
         private void Requires(TokenKind kind)
         {
             if (_tokens[_idx++].kind != kind) throw new Exception($"Requires {kind}");
+        }
+        private void GetBlockCode<T>(List<T> list) where T : AstNode
+        {
+            while (_tokens[_idx].kind is not TokenKind.RightBrace)
+            {
+                list.Add((T)GetAstNode());
+            }
+            _idx++;
         }
         private (Operations, int) GetOperatorAndPriority() => _tokens[_idx].kind switch
         {
