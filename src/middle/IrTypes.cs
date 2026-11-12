@@ -47,10 +47,6 @@ namespace Best_language.src.middle
         public IrValue Left { get; } = left;
         public IrValue Right { get; } = right;
     }
-    public class IrFunction(string name) : IrInstruction
-    {
-        public string Name { get; } = name;
-    }
     public class IrProgram : IrInstruction
     {
         public List<IrInstruction> Instructions { get; } = new();
@@ -115,12 +111,6 @@ namespace Best_language.src.middle
                         Console.WriteLine($"IrUnary: {unary.Op} ({unary.Right})");
                         break;
                     }
-                case IrFunction function:
-                    {
-                        Console.WriteLine($"IrFunc: {function.Name}");
-                        break;
-                    }
-
                 default:
                     {
                         Console.WriteLine(node.GetType());

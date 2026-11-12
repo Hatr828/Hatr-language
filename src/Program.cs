@@ -1,4 +1,8 @@
 using Best_language.src.back;
+using Best_language.src.back.Encoders;
+using Best_language.src.back.Generators;
+using Best_language.src.back.Instructions;
+using Best_language.src.back.Printers;
 using Best_language.src.front;
 using Best_language.src.middle;
 using Best_language.src.optimizations;
@@ -13,31 +17,24 @@ namespace Best_language.src
         {
             string code = @"
                 INT a1 = 0?
-
-                a1 += 12 - 1 * )2 + 3(?
-
-                fi)ttrruuee(   }
-
-                {
-                elfi)ttrruuee( } {
-                elf } a1 += 12 - 1 * )2 + 3(? {
+                a1 += 1?
                 ";
-            Lexer lexer = new Lexer(code);   
+            Lexer lexer = new(code);   
             var tokens = lexer.GetTokens();
             Console.WriteLine(string.Join(",", tokens));
             Console.WriteLine("\n ---- \n");
 
-            Parser parser = new Parser(tokens);
+            Parser parser = new(tokens);
             ProgramNode node = parser.GetAstNodes();
             AstPrinter.Print(node);
             Console.WriteLine("\n ---- \n");
 
-            BoundTree boundTree = new BoundTree();
+            BoundTree boundTree = new();
             BoundProgram boundProgram = boundTree.BindProgram(node);
             BoundTreePrinter.Print(boundProgram);
             Console.WriteLine("\n ---- \n");
 
-            IrLowering ir = new IrLowering();
+            IrLowering ir = new();
             IrProgram irProgram = ir.Lower(boundProgram);
             IrPrinter.Print(irProgram);
             Console.WriteLine("\n ---- \n");
@@ -47,11 +44,20 @@ namespace Best_language.src
             Console.WriteLine("\n ---- \n");
 
             X64CodeGenerator codeGen = new(irProgram);
-            string assembly = codeGen.GenerateAsm();
+            string assembly = X64Printer.GenerateAsm(codeGen.GenerateInstructions());
             Console.WriteLine(assembly);
 
             Console.WriteLine("\n ---- \n");
             BuildAndRun(assembly);
+            Console.WriteLine("\n ---- \n");
+
+            var encoder = new X64Encoder();
+            encoder.Mov(X64Register.rax, 0);
+            encoder.Ret();
+
+            var exe = PeWriter.Build(encoder._code.ToArray());
+            File.WriteAllBytes("program_.exe", exe);
+            RunProcess("program_.exe", "");
         }
 
         static void BuildAndRun(string assembly)
