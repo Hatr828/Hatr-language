@@ -43,26 +43,30 @@ namespace Best_language.src.back.Instructions
     }
 
     public abstract class X64Operand;
-    public class RegisterOperand(X64Register register) : X64Operand
+    public class X64RegisterOperand(X64Register register) : X64Operand
     {
         public X64Register Register { get; } = register;
     }
-    public class LabelOperand(string label) : X64Operand
+    public class X64LabelOperand(string label) : X64Operand
     {
         public string Label { get; } = label;
     }
-    public class SymbolOperand(string name) : X64Operand
+    public class X64SymbolOperand(string name) : X64Operand
     {
         public string Name { get; } = name;
     }
-    public class MemoryOperand(X64Register register, int offset) : X64Operand
+    public class X64MemoryOperand(X64Register register, int offset) : X64Operand
     {
         public X64Register Register { get; } = register;
         public int Offset {  get; } = offset;
     }
-    public class LongOperand(long value) : X64Operand
+    public class X64LongOperand(long value) : X64Operand
     {
         public long Value { get; } = value;
+    }
+    public class X64IntOperand(int value) : X64Operand
+    {
+        public int Value { get; } = value;
     }
 
     public class X64Instruction(X64Opcode opcode, X64Operand? left = null, X64Operand? right = null)

@@ -44,7 +44,9 @@ namespace Best_language.src
             Console.WriteLine("\n ---- \n");
 
             X64CodeGenerator codeGen = new(irProgram);
-            string assembly = X64Printer.GenerateAsm(codeGen.GenerateInstructions());
+            List<X64Instruction> instructions = codeGen.GenerateInstructions();
+
+            string assembly = X64Printer.GenerateAsm(instructions);
             Console.WriteLine(assembly);
 
             Console.WriteLine("\n ---- \n");
@@ -52,10 +54,9 @@ namespace Best_language.src
             Console.WriteLine("\n ---- \n");
 
             var encoder = new X64Encoder();
-            encoder.Mov(X64Register.rax, 0);
-            encoder.Ret();
+            var tmp = encoder.Encode(instructions);
 
-            var exe = PeWriter.Build(encoder._code.ToArray());
+            var exe = PeWriter.Build(tmp.bytes, tmp.importFixups);
             File.WriteAllBytes("program_.exe", exe);
             RunProcess("program_.exe", "");
         }

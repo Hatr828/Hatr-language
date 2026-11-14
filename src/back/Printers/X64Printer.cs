@@ -72,19 +72,22 @@ namespace Best_language.src.back.Printers
         {
             switch (operand)
             {
-                case LongOperand longOperand:
+                case X64LongOperand longOperand:
                     return longOperand.Value.ToString();
 
-                case RegisterOperand registerOperand:
+                case X64IntOperand longOperand:
+                    return longOperand.Value.ToString();
+
+                case X64RegisterOperand registerOperand:
                     return registerOperand.Register.ToString();
 
-                case MemoryOperand memoryOperand:
+                case X64MemoryOperand memoryOperand:
                     return $"qword [{memoryOperand.Register}-{memoryOperand.Offset}]";
 
-                case LabelOperand labelOperand:
+                case X64LabelOperand labelOperand:
                     return $"{labelOperand.Label}";
 
-                case SymbolOperand symbolOperand:
+                case X64SymbolOperand symbolOperand:
                     return $"{symbolOperand.Name}";
 
                 default:
