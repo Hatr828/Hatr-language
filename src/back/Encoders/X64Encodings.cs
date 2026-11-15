@@ -1,12 +1,7 @@
 ﻿using Best_language.src.back.Instructions;
-using Best_language.src.front;
-using System;
+using Best_language.src.middle;
 using System.Buffers.Binary;
-using System.Collections;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Runtime.InteropServices;
-using System.Text;
+using System.Linq.Expressions;
 
 namespace Best_language.src.back.Encoders
 {
@@ -18,311 +13,323 @@ namespace Best_language.src.back.Encoders
         {
             ["ExitProcess"] = "kernel32.dll",
         };
+        private List<X64Label> _labelFixups = new();
+        private Dictionary<string, int> _labels = new();
 
-        public void Mov(X64RegisterOperand left, X64LongOperand right)
+        public (byte[] bytes, List<PeImport> importFixups) Encode(List<X64Instruction> instructions)
         {
-            _code.Add(0x48);
-            _code.Add((byte)(0xB8 + GetRegisterCode(left.Register)));
+            _code = new();
+            _importFixups = new();
+            _labelFixups = new();
+            _labels = new();
 
-            Span<byte> tmp = stackalloc byte[8];
-            BinaryPrimitives.WriteInt64LittleEndian(tmp, right.Value);
-
-            foreach (var t in tmp) _code.Add(t);
-        }
-        public void Mov(X64RegisterOperand left, X64IntOperand right)
-        {
-            _code.Add(0x48);
-            _code.Add((byte)(0xB8 + GetRegisterCode(left.Register)));
-
-            Span<byte> tmp = stackalloc byte[8];
-            BinaryPrimitives.WriteInt64LittleEndian(tmp, right.Value);
-
-            foreach (var t in tmp) _code.Add(t);
-        }
-        public void Mov(X64RegisterOperand left, X64RegisterOperand right)
-        {
-            byte l = GetRegisterCode(left.Register);
-            byte r = GetRegisterCode(right.Register);
-
-            _code.Add(0x48);
-            _code.Add(0x8B);
-            _code.Add((byte)(0xC0 | (l << 3) | r));
-        }
-        public void Mov(X64RegisterOperand left, X64MemoryOperand mem)
-        {
-            _code.Add(0x48);
-            _code.Add(0x8B);
-            WriteStackOperand(GetRegisterCode(left.Register), -mem.Offset);
-        }
-        public void Mov(X64MemoryOperand mem, X64RegisterOperand right)
-        {
-            _code.Add(0x48);
-            _code.Add(0x89);
-            WriteStackOperand(GetRegisterCode(right.Register), -mem.Offset);
-        }
-
-        public void Movzx(X64RegisterOperand left, X64RegisterOperand right)
-        {
-            byte l = GetRegisterCode(left.Register);
-            byte r = GetRegisterCode(right.Register);
-
-            _code.Add(0x48);
-            _code.Add(0x0F);
-            _code.Add(0xB6);
-            _code.Add((byte)(0xC0 | (l << 3) | r));
-        }
-
-        public void Push(X64RegisterOperand left)
-        {
-            _code.Add((byte)(0x50 + GetRegisterCode(left.Register)));
-        }
-
-        public void Sub(X64RegisterOperand left, X64RegisterOperand right)
-        {
-            byte l = GetRegisterCode(left.Register);
-            byte r = GetRegisterCode(right.Register);
-
-            _code.Add(0x48);
-            _code.Add(0x29);
-            _code.Add((byte)(0xC0 | (r << 3) | l));
-        }
-        public void Sub(X64RegisterOperand left, X64IntOperand right)
-        {
-            byte l = GetRegisterCode(left.Register);
-
-            _code.Add(0x48);
-
-            if(right.Value >= -128 && right.Value <= 127)
+            outer: foreach (var instruction in instructions)
             {
-                _code.Add(0x83);
-                _code.Add((byte)(0xC0 | (5 << 3) | l));
-                _code.Add((byte)right.Value);
+                if (instruction.Opcode is X64Opcode.label) EncodeLabel(instruction.Operands[0]);
+                else if (instruction.Opcode is X64Opcode.call && instruction.Operands[0].Kind is X64ValueKind.Symbol) EncodeImportCall(instruction.Operands[0]);
+                else
+                {
+                    foreach (var form in X64InstructionTable.GetForms(instruction.Opcode))
+                    {
+                        if (!TryMatch(form, instruction.Operands, out int size)) continue;
+
+                        EncodeInstruction(form, instruction.Operands, size);
+
+                        continue outer;
+                    }
+
+                    throw new NotSupportedException($"Unknown encoding for {instruction.Opcode}");
+                }
             }
-            else
+
+            var res = _code.ToArray();
+
+            foreach (var fixup in _labelFixups)
             {
-                _code.Add(0x81);
-                _code.Add((byte)(0xC0 | (5 << 3) | l));
+                if (!_labels.TryGetValue(fixup.Name, out int target)) throw new ArgumentException();
 
-                Span<byte> tmp = stackalloc byte[4];
-                BinaryPrimitives.WriteInt64LittleEndian(tmp, right.Value);
+                int displacement = checked(target - fixup.NextInstruction);
 
-                foreach (var t in tmp) _code.Add(t);
+                BinaryPrimitives.WriteInt32LittleEndian(res.AsSpan(fixup.Offset, 4), displacement);
             }
+
+            return (res, _importFixups);
         }
-
-        public void Add(X64RegisterOperand left, X64RegisterOperand right)
+        public void EncodeLabel(X64Operand operand)
         {
-            byte l = GetRegisterCode(left.Register);
-            byte r = GetRegisterCode(right.Register);
+            string name = operand.Name!;
 
-            _code.Add(0x48);
-            _code.Add(0x01);
-            _code.Add((byte)(0xC0 | (r << 3) | l));
+            _labels[name] = _code.Count;
         }
-        public void Add(X64RegisterOperand left, X64IntOperand right)
+        public bool TryMatch(X64Form form, X64Operand[] operands, out int size)
         {
-            byte l = GetRegisterCode(left.Register);
+            size = 0;
 
-            _code.Add(0x48);
+            if (operands.Length != form.Operands.Length) return false;
 
-            if (right.Value >= -128 && right.Value <= 127)
+            for(int i = 0; i < operands.Length; i++)
+            {   
+                var spec = form.Operands[i];
+                var operand = operands[i];
+
+                bool matches = spec.Kind switch
+                {
+                    X64OperandKind.Register => operand.Kind is X64ValueKind.Register,
+                    X64OperandKind.Memory => operand.Kind is X64ValueKind.Memory,
+                    X64OperandKind.RegisterOrMemory => operand.Kind is X64ValueKind.Register or X64ValueKind.Memory,
+                    X64OperandKind.Immediate => operand.Kind is X64ValueKind.Immediate,
+                    X64OperandKind.Relative => operand.Kind is X64ValueKind.Label,
+
+                    _ => false,
+                };
+
+                if (!matches) return false;
+
+                if (spec.FixedRegister is X64Register register && (operand.Kind != X64ValueKind.Register || operand.Register != register)) return false;
+
+                if (spec.FixedImmediate is long value && (operand.Kind != X64ValueKind.Immediate || operand.Value != value)) return false;
+
+                if (operand.Kind is not X64ValueKind.Register and not X64ValueKind.Memory) continue;
+
+                int actualSize = GetSize(operand.Size, 0);
+
+                if (operand.Kind is X64ValueKind.Register && (operand.Register is null || operand.Size != X64Operand.GetSize(operand.Register.Value))) return false;
+
+                if(spec.Size == X64Size.operand)
+                {
+                    if (actualSize is 0) continue;
+
+                    if (size != 0 && size != actualSize) return false;
+
+                    size = actualSize;
+                }
+                else
+                {
+                    int expectedSize = GetSize(spec.Size, 0);
+
+                    if (actualSize != 0 && actualSize != expectedSize) return false;
+                }
+            }
+
+            switch (form.SizeMode)
             {
-                _code.Add(0x83);
-                _code.Add((byte)(0xC0 | l));
-                _code.Add((byte)right.Value);
+                case X64OperandSizeMode.None:
+                    break;
+
+                case X64OperandSizeMode.Byte:
+                    if (size != 0 && size != 1) return false;
+
+                    size = 1;
+                    break;
+
+                case X64OperandSizeMode.Standard:
+                    if (size != 2 && size != 4 && size != 8) return false;
+                    break;
+
+                case X64OperandSizeMode.Default64:
+                    if (size is 0) size = 8;
+
+                    if (size != 2 && size != 8) return false;
+
+                    break;
+
+                case X64OperandSizeMode.Fixed64:
+                    if (size != 0 && size != 8) return false;
+
+                    size = 8;
+                    break;
+
+                default: return false;
             }
-            else
+
+            for(int i = 0; i < operands.Length; i++)
             {
-                _code.Add(0x81);
-                _code.Add((byte)(0xC0 | l));
+                var spec = form.Operands[i];
+                var operand = operands[i];
 
-                Span<byte> tmp = stackalloc byte[4];
-                BinaryPrimitives.WriteInt64LittleEndian(tmp, right.Value);
+                if (spec.SmallerThanOperandSize && GetSize(spec.Size, size) >= size) return false;
 
-                foreach (var t in tmp) _code.Add(t);
+                if (spec.Role is X64OperandRole.Immediate)
+                {
+                    int width = GetSize(spec.Size, size);
+
+                    bool signed = spec.ImmediateRule == X64ImmediateRule.SignExtended || (spec.ImmediateRule is X64ImmediateRule.SignExtendedWhenOperand64 && size == 8);
+
+                    if (!FitsImmediate(operand.Value, width, signed)) return false;
+                }
+                else if(spec.Role is X64OperandRole.Relative) 
+                {
+                    if (GetSize(spec.Size, size) != 4 || operand.Name is null) return false; 
+                }
             }
+
+            return true;
         }
-
-        public void Xor(X64RegisterOperand left, X64RegisterOperand right)
+        private void EncodeInstruction(X64Form form, X64Operand[] operands, int size)
         {
-            byte l = GetRegisterCode(left.Register);
-            byte r = GetRegisterCode(right.Register);
+            List<byte> bytes = new();
 
-            _code.Add(0x48);
-            _code.Add(0x31);
-            _code.Add((byte)(0xC0 | (r << 3) | l));
-        }
-        public void Xor(X64RegisterOperand left, X64IntOperand right)
-        {
-            byte l = GetRegisterCode(left.Register);
+            (int Offset, int Size, string Name)? fixup = null;
 
-            _code.Add(0x48);
+            bool prefix = (form.Prefixes & X64Prefixes.OperandSize) != 0 || (size == 2 &&
+                (form.SizeMode is X64OperandSizeMode.Standard || form.SizeMode is X64OperandSizeMode.Default64));
 
-            if (right.Value >= -128 && right.Value <= 127)
+            if (prefix) bytes.Add(0x66);
+            if ((form.Prefixes & X64Prefixes.Repne) != 0) bytes.Add(0xF2);
+            if ((form.Prefixes & X64Prefixes.Rep) != 0) bytes.Add(0xF3);
+
+            bool rexW = form.SizeMode is X64OperandSizeMode.Fixed64 || (form.SizeMode is X64OperandSizeMode.Standard && size == 8);
+
+            if (rexW) bytes.Add(0x48);
+
+            switch(form.Map)
             {
-                _code.Add(0x83);
-                _code.Add((byte)(0xC0 | (6 << 3) | l));
-                _code.Add((byte)right.Value);
+                case X64OpcodeMap.Primary:
+                    break;
+
+                case X64OpcodeMap.Map0F:
+                    bytes.Add(0x0F);
+                    break;
+
+                default: throw new NotSupportedException();
             }
-            else
+
+            int opcode = form.Opcode;
+
+            if(form.OpcodePlusRegister)
             {
-                _code.Add(0x81);
-                _code.Add((byte)(0xC0 | (6 << 3) | l));
+                var operand = GetOperand(form, operands, X64OperandRole.OpcodeRegister);
 
-                Span<byte> tmp = stackalloc byte[4];
-                BinaryPrimitives.WriteInt64LittleEndian(tmp, right.Value);
-
-                foreach (var t in tmp) _code.Add(t);
+                opcode += GetRegisterCode(operand.Register!.Value);
             }
-        }
 
-        public void Call(string dll, string name)
+            bytes.Add(checked((byte)opcode));
+
+            if(form.FixedModRm >= 0)
+            {
+                bytes.Add(checked((byte)form.FixedModRm));
+            }
+            else if(form.HasModRm)
+            {
+                int regField = form.Extension;
+
+                if(regField < 0)
+                {
+                    var register = GetOperand(form, operands, X64OperandRole.ModRmReg);
+
+                    regField = GetRegisterCode(register.Register!.Value);
+                }
+
+                var rm = GetOperand(form, operands, X64OperandRole.ModRmRm);
+
+                EncodeModRm(bytes, regField, rm);
+            }
+
+            for(int i = 0; i < operands.Length; i++)
+            {
+                var spec = form.Operands[i];
+                var operand = operands[i];
+
+                if (spec.Role is X64OperandRole.Immediate) EncodeInteger(bytes, operand.Value, GetSize(spec.Size, size));
+                else if(spec.Role is X64OperandRole.Relative)
+                {
+                    int width = GetSize(spec.Size, size);
+
+                    if (fixup is not null) throw new ArgumentException();
+
+                    fixup = (bytes.Count, width, operand.Name!);
+                    EncodeInteger(bytes, 0, width);   
+                }
+            }
+
+            int start = _code.Count;
+            int nextInstruction = checked(start + bytes.Count);
+
+            _code.AddRange(bytes);
+
+            if (fixup is not null)                
+                _labelFixups.Add(new(fixup.Value.Size, start + fixup.Value.Offset, nextInstruction, fixup.Value.Name)); 
+        }
+        public void EncodeModRm(List<byte> bytes, int regField, X64Operand operand)
         {
+            if (regField > 7) throw new ArgumentException(nameof(regField));
+
+            if(operand.Kind == X64ValueKind.Register)
+            {
+                int rm = GetRegisterCode(operand.Register!.Value);
+
+                bytes.Add((byte)(0xC0 | (regField << 3) | rm));
+                return;
+            }
+            X64Register baseRegister = operand.Register!.Value;
+
+            if (X64Operand.GetSize(baseRegister) != X64Size.qword) throw new ArgumentException();
+
+            int baseCode = GetRegisterCode(baseRegister);
+            int offset = operand.Offset;
+            int mod;
+
+            if (offset == 0 && baseCode != 5) mod = 0;
+            else if (offset >= -128 && offset <= 127) mod = 1;
+            else mod = 2;
+
+            bytes.Add((byte)((mod << 6) | (regField << 3) | baseCode));
+
+            if (baseCode is 4) bytes.Add(0x24);
+
+            if (mod is 1) EncodeInteger(bytes, offset, 1);
+            else if (mod is 2) EncodeInteger(bytes, offset, 4);
+        }
+        public void EncodeImportCall(X64Operand operand)
+        {
+            if (!_dlls.TryGetValue(operand.Name!, out string? dll)) throw new ArgumentException($"unknown import: {operand.Name!}");
+
             _code.Add(0xFF);
             _code.Add(0x15);
 
-            int offset = _code.Count;
+            _importFixups.Add(new(_code.Count, dll, operand.Name!));
 
-            _importFixups.Add(new PeImport
-            {
-                Offset = _code.Count,
-                DLL = dll,
-                Name = name
-            });
-
-            CollectionsMarshal.SetCount(_code, checked(offset + 4));
-            CollectionsMarshal.AsSpan(_code).Slice(offset, 4).Clear();
+            EncodeInteger(_code, 0, 4);
         }
-        public void Call(X64SymbolOperand op)
+        private X64Operand GetOperand(X64Form form, X64Operand[] operands, X64OperandRole role)
         {
-            if(!_dlls.TryGetValue(op.Name, out var dll))
+            for (int i = 0; i < operands.Length; i++)
             {
-                throw new ArgumentException("Unknown dll");
+                if (form.Operands[i].Role == role)
+                    return operands[i];
             }
-
-            Call(dll, op.Name);
+            throw new InvalidOperationException($"Missing operand with role: {role}");
         }
-
-        public void Ret() => _code.Add(0xC3);
-    }
-    // Helpers
-    public partial class X64Encoder
-    {
-        public void MovHelper(X64Operand left, X64Operand right)
+        private int GetSize(X64Size size, int operandSize) => size switch
         {
-            switch (left, right)
-            {
-                case (X64RegisterOperand l, X64RegisterOperand r):
-                    Mov(l, r);
-                    return;
-                case (X64RegisterOperand l, X64LongOperand r):
-                    Mov(l, r);
-                    return;
-                case (X64RegisterOperand l, X64MemoryOperand r):
-                    Mov(l, r);
-                    return;
-                case (X64RegisterOperand l, X64IntOperand r):
-                    Mov(l, r);
-                    return;
-                case (X64MemoryOperand l, X64RegisterOperand r):
-                    Mov(l, r);
-                    return;
-            }
+            X64Size.none => 0,
+            X64Size.@byte => 1,
+            X64Size.word => 2,
+            X64Size.dword => 4,
+            X64Size.qword => 8,
 
-            throw new ArgumentException("Unknown encoding for mov");
-        }
-        public void MovzxHelper(X64Operand left, X64Operand right)
+            X64Size.operand => operandSize,
+            X64Size.immediate => operandSize is 2 ? 2 : 4,
+
+            _ => throw new ArgumentOutOfRangeException(nameof(size))
+        };
+        private bool FitsImmediate(long value, int size, bool signed) => size switch
         {
-            switch (right, left)
-            {
-                case (X64RegisterOperand l, X64RegisterOperand r):
-                    Movzx(l, r);
-                    return;
-            }
+            1 => signed ? value >= sbyte.MinValue && value <= byte.MaxValue : value >= sbyte.MinValue && value <= sbyte.MaxValue,
+            2 => signed ? value >= short.MinValue && value <= short.MaxValue : value >= short.MinValue && value <= ushort.MaxValue,
+            4 => signed ? value >= int.MinValue && value <= int.MaxValue : value >= int.MinValue && value <= uint.MaxValue,
+            8 => true,
 
-            throw new ArgumentException("Unknown encoding for movzx");
-        }
-        public void AddHelper(X64Operand left, X64Operand right)
+            _ => false
+        };
+        private void EncodeInteger(List<byte> bytes, long value, int size)
         {
-            switch (left, right)
-            {
-                case (X64RegisterOperand l, X64RegisterOperand r):
-                    Add(l, r);
-                    return;
-                case (X64RegisterOperand l, X64IntOperand r):
-                    Add(l, r);
-                    return;
-            }
+            Span<byte> buffer = stackalloc byte[8];
 
-            throw new ArgumentException("Unknown encoding for add");
+            BinaryPrimitives.WriteInt64LittleEndian(buffer, value);
+
+            bytes.AddRange(buffer[..size]);
         }
-        public void SubHelper(X64Operand left, X64Operand right)
-        {
-            switch (left, right)
-            {
-                case (X64RegisterOperand l, X64RegisterOperand r):
-                    Sub(l, r);
-                    return;
-                case (X64RegisterOperand l, X64IntOperand r):
-                    Sub(l, r);
-                    return;
-            }
-
-            throw new ArgumentException("Unknown encoding for sub");
-        }
-        public void XorHelper(X64Operand left, X64Operand right)
-        {
-            switch(left, right)
-            {
-                case (X64RegisterOperand l, X64RegisterOperand r):
-                    Xor(l, r);
-                    return;
-                case (X64RegisterOperand l, X64IntOperand r):
-                    Xor(l, r);
-                    return;
-            }
-
-            throw new ArgumentException("Unknown encoding for xor");
-        }
-        public void PushHelper(X64Operand left)
-        {
-            switch (left)
-            {
-                case (X64RegisterOperand l):
-                    Push(l);
-                    return;
-            }
-
-            throw new ArgumentException("Unknown encoding for push");
-        }
-        public void CallHelper(X64Operand left)
-        {
-            switch (left)
-            {
-                case (X64SymbolOperand l):
-                    Call(l);
-                    return;
-            }
-
-            throw new ArgumentException("Unknown encoding for push");
-        }
-        public void WriteStackOperand(int register, int offset)
-        {
-            if (offset >= -128 && offset <= 127)
-            {
-                _code.Add((byte)(0x40 | (register << 3) | 5));
-                _code.Add((byte)offset);
-            }
-            else
-            {
-                _code.Add((byte)(0x80 | (register << 3) | 5));
-
-                Span<byte> tmp = stackalloc byte[4];
-                BinaryPrimitives.WriteInt32LittleEndian(tmp, offset);
-                foreach (var t in tmp) _code.Add(t);
-            }
-        }
-
         private byte GetRegisterCode(X64Register reg) => reg switch
         {
             X64Register.rax or X64Register.al => 0,

@@ -6,6 +6,7 @@ using Best_language.src.back.Printers;
 using Best_language.src.front;
 using Best_language.src.middle;
 using Best_language.src.optimizations;
+using System.ComponentModel;
 using System.Diagnostics;
 using static Best_language.src.middle.BoundScopes;
 
@@ -18,6 +19,8 @@ namespace Best_language.src
             string code = @"
                 INT a1 = 0?
                 a1 += 1?
+
+                fi)ttrruuee( }{
                 ";
             Lexer lexer = new(code);   
             var tokens = lexer.GetTokens();

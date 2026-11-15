@@ -30,8 +30,8 @@ namespace Best_language.src.back.Printers
                     case X64Opcode.test:
                     case X64Opcode.shl:
                         _sb.AppendLine($"    {instruction.Opcode} " +
-                            $"{GetStringFromOperand(instruction.Left!)}," +
-                            $" {GetStringFromOperand(instruction.Right!)}");
+                            $"{GetStringFromOperand(instruction.Operands[0])}," +
+                            $" {GetStringFromOperand(instruction.Operands[1])}");
                         break;
 
                     case X64Opcode.call:
@@ -48,7 +48,7 @@ namespace Best_language.src.back.Printers
                     case X64Opcode.jnz:
                     case X64Opcode.push:
                         _sb.AppendLine($"    {instruction.Opcode} " +
-                            $"{GetStringFromOperand(instruction.Left!)}");
+                            $"{GetStringFromOperand(instruction.Operands[0])}");
                         break;
 
                     case X64Opcode.cqo:
@@ -57,7 +57,7 @@ namespace Best_language.src.back.Printers
                         break;
 
                     case X64Opcode.label:
-                        _sb.AppendLine($"{GetStringFromOperand(instruction.Left!)}:");
+                        _sb.AppendLine($"{GetStringFromOperand(instruction.Operands[0])}:");
                         break;
 
                     default:
@@ -70,28 +70,27 @@ namespace Best_language.src.back.Printers
 
         private static string GetStringFromOperand(X64Operand operand)
         {
-            switch (operand)
+            switch (operand.Kind)
             {
-                case X64LongOperand longOperand:
-                    return longOperand.Value.ToString();
+                case X64ValueKind.Register:
+                    return operand.Register.ToString()!;
 
-                case X64IntOperand longOperand:
-                    return longOperand.Value.ToString();
+                case X64ValueKind.Immediate:
+                    return operand.Value.ToString();
 
-                case X64RegisterOperand registerOperand:
-                    return registerOperand.Register.ToString();
+                case X64ValueKind.Memory:
+                    if (operand.Size != X64Size.@byte)
+                        return $"{operand.Size} [{operand.Register}-{operand.Offset}]";
+                    else
+                        throw new NotSupportedException();
+                case X64ValueKind.Label:
+                    return $"{operand.Name}";
 
-                case X64MemoryOperand memoryOperand:
-                    return $"qword [{memoryOperand.Register}-{memoryOperand.Offset}]";
-
-                case X64LabelOperand labelOperand:
-                    return $"{labelOperand.Label}";
-
-                case X64SymbolOperand symbolOperand:
-                    return $"{symbolOperand.Name}";
+                case X64ValueKind.Symbol:
+                    return $"{operand.Name}";
 
                 default:
-                    throw new ArgumentException($"Unknow Operand: {operand}");
+                    throw new ArgumentException($"Unknow operand: {operand}");
             }
         }
     }

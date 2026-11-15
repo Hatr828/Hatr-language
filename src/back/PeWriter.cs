@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Best_language.src.back.Instructions;
+using System;
 using System.Buffers.Binary;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,12 +12,6 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Best_language.src.back
 {
-    public struct PeImport
-    {
-        public int Offset;
-        public string DLL;
-        public string Name;
-    }
     public class PeWriter
     {
         private const int fileAlignment = 0x200;

@@ -22,6 +22,7 @@ namespace Best_language.src.back.Generators
         private List<X64Instruction> _instructions = new();
 
         private int idx;
+        private int StackIdx;
 
         public List<X64Instruction> GenerateInstructions()
         {
@@ -43,8 +44,8 @@ namespace Best_language.src.back.Generators
                             _constants.Remove(binary.Left);
 
                             _instructions.Add(new(X64Opcode.mov,
-                                new X64MemoryOperand(X64Register.rbp, slot),
-                                new X64RegisterOperand(X64Register.rax)));
+                                X64Operand.Mem(X64Register.rbp, slot, X64Size.qword),
+                                X64Operand.Reg(X64Register.rax)));
                             break;
                         }
                     case IrUnary unary:
@@ -56,8 +57,8 @@ namespace Best_language.src.back.Generators
                             _constants.Remove(unary.Right);
 
                             _instructions.Add(new(X64Opcode.mov,
-                                new X64MemoryOperand(X64Register.rbp, slot),
-                                new X64RegisterOperand(X64Register.rax)));
+                                X64Operand.Mem(X64Register.rbp, slot, X64Size.qword),
+                                X64Operand.Reg(X64Register.rax)));
                             break;
                         }
                     case IrVariable variable:
@@ -68,8 +69,8 @@ namespace Best_language.src.back.Generators
                             _constants.Remove(variable.Left);
 
                             _instructions.Add(new(X64Opcode.mov,
-                                new X64MemoryOperand(X64Register.rbp, slot),
-                                new X64RegisterOperand(X64Register.rax)));
+                                X64Operand.Mem(X64Register.rbp, slot, X64Size.qword),
+                                X64Operand.Reg(X64Register.rax)));
                             break;
                         }
                     case IrConstant constant:
@@ -79,21 +80,21 @@ namespace Best_language.src.back.Generators
                         }
                     case IrLabel label:
                         {
-                            _instructions.Add(new(X64Opcode.label, new X64LabelOperand($"{label.Name}")));
+                            _instructions.Add(new(X64Opcode.label, X64Operand.Label($"{label.Name}")));
                             break;
                         }
                     case IrJump jump:
                         {
-                            _instructions.Add(new(X64Opcode.jmp, new X64LabelOperand($"{jump.Target}")));
+                            _instructions.Add(new(X64Opcode.jmp, X64Operand.Label($"{jump.Target}")));
                             break;
                         }
                     case IrJumpIfTrue jump:
                         {
                             LoadValue(jump.Condition, X64Register.rax);
                             _instructions.Add(new(X64Opcode.test,
-                                new X64RegisterOperand(X64Register.rax),
-                                new X64RegisterOperand(X64Register.rax)));
-                            _instructions.Add(new(X64Opcode.jnz, new X64LabelOperand($"{jump.Target}")));
+                                X64Operand.Reg(X64Register.rax),
+                                X64Operand.Reg(X64Register.rax)));
+                            _instructions.Add(new(X64Opcode.jnz, X64Operand.Label($"{jump.Target}")));
                             break;
                         }
                 }
@@ -101,20 +102,9 @@ namespace Best_language.src.back.Generators
 
             AppendEndFunc();
 
-            PutStackSize((offset + 15) & ~15);
+            _instructions[StackIdx].Operands[1] = X64Operand.Imm(X64Size.dword, ((offset + 15) & ~15));
 
             return _instructions;
-        }
-        private void PutStackSize(int stackSize)
-        {
-            for(int i = 0; i < _instructions.Count; i++)
-            {
-                if (_instructions[i].Opcode is not X64Opcode.sub) continue;
-                if (_instructions[i].Right is not null) continue;
-
-                _instructions[i].Right = new X64IntOperand(stackSize);
-                return;
-            }
         }
 
         private void OperationGen(IrBinary binary)
@@ -127,37 +117,37 @@ namespace Best_language.src.back.Generators
                 case Operations.PlusEquals:
                 case Operations.Plus:
                     _instructions.Add(new(X64Opcode.add,
-                               new X64RegisterOperand(X64Register.rax),
-                               new X64RegisterOperand(X64Register.rcx)));
+                               X64Operand.Reg(X64Register.rax),
+                               X64Operand.Reg(X64Register.rcx)));
                     break;
 
                 case Operations.MinusEquals:
                 case Operations.Minus:
                     _instructions.Add(new(X64Opcode.sub,
-                               new X64RegisterOperand(X64Register.rax),
-                               new X64RegisterOperand(X64Register.rcx)));
+                               X64Operand.Reg(X64Register.rax),
+                               X64Operand.Reg(X64Register.rcx)));
                     break;
 
                 case Operations.MultiplyEquals:
                 case Operations.Multiply:
                     _instructions.Add(new(X64Opcode.imul,
-                               new X64RegisterOperand(X64Register.rax),
-                               new X64RegisterOperand(X64Register.rcx)));
+                               X64Operand.Reg(X64Register.rax),
+                               X64Operand.Reg(X64Register.rcx)));
                     break;
 
                 case Operations.DivideEquals:
                 case Operations.Divide:
                     _instructions.Add(new(X64Opcode.cqo));
-                    _instructions.Add(new(X64Opcode.idiv, new X64RegisterOperand(X64Register.rcx)));
+                    _instructions.Add(new(X64Opcode.idiv, X64Operand.Reg(X64Register.rcx)));
                     break;
 
                 case Operations.DivisionRemEquals:
                 case Operations.DivisionRem:
                     _instructions.Add(new(X64Opcode.cqo));
-                    _instructions.Add(new(X64Opcode.idiv, new X64RegisterOperand(X64Register.rcx)));
+                    _instructions.Add(new(X64Opcode.idiv, X64Operand.Reg(X64Register.rcx)));
                     _instructions.Add(new(X64Opcode.mov,
-                               new X64RegisterOperand(X64Register.rax),
-                               new X64RegisterOperand(X64Register.rdx)));
+                               X64Operand.Reg(X64Register.rax),
+                               X64Operand.Reg(X64Register.rdx)));
                     break;
 
                 case Operations.GreaterThan:
@@ -186,70 +176,70 @@ namespace Best_language.src.back.Generators
 
                 case Operations.And:
                     _instructions.Add(new(X64Opcode.sub,
-                              new X64RegisterOperand(X64Register.rax),
-                              new X64RegisterOperand(X64Register.rax)));
+                              X64Operand.Reg(X64Register.rax),
+                              X64Operand.Reg(X64Register.rax)));
 
-                    _instructions.Add(new(X64Opcode.setne, new X64RegisterOperand(X64Register.al)));
+                    _instructions.Add(new(X64Opcode.setne, X64Operand.Reg(X64Register.al)));
 
                     _instructions.Add(new(X64Opcode.sub,
-                             new X64RegisterOperand(X64Register.rcx),
-                             new X64RegisterOperand(X64Register.rcx)));
+                             X64Operand.Reg(X64Register.rcx),
+                             X64Operand.Reg(X64Register.rcx)));
 
-                    _instructions.Add(new(X64Opcode.setne, new X64RegisterOperand(X64Register.cl)));
+                    _instructions.Add(new(X64Opcode.setne, X64Operand.Reg(X64Register.cl)));
                     _instructions.Add(new(X64Opcode.and,
-                          new X64RegisterOperand(X64Register.al),
-                          new X64RegisterOperand(X64Register.cl)));
+                          X64Operand.Reg(X64Register.al),
+                          X64Operand.Reg(X64Register.cl)));
 
                     _instructions.Add(new(X64Opcode.movzx,
-                          new X64RegisterOperand(X64Register.rax),
-                          new X64RegisterOperand(X64Register.al)));
+                          X64Operand.Reg(X64Register.rax),
+                          X64Operand.Reg(X64Register.al)));
                     break;
 
                 case Operations.Or:
                     _instructions.Add(new(X64Opcode.or,
-                             new X64RegisterOperand(X64Register.rax),
-                             new X64RegisterOperand(X64Register.rcx)));
+                             X64Operand.Reg(X64Register.rax),
+                             X64Operand.Reg(X64Register.rcx)));
 
-                    _instructions.Add(new(X64Opcode.setne, new X64RegisterOperand(X64Register.al))); 
+                    _instructions.Add(new(X64Opcode.setne, X64Operand.Reg(X64Register.al))); 
 
                     _instructions.Add(new(X64Opcode.movzx,
-                        new X64RegisterOperand(X64Register.rax),
-                        new X64RegisterOperand(X64Register.al)));
+                        X64Operand.Reg(X64Register.rax),
+                        X64Operand.Reg(X64Register.al)));
                     break;
 
                 case Operations.BitAndEquals:
                 case Operations.BitAnd:
                     _instructions.Add(new(X64Opcode.and,
-                             new X64RegisterOperand(X64Register.rax),
-                             new X64RegisterOperand(X64Register.rcx)));
+                             X64Operand.Reg(X64Register.rax),
+                             X64Operand.Reg(X64Register.rcx)));
                     break;
 
                 case Operations.BitOrEquals:
                 case Operations.BitOr:
                     _instructions.Add(new(X64Opcode.or,
-                             new X64RegisterOperand(X64Register.rax),
-                             new X64RegisterOperand(X64Register.rcx)));
+                             X64Operand.Reg(X64Register.rax),
+                             X64Operand.Reg(X64Register.rcx)));
                     break;
 
                 case Operations.BitXorEquals:
                 case Operations.BitXor:
                     _instructions.Add(new(X64Opcode.xor,
-                             new X64RegisterOperand(X64Register.rax),
-                             new X64RegisterOperand(X64Register.rcx)));
+                             X64Operand.Reg(X64Register.rax),
+                             X64Operand.Reg(X64Register.rcx)));
                     break;
 
                 case Operations.LeftShiftEquals:
                 case Operations.LeftShift:
                     _instructions.Add(new(X64Opcode.shl,
-                             new X64RegisterOperand(X64Register.rax),
-                             new X64RegisterOperand(X64Register.cl)));
+                             X64Operand.Reg(X64Register.rax),
+                             X64Operand.Reg(X64Register.cl)));
                     break;
 
                 case Operations.RightShiftEquals:
                 case Operations.RightShift:
                     _instructions.Add(new(X64Opcode.sar,
-                             new X64RegisterOperand(X64Register.rax),
-                             new X64RegisterOperand(X64Register.cl)));
+                             X64Operand.Reg(X64Register.rax),
+                             X64Operand.Reg(X64Register.cl)));
                     break;
 
                 default:
@@ -263,33 +253,33 @@ namespace Best_language.src.back.Generators
             switch (binary.Op)
             {
                 case Operations.Minus:
-                    _instructions.Add(new(X64Opcode.neg, new X64RegisterOperand(X64Register.rax)));
+                    _instructions.Add(new(X64Opcode.neg, X64Operand.Reg(X64Register.rax)));
                     break;
                 case Operations.BitNot:
-                    _instructions.Add(new(X64Opcode.not, new X64RegisterOperand(X64Register.rax)));
+                    _instructions.Add(new(X64Opcode.not, X64Operand.Reg(X64Register.rax)));
                     break;
                 case Operations.Not:
                     _instructions.Add(new(X64Opcode.test,
-                         new X64RegisterOperand(X64Register.rax),
-                         new X64RegisterOperand(X64Register.rax)));
+                         X64Operand.Reg(X64Register.rax),
+                         X64Operand.Reg(X64Register.rax)));
 
-                    _instructions.Add(new(X64Opcode.sete, new X64RegisterOperand(X64Register.al)));
+                    _instructions.Add(new(X64Opcode.sete, X64Operand.Reg(X64Register.al)));
 
                     _instructions.Add(new(X64Opcode.movzx,
-                         new X64RegisterOperand(X64Register.rax),
-                         new X64RegisterOperand(X64Register.al)));
+                         X64Operand.Reg(X64Register.rax),
+                         X64Operand.Reg(X64Register.al)));
                     break;
                 case Operations.PlusPlusRight:
                 case Operations.PlusPlusLeft:
                     _instructions.Add(new(X64Opcode.add,
-                         new X64RegisterOperand(X64Register.rax),
-                         new X64IntOperand(1)));
+                         X64Operand.Reg(X64Register.rax),
+                         X64Operand.Imm(X64Size.word, 1)));
                     break;
                 case Operations.MinusMinusRight:
                 case Operations.MinusMinusLeft:
                     _instructions.Add(new(X64Opcode.sub,
-                         new X64RegisterOperand(X64Register.rax),
-                         new X64IntOperand(1)));
+                         X64Operand.Reg(X64Register.rax),
+                         X64Operand.Imm(X64Size.word, 1)));
                     break;
                 default:
                     throw new NotImplementedException($"Unsupported binary operation: {binary.Op}");
@@ -299,26 +289,26 @@ namespace Best_language.src.back.Generators
         private void Compare(X64Opcode op)
         {
             _instructions.Add(new(X64Opcode.cmp,
-                        new X64RegisterOperand(X64Register.rax),
-                        new X64RegisterOperand(X64Register.rcx)));
+                        X64Operand.Reg(X64Register.rax),
+                        X64Operand.Reg(X64Register.rcx)));
 
-            _instructions.Add(new(op, new X64RegisterOperand(X64Register.al)));
+            _instructions.Add(new(op, X64Operand.Reg(X64Register.al)));
 
             _instructions.Add(new(X64Opcode.movzx,
-                       new X64RegisterOperand(X64Register.rax),
-                       new X64RegisterOperand(X64Register.al)));
+                       X64Operand.Reg(X64Register.rax),
+                       X64Operand.Reg(X64Register.al)));
         }
 
         private void LoadValue(IrValue value, X64Register register)
         {
             if (_locals.TryGetValue(value, out int slot))
                 _instructions.Add(new(X64Opcode.mov,
-                       new X64RegisterOperand(register),
-                       new X64MemoryOperand(X64Register.rbp, slot)));
+                       X64Operand.Reg(register),
+                       X64Operand.Mem(X64Register.rbp, slot, X64Size.qword)));
             else if (_constants.TryGetValue(value, out long constant))
                 _instructions.Add(new(X64Opcode.mov,
-                       new X64RegisterOperand(register),
-                       new X64LongOperand(constant)));
+                       X64Operand.Reg(register),
+                       X64Operand.Imm(X64Size.qword, constant)));
             else
                 throw new InvalidOperationException($"Unknown IR value: {value}");
         }
@@ -335,17 +325,18 @@ namespace Best_language.src.back.Generators
 
         public void AppendStartFunc()
         {
-            _instructions.Add(new(X64Opcode.label, new X64LabelOperand("start")));
-            _instructions.Add(new(X64Opcode.push, new X64RegisterOperand(X64Register.rbp)));
-            _instructions.Add(new(X64Opcode.mov, new X64RegisterOperand(X64Register.rbp), new X64RegisterOperand(X64Register.rsp)));
-            _instructions.Add(new(X64Opcode.sub, new X64RegisterOperand(X64Register.rsp))); // Later should be added stack size by program
+            _instructions.Add(new(X64Opcode.label, X64Operand.Label("start")));
+            _instructions.Add(new(X64Opcode.push, X64Operand.Reg(X64Register.rbp)));
+            _instructions.Add(new(X64Opcode.mov, X64Operand.Reg(X64Register.rbp), X64Operand.Reg(X64Register.rsp)));
+            _instructions.Add(new(X64Opcode.sub, X64Operand.Reg(X64Register.rsp), X64Operand.Imm(X64Size.dword, -1))); // Later should be added stack size by program
+            StackIdx = _instructions.Count - 1;
         }
 
         public void AppendEndFunc()
         {
-            _instructions.Add(new(X64Opcode.xor, new X64RegisterOperand(X64Register.ecx), new X64RegisterOperand(X64Register.ecx)));
-            _instructions.Add(new(X64Opcode.sub, new X64RegisterOperand(X64Register.rsp), new X64IntOperand(32)));
-            _instructions.Add(new(X64Opcode.call, new X64SymbolOperand("ExitProcess")));
+            _instructions.Add(new(X64Opcode.xor, X64Operand.Reg(X64Register.ecx), X64Operand.Reg(X64Register.ecx)));
+            _instructions.Add(new(X64Opcode.sub, X64Operand.Reg(X64Register.rsp), X64Operand.Imm(X64Size.@byte, 32)));
+            _instructions.Add(new(X64Opcode.call, X64Operand.Symbol("ExitProcess")));
         }
     }
 }

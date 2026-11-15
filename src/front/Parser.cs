@@ -81,8 +81,10 @@ namespace Best_language.src.front
                             Requires(TokenKind.LeftBrace);
 
                             GetBlockCode(block);
+                            
+                            if(_idx >= _tokens.Count) return new IfDeclaration(ex, block);
 
-                            if(_tokens[_idx].kind is not TokenKind.ElseIf and not TokenKind.Else) return new IfDeclaration(ex, block);
+                            if (_tokens[_idx].kind is not TokenKind.ElseIf and not TokenKind.Else) return new IfDeclaration(ex, block);
 
                             var @if = new IfDeclaration(ex, block);
 
