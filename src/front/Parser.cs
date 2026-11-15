@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace Best_language.src.front
 {
     class Parser
@@ -17,12 +13,12 @@ namespace Best_language.src.front
 
         public ProgramNode GetAstNodes()
         {
-             List<AstNode> res = new List<AstNode>();
+            List<AstNode> res = new List<AstNode>();
 
-             while(_idx < _tokens.Count)
-             {
-                 res.Add(GetAstNode());
-             }
+            while (_idx < _tokens.Count)
+            {
+                res.Add(GetAstNode());
+            }
 
             return new(res);
         }
@@ -33,6 +29,21 @@ namespace Best_language.src.front
             {
                 switch (_tokens[_idx].kind)
                 {
+                    case TokenKind.PlusPlus:
+                    case TokenKind.MinusMinus:
+                        {
+                            Operations op = Operations.MinusMinusLeft;
+                            if (_tokens[_idx].kind is TokenKind.PlusPlus) op = Operations.PlusPlusLeft;
+
+                            _idx++;
+
+                            if (_tokens[_idx].kind is not TokenKind.Indent) throw new ArgumentException($"Requires indent after ++ or --, got: {_tokens[_idx].kind}");
+
+                            string name = _tokens[_idx].val!;
+                            Requires(TokenKind.SemiColon);
+
+                            return new UnaryExpression(op, new VariableExpression(name));
+                        }
                     case TokenKind.Bool:
                     case TokenKind.Int:
                         {
@@ -43,27 +54,89 @@ namespace Best_language.src.front
                                 _idx++;
                                 var temp = new VariableDeclaration(_tokens[_idx - 2].val!, GetTypeFromToken(type), GetExpression());
 
-                                Requires(TokenKind.QuestionMark);
+                                Requires(TokenKind.SemiColon);
 
                                 return temp;
                             }
-                            else if (_tokens[_idx].kind is TokenKind.QuestionMark)
+                            else if (_tokens[_idx].kind is TokenKind.SemiColon)
                             {
                                 _idx++;
                                 return new VariableDeclaration(_tokens[_idx - 2].val!, VariableType.Int);
                             }
                             break;
                         }
-                    case TokenKind.ElseIf:
+                    case TokenKind.Do:
                         {
                             _idx++;
+                            List<AstNode> block = new();
+
+                            Requires(TokenKind.RightBrace);
+
+                            GetBlockCode(block);
+
+                            Requires(TokenKind.While);
+                            Requires(TokenKind.RightParen);
+
+                            Expression ex = GetExpression();
+
                             Requires(TokenKind.LeftParen);
+                            Requires(TokenKind.SemiColon);
+
+                            return new WhileDeclaration(ex, block, true);
+                        }
+                    case TokenKind.While:
+                        {
+                            _idx++;
+                            Requires(TokenKind.RightParen);
 
                             Expression ex = GetExpression();
                             List<AstNode> block = new();
 
+                            Requires(TokenKind.LeftParen);
+                            Requires(TokenKind.RightBrace);
+
+                            GetBlockCode(block);
+
+                            return new WhileDeclaration(ex, block);
+                        }
+                    case TokenKind.For:
+                        {
+                            _idx++;
                             Requires(TokenKind.RightParen);
-                            Requires(TokenKind.LeftBrace);
+
+                            AstNode? initializer;
+                            Expression? ex, step;
+
+                            if (_tokens[_idx].kind is TokenKind.SemiColon) { initializer = null; _idx++; }
+                            else initializer = GetAstNode();
+
+                            if (_tokens[_idx].kind is TokenKind.SemiColon) { ex = null; }
+                            else ex = GetExpression();
+
+                            Requires(TokenKind.SemiColon);
+
+                            if (_tokens[_idx].kind is TokenKind.LeftParen) { step = null; }
+                            else step = GetExpression();
+
+                            List<AstNode> block = new();
+
+                            Requires(TokenKind.LeftParen);
+                            Requires(TokenKind.RightBrace);
+
+                            GetBlockCode(block);
+
+                            return new ForDeclaration(initializer, ex, step, block);
+                        }
+                    case TokenKind.ElseIf:
+                        {
+                            _idx++;
+                            Requires(TokenKind.RightParen);
+
+                            Expression ex = GetExpression();
+                            List<AstNode> block = new();
+
+                            Requires(TokenKind.LeftParen);
+                            Requires(TokenKind.RightBrace);
 
                             GetBlockCode(block);
 
@@ -72,17 +145,17 @@ namespace Best_language.src.front
                     case TokenKind.If:
                         {
                             _idx++;
-                            Requires(TokenKind.LeftParen);
+                            Requires(TokenKind.RightParen);
 
                             Expression ex = GetExpression();
                             List<AstNode> block = new();
 
-                            Requires(TokenKind.RightParen);
-                            Requires(TokenKind.LeftBrace);
+                            Requires(TokenKind.LeftParen);
+                            Requires(TokenKind.RightBrace);
 
                             GetBlockCode(block);
-                            
-                            if(_idx >= _tokens.Count) return new IfDeclaration(ex, block);
+
+                            if (_idx >= _tokens.Count) return new IfDeclaration(ex, block);
 
                             if (_tokens[_idx].kind is not TokenKind.ElseIf and not TokenKind.Else) return new IfDeclaration(ex, block);
 
@@ -98,7 +171,7 @@ namespace Best_language.src.front
                             @if.Else = new();
                             _idx++;
 
-                            Requires(TokenKind.LeftBrace);
+                            Requires(TokenKind.RightBrace);
                             GetBlockCode(@if.Else.CodeBlock);
 
                             return @if;
@@ -107,12 +180,12 @@ namespace Best_language.src.front
                         {
                             _idx++;
                             Requires(TokenKind.Indent);
-                            Requires(TokenKind.QuestionMark);
+                            Requires(TokenKind.SemiColon);
                             return new GotoStatement(_tokens[_idx - 2].val!);
                         }
                     case TokenKind.Indent when _tokens[_idx + 1].kind is TokenKind.Colon:
                         {
-                             _idx += 2;
+                            _idx += 2;
                             return new GotoDeclaration(_tokens[_idx - 2].val!);
                         }
                     case TokenKind.Indent:
@@ -124,14 +197,27 @@ namespace Best_language.src.front
                                 _idx++;
                                 var temp = new AssignmentStatement(name, null, GetExpression());
 
-                                Requires(TokenKind.QuestionMark);
+                                Requires(TokenKind.SemiColon);
 
                                 return temp;
                             }
+                            else if (_tokens[_idx].kind is TokenKind.PlusPlus)
+                            {
+                                _idx++;
+                                Requires(TokenKind.SemiColon);
+                                return new UnaryExpression(Operations.PlusPlusRight, new VariableExpression(name));
+                            }
+                            else if (_tokens[_idx].kind is TokenKind.MinusMinus)
+                            {
+                                _idx++;
+                                Requires(TokenKind.SemiColon);
+                                return new UnaryExpression(Operations.MinusMinusLeft, new VariableExpression(name));
+                            }
+
                             var op = GetOperatorEquals(); _idx++;
                             var temp2 = new AssignmentStatement(name, op, GetExpression());
 
-                            Requires(TokenKind.QuestionMark);
+                            Requires(TokenKind.SemiColon);
                             return temp2;
                         }
 
@@ -154,7 +240,7 @@ namespace Best_language.src.front
                 case TokenKind.BitNot:
                 case TokenKind.PlusPlus:
                 case TokenKind.MinusMinus:
-                {
+                    {
                         Operations op = _tokens[_idx++].kind switch
                         {
                             TokenKind.Plus => Operations.Plus,
@@ -169,12 +255,12 @@ namespace Best_language.src.front
                         left = new UnaryExpression(op, GetExpression(100));
                         break;
                     }
-                case TokenKind.LeftParen:
+                case TokenKind.RightParen:
                     {
-                        _idx++; 
+                        _idx++;
                         left = GetExpression();
 
-                        if (_idx >= _tokens.Count || _tokens[_idx].kind != TokenKind.RightParen)
+                        if (_idx >= _tokens.Count || _tokens[_idx].kind != TokenKind.LeftParen)
                         {
                             throw new Exception("Parser error expected )");
                         }
@@ -183,7 +269,7 @@ namespace Best_language.src.front
                         break;
                     }
                 case TokenKind.Number:
-                    {    
+                    {
                         left = new NumberExpression(int.Parse(_tokens[_idx++].val!), VariableType.Int);
                         break;
                     }
@@ -208,7 +294,7 @@ namespace Best_language.src.front
                     throw new Exception("Error in Parser, unknown token: " + _tokens[_idx].kind);
             }
 
-            while(_idx < _tokens.Count && _tokens[_idx].kind is not TokenKind.QuestionMark and not TokenKind.RightParen)
+            while (_idx < _tokens.Count && _tokens[_idx].kind is not TokenKind.SemiColon and not TokenKind.LeftParen)
             {
                 if (_tokens[_idx].kind is TokenKind.PlusPlus or TokenKind.MinusMinus)
                 {
@@ -226,7 +312,7 @@ namespace Best_language.src.front
                 (var op, int opPriority) = GetOperatorAndPriority();
                 if (priority > opPriority) break;
                 _idx++;
-                                                                
+
                 left = new BinaryExpression(left, op, GetExpression(++opPriority));
             }
 
@@ -239,7 +325,7 @@ namespace Best_language.src.front
         }
         private void GetBlockCode<T>(List<T> list) where T : AstNode
         {
-            while (_tokens[_idx].kind is not TokenKind.RightBrace)
+            while (_tokens[_idx].kind is not TokenKind.LeftBrace)
             {
                 list.Add((T)GetAstNode());
             }
@@ -292,7 +378,8 @@ namespace Best_language.src.front
 
             _ => throw new Exception("Unknown Operation")
         };
-        public VariableType GetTypeFromToken(TokenKind kind) => kind switch { 
+        public VariableType GetTypeFromToken(TokenKind kind) => kind switch
+        {
             TokenKind.Bool => VariableType.Bool,
             TokenKind.Int => VariableType.Int,
             _ => throw new Exception("Unknown type")

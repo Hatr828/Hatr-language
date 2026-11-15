@@ -1,8 +1,5 @@
 using Best_language.src.front;
 using Best_language.src.middle;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Best_language.src.optimizations
 {
@@ -22,16 +19,16 @@ namespace Best_language.src.optimizations
                         IrConstant constant = (IrConstant)instruction;
                         constants.Add(constant.Left, constant.Right);
                     }
-                    else if(instruction is IrBinary)
+                    else if (instruction is IrBinary)
                     {
                         IrBinary binary = (IrBinary)instruction;
-                        if(constants.TryGetValue(binary.Left, out long left) && constants.TryGetValue(binary.Right, out long right))
+                        if (constants.TryGetValue(binary.Left, out long left) && constants.TryGetValue(binary.Right, out long right))
                         {
                             constants.Remove(binary.Left);
-                            constants.Add(binary.Left, Combine(left, binary.Op, right)); 
+                            constants.Add(binary.Left, Combine(left, binary.Op, right));
                         }
                     }
-                    else if(instruction is IrVariable)
+                    else if (instruction is IrVariable)
                     {
                         IrVariable variable = (IrVariable)instruction;
                         if (constants.TryGetValue(variable.Right, out long value))

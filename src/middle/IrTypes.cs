@@ -1,8 +1,4 @@
 using Best_language.src.front;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Xml.Linq;
 
 namespace Best_language.src.middle
 {
@@ -23,6 +19,11 @@ namespace Best_language.src.middle
         public long Right { get; } = right;
     }
     public class IrJumpIfTrue(IrValue condition, string target) : IrInstruction
+    {
+        public string Target { get; } = target;
+        public IrValue Condition { get; } = condition;
+    }
+    public class IrJumpIfNotTrue(IrValue condition, string target) : IrInstruction
     {
         public string Target { get; } = target;
         public IrValue Condition { get; } = condition;
@@ -94,6 +95,11 @@ namespace Best_language.src.middle
                 case IrJumpIfTrue jump:
                     {
                         Console.WriteLine($"IrJumpIfTrue: {jump.Condition} {jump.Target}");
+                        break;
+                    }
+                case IrJumpIfNotTrue jump:
+                    {
+                        Console.WriteLine($"IrJumpIfNotTrue: {jump.Condition} {jump.Target}");
                         break;
                     }
                 case IrJump jump:

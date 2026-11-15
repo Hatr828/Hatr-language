@@ -1,9 +1,4 @@
-﻿using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Best_language.src.back.Instructions
+﻿namespace Best_language.src.back.Instructions
 {
     public enum X64Register : byte
     {
@@ -31,6 +26,7 @@ namespace Best_language.src.back.Instructions
         label,
         test,
         jnz,
+        jz,
         setg,
         setge,
         setl,
@@ -46,7 +42,7 @@ namespace Best_language.src.back.Instructions
     {
         none,
         @byte,
-        word, 
+        word,
         dword,
         qword,
 
@@ -139,11 +135,11 @@ namespace Best_language.src.back.Instructions
 
         public bool OpcodePlusRegister { get; init; }
         public bool OpcodePlusCondition { get; init; }
-        public bool HasModRm 
+        public bool HasModRm
         {
             get
             {
-                if(Extension >= 0 || FixedModRm >= 0) return true;
+                if (Extension >= 0 || FixedModRm >= 0) return true;
 
                 foreach (var operand in Operands)
                 {
@@ -161,7 +157,7 @@ namespace Best_language.src.back.Instructions
     {
         Register, Memory, Immediate, Label, Symbol
     }
-    public struct X64Operand(X64ValueKind kind, X64Size size, X64Register register = 0, 
+    public struct X64Operand(X64ValueKind kind, X64Size size, X64Register register = 0,
         int offset = 0, long value = 0, string? name = null)
     {
         public X64ValueKind Kind { get; init; } = kind;

@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Text;
-
 namespace Best_language.src.front
 {
     public class Lexer
@@ -15,11 +10,17 @@ namespace Best_language.src.front
         {
             ["INT"] = TokenKind.Int,
             ["boom"] = TokenKind.Bool,
+
             ["fi"] = TokenKind.If,
             ["elfi"] = TokenKind.ElseIf,
             ["elf"] = TokenKind.Else,
             ["ttrruuee"] = TokenKind.True,
             ["ffaallssee"] = TokenKind.False,
+
+            ["whale"] = TokenKind.While,
+            ["fire"] = TokenKind.For,
+            ["done"] = TokenKind.Do,
+
             ["goat"] = TokenKind.Goto,
         };
 
@@ -31,13 +32,13 @@ namespace Best_language.src.front
             ['/'] = TokenKind.Divide,
             ['%'] = TokenKind.DivisionRem,
 
-            ['('] = TokenKind.RightParen,
-            [')'] = TokenKind.LeftParen,
-            ['{'] = TokenKind.RightBrace,
-            ['}'] = TokenKind.LeftBrace,
+            ['('] = TokenKind.LeftParen,
+            [')'] = TokenKind.RightParen,
+            ['{'] = TokenKind.LeftBrace,
+            ['}'] = TokenKind.RightBrace,
 
             ['='] = TokenKind.Equals,
-            ['?'] = TokenKind.QuestionMark,
+            ['?'] = TokenKind.SemiColon,
             ['>'] = TokenKind.GreaterThan,
             ['<'] = TokenKind.LessThan,
             ['!'] = TokenKind.Not,
@@ -76,24 +77,25 @@ namespace Best_language.src.front
             ["&="] = TokenKind.BitAndEquals,
         };
 
-        public Lexer(string code) {
-            _code = code; 
+        public Lexer(string code)
+        {
+            _code = code;
         }
-         
+
         public List<Token> GetTokens()
         {
             List<Token> res = new List<Token>();
 
-            while(_idx < _code.Length)
+            while (_idx < _code.Length)
             {
                 char temp = _code[_idx];
-                
-                if(temp is '\n' or ' ' or '\t' or '\r')
+
+                if (temp is '\n' or ' ' or '\t' or '\r')
                 {
                     _idx++;
                     continue;
                 }
-                if(temp is >= '0' and <= '9')
+                if (temp is >= '0' and <= '9')
                 {
                     string num = GetNumber();
                     res.Add(new Token(TokenKind.Number, num));
@@ -106,12 +108,13 @@ namespace Best_language.src.front
                 {
                     word = GetWord();
                 }
-                else {
+                else
+                {
                     if (_idx + 1 < _code.Length)
                     {
                         if (_idx + 3 < _code.Length)
                         {
-                            if(_code[_idx..(_idx + 3)] is "<<=")
+                            if (_code[_idx..(_idx + 3)] is "<<=")
                             {
                                 res.Add(new(TokenKind.LeftShiftEquals));
                                 _idx += 3;
@@ -159,7 +162,8 @@ namespace Best_language.src.front
                 _idx++;
             }
 
-            return _code[startIdx.._idx];             }
+            return _code[startIdx.._idx];
+        }
         public ReadOnlySpan<char> GetWord()
         {
             int startIdx = _idx;

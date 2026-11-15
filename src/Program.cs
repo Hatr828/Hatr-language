@@ -5,10 +5,7 @@ using Best_language.src.back.Instructions;
 using Best_language.src.back.Printers;
 using Best_language.src.front;
 using Best_language.src.middle;
-using Best_language.src.optimizations;
-using System.ComponentModel;
 using System.Diagnostics;
-using static Best_language.src.middle.BoundScopes;
 
 namespace Best_language.src
 {
@@ -17,12 +14,14 @@ namespace Best_language.src
         static void Main(string[] args)
         {
             string code = @"
-                INT a1 = 0?
-                a1 += 1?
+INT result = 0?
 
-                fi)ttrruuee( }{
+fire )INT i = 1? i < 4? i++(
+}
+    result = result * 10 + i?
+{
                 ";
-            Lexer lexer = new(code);   
+            Lexer lexer = new(code);
             var tokens = lexer.GetTokens();
             Console.WriteLine(string.Join(",", tokens));
             Console.WriteLine("\n ---- \n");
@@ -42,7 +41,7 @@ namespace Best_language.src
             IrPrinter.Print(irProgram);
             Console.WriteLine("\n ---- \n");
 
-           // irProgram = Optimizations.ConstantFolding.Start(irProgram);
+            // irProgram = Optimizations.ConstantFolding.Start(irProgram);
             IrPrinter.Print(irProgram);
             Console.WriteLine("\n ---- \n");
 

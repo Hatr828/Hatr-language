@@ -1,9 +1,4 @@
 using Best_language.src.front;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Xml.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Best_language.src.middle
 {
@@ -22,6 +17,18 @@ namespace Best_language.src.middle
         public VariableType Type { get; } = type;
         public string Name { get; } = name;
     }
+    public class BoundExpressionStatement(BoundExpression expression) : BoundStatement
+    {
+        public BoundExpression Expression { get; } = expression;
+        public override string DName => $"{nameof(BoundExpressionStatement)}";
+        public override IEnumerable<BoundNode> Children
+        {
+            get
+            {
+                yield return Expression;
+            }
+        }
+    }
     public class BoundProgram(List<BoundFunction> functions) : BoundNode
     {
         public List<BoundFunction> Functions { get; } = functions;
@@ -31,7 +38,7 @@ namespace Best_language.src.middle
             get
             {
                 foreach (BoundNode node in Functions) yield return node;
-            }       
+            }
         }
     }
     public class BoundFunction(VariableType type, string name, List<BoundStatement> statements) : BoundStatement
@@ -89,7 +96,7 @@ namespace Best_language.src.middle
                 yield return Expression;
                 foreach (BoundNode node in Statements) yield return node;
                 foreach (BoundNode node in ElseIfs ?? []) yield return node;
-                if(Else is not null) yield return Else;
+                if (Else is not null) yield return Else;
             }
         }
     }
@@ -116,6 +123,39 @@ namespace Best_language.src.middle
             get
             {
                 foreach (BoundNode node in Statements ?? []) yield return node;
+            }
+        }
+    }
+    public class BoundWhileDeclaration(BoundExpression expression, bool isDoWhile = false) : BoundStatement
+    {
+        public BoundExpression Expression { get; } = expression;
+        public List<BoundStatement> Statements { get; } = new();
+        public bool IsDoWhile { get; } = isDoWhile;
+        public override string DName => $"{nameof(BoundElseDeclaration)}";
+        public override IEnumerable<BoundNode> Children
+        {
+            get
+            {
+                yield return Expression;
+                foreach (BoundNode node in Statements ?? []) yield return node;
+            }
+        }
+    }
+    public class BoundForDeclaration(BoundStatement? initializer, BoundExpression? expression, BoundExpression? step) : BoundStatement
+    {
+        public List<BoundStatement> Statements { get; set; } = new();
+        public BoundStatement? Initializer { get; } = initializer;
+        public BoundExpression? Expression { get; } = expression;
+        public BoundExpression? Step { get; } = step;
+        public override string DName => $"{nameof(ForDeclaration)}:";
+        public override IEnumerable<BoundNode> Children
+        {
+            get
+            {
+                if (Initializer is not null) yield return Initializer;
+                if (Expression is not null) yield return Expression;
+                if (Step is not null) yield return Step;
+                foreach (BoundStatement node in Statements ?? []) yield return node;
             }
         }
     }
@@ -173,7 +213,7 @@ namespace Best_language.src.middle
         {
             get
             {
-                yield return Right;
+                if (Right is not null) yield return Right;
             }
         }
     }
@@ -188,7 +228,7 @@ namespace Best_language.src.middle
         }
         public bool Lookup(string name, out VariableType type)
         {
-            for(int i = 1; i <= _variables.Count; i++)
+            for (int i = 1; i <= _variables.Count; i++)
             {
                 if (_variables[^i].TryGetValue(name, out var variable))
                 {

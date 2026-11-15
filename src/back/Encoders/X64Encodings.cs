@@ -1,7 +1,5 @@
 ﻿using Best_language.src.back.Instructions;
-using Best_language.src.middle;
 using System.Buffers.Binary;
-using System.Linq.Expressions;
 
 namespace Best_language.src.back.Encoders
 {
@@ -23,7 +21,7 @@ namespace Best_language.src.back.Encoders
             _labelFixups = new();
             _labels = new();
 
-            outer: foreach (var instruction in instructions)
+        outer: foreach (var instruction in instructions)
             {
                 if (instruction.Opcode is X64Opcode.label) EncodeLabel(instruction.Operands[0]);
                 else if (instruction.Opcode is X64Opcode.call && instruction.Operands[0].Kind is X64ValueKind.Symbol) EncodeImportCall(instruction.Operands[0]);
@@ -67,8 +65,8 @@ namespace Best_language.src.back.Encoders
 
             if (operands.Length != form.Operands.Length) return false;
 
-            for(int i = 0; i < operands.Length; i++)
-            {   
+            for (int i = 0; i < operands.Length; i++)
+            {
                 var spec = form.Operands[i];
                 var operand = operands[i];
 
@@ -95,7 +93,7 @@ namespace Best_language.src.back.Encoders
 
                 if (operand.Kind is X64ValueKind.Register && (operand.Register is null || operand.Size != X64Operand.GetSize(operand.Register.Value))) return false;
 
-                if(spec.Size == X64Size.operand)
+                if (spec.Size == X64Size.operand)
                 {
                     if (actualSize is 0) continue;
 
@@ -142,7 +140,7 @@ namespace Best_language.src.back.Encoders
                 default: return false;
             }
 
-            for(int i = 0; i < operands.Length; i++)
+            for (int i = 0; i < operands.Length; i++)
             {
                 var spec = form.Operands[i];
                 var operand = operands[i];
@@ -157,9 +155,9 @@ namespace Best_language.src.back.Encoders
 
                     if (!FitsImmediate(operand.Value, width, signed)) return false;
                 }
-                else if(spec.Role is X64OperandRole.Relative) 
+                else if (spec.Role is X64OperandRole.Relative)
                 {
-                    if (GetSize(spec.Size, size) != 4 || operand.Name is null) return false; 
+                    if (GetSize(spec.Size, size) != 4 || operand.Name is null) return false;
                 }
             }
 
@@ -182,7 +180,7 @@ namespace Best_language.src.back.Encoders
 
             if (rexW) bytes.Add(0x48);
 
-            switch(form.Map)
+            switch (form.Map)
             {
                 case X64OpcodeMap.Primary:
                     break;
@@ -196,7 +194,7 @@ namespace Best_language.src.back.Encoders
 
             int opcode = form.Opcode;
 
-            if(form.OpcodePlusRegister)
+            if (form.OpcodePlusRegister)
             {
                 var operand = GetOperand(form, operands, X64OperandRole.OpcodeRegister);
 
@@ -205,15 +203,15 @@ namespace Best_language.src.back.Encoders
 
             bytes.Add(checked((byte)opcode));
 
-            if(form.FixedModRm >= 0)
+            if (form.FixedModRm >= 0)
             {
                 bytes.Add(checked((byte)form.FixedModRm));
             }
-            else if(form.HasModRm)
+            else if (form.HasModRm)
             {
                 int regField = form.Extension;
 
-                if(regField < 0)
+                if (regField < 0)
                 {
                     var register = GetOperand(form, operands, X64OperandRole.ModRmReg);
 
@@ -225,20 +223,20 @@ namespace Best_language.src.back.Encoders
                 EncodeModRm(bytes, regField, rm);
             }
 
-            for(int i = 0; i < operands.Length; i++)
+            for (int i = 0; i < operands.Length; i++)
             {
                 var spec = form.Operands[i];
                 var operand = operands[i];
 
                 if (spec.Role is X64OperandRole.Immediate) EncodeInteger(bytes, operand.Value, GetSize(spec.Size, size));
-                else if(spec.Role is X64OperandRole.Relative)
+                else if (spec.Role is X64OperandRole.Relative)
                 {
                     int width = GetSize(spec.Size, size);
 
                     if (fixup is not null) throw new ArgumentException();
 
                     fixup = (bytes.Count, width, operand.Name!);
-                    EncodeInteger(bytes, 0, width);   
+                    EncodeInteger(bytes, 0, width);
                 }
             }
 
@@ -247,14 +245,14 @@ namespace Best_language.src.back.Encoders
 
             _code.AddRange(bytes);
 
-            if (fixup is not null)                
-                _labelFixups.Add(new(fixup.Value.Size, start + fixup.Value.Offset, nextInstruction, fixup.Value.Name)); 
+            if (fixup is not null)
+                _labelFixups.Add(new(fixup.Value.Size, start + fixup.Value.Offset, nextInstruction, fixup.Value.Name));
         }
         public void EncodeModRm(List<byte> bytes, int regField, X64Operand operand)
         {
             if (regField > 7) throw new ArgumentException(nameof(regField));
 
-            if(operand.Kind == X64ValueKind.Register)
+            if (operand.Kind == X64ValueKind.Register)
             {
                 int rm = GetRegisterCode(operand.Register!.Value);
 

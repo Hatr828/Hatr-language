@@ -1,9 +1,4 @@
 using Best_language.src.front;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Xml.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Best_language.src.middle
 {
@@ -56,12 +51,12 @@ namespace Best_language.src.middle
                         if (scopes.Lookup(variable.Name, out _)) throw new Exception($"Variable {variable.Name} already exist");
 
                         BoundVariableDeclaration temp;
-                        
+
                         if (variable.Initializer is not null)
-                             temp = new BoundVariableDeclaration(variable.Type, variable.Name, BindExpression(variable.Initializer));
+                            temp = new BoundVariableDeclaration(variable.Type, variable.Name, BindExpression(variable.Initializer));
                         else
-                             temp = new BoundVariableDeclaration(variable.Type, variable.Name, null!);
-                       
+                            temp = new BoundVariableDeclaration(variable.Type, variable.Name, null!);
+
                         if (!scopes.TryAddVariable(new(variable.Type, variable.Name))) throw new Exception($"Error in TryAddVariable");
                         return temp;
                     }
@@ -72,7 +67,7 @@ namespace Best_language.src.middle
                         foreach (var statement in ifDeclaration.CodeBlock) If.Statements.Add(BindStatement(statement));
                         scopes.RemoveScope();
 
-                        if(ifDeclaration.ElseIfs is not null)
+                        if (ifDeclaration.ElseIfs is not null)
                         {
                             If.ElseIfs ??= new();
                             foreach (var elseIf in ifDeclaration.ElseIfs) If.ElseIfs.Add((BoundElseIfDeclaration)BindStatement(elseIf));
@@ -95,9 +90,34 @@ namespace Best_language.src.middle
                         scopes.RemoveScope();
                         return If;
                     }
+                case WhileDeclaration whileDeclaration:
+                    {
+                        var @while = new BoundWhileDeclaration(BindExpression(whileDeclaration.Expression));
+                        scopes.AddScope();
+                        foreach (var statement in whileDeclaration.CodeBlock) @while.Statements.Add(BindStatement(statement));
+                        scopes.RemoveScope();
+                        return @while;
+                    }
+                case ForDeclaration forDeclaration:
+                    {
+                        scopes.AddScope();
+                        BoundStatement? initializer = null;
+                        BoundExpression? step = null, ex = null;
+
+                        if (forDeclaration.Initializer is not null) initializer = BindStatement(forDeclaration.Initializer);
+                        if (forDeclaration.Step is not null) step = BindExpression(forDeclaration.Step);
+                        if (forDeclaration.Expression is not null) ex = BindExpression(forDeclaration.Expression);
+
+                        BoundForDeclaration @for = new(initializer, ex, step);
+
+                        foreach (var statement in forDeclaration.CodeBlock) @for.Statements.Add(BindStatement(statement));
+
+                        scopes.RemoveScope();
+                        return @for;
+                    }
                 case GotoDeclaration @goto:
                     {
-                        if(_gotoLabels.TryGetValue(@goto.Name, out int id))
+                        if (_gotoLabels.TryGetValue(@goto.Name, out int id))
                             return new BoundGotoDeclaration(id);
                         throw new Exception("Some odd Error in BoundTree");
                     }
@@ -110,9 +130,13 @@ namespace Best_language.src.middle
                 case AssignmentStatement assignment:
                     {
                         if (!scopes.Lookup(assignment.Name, out _)) throw new Exception($"Variable {assignment.Name} not exist");
-                        if(assignment.Op is Operations op)
+                        if (assignment.Op is Operations op)
                             return new BoundAssignmentStatement(assignment.Name, BindExpression(new BinaryExpression(new VariableExpression(assignment.Name), op, assignment.Right)));
-                        return new BoundAssignmentStatement(assignment.Name, BindExpression(assignment.Right));
+                        return new BoundAssignmentStatement(assignment.Name, BindExpression(assignment.Right!));
+                    }
+                case UnaryExpression unary:
+                    {
+                        return new BoundExpressionStatement(BindExpression(unary));
                     }
             }
             throw new Exception("Failed to BindStatement");
@@ -123,7 +147,7 @@ namespace Best_language.src.middle
             switch (expression)
             {
                 case NumberExpression number:
-                    {                                                           
+                    {
                         return new BoundNumberExpression(number.Type, number.Value);
                     }
                 case VariableExpression variable:

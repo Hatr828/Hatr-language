@@ -1,10 +1,6 @@
 using Best_language.src.back.Instructions;
 using Best_language.src.front;
 using Best_language.src.middle;
-using System;
-using System.Collections.Generic;
-using System.Reflection.Emit;
-using System.Text;
 
 namespace Best_language.src.back.Generators
 {
@@ -34,7 +30,7 @@ namespace Best_language.src.back.Generators
 
             while (idx < _irInstructions.Count)
             {
-                switch(_irInstructions[idx++])
+                switch (_irInstructions[idx++])
                 {
                     case IrBinary binary:
                         {
@@ -97,6 +93,17 @@ namespace Best_language.src.back.Generators
                             _instructions.Add(new(X64Opcode.jnz, X64Operand.Label($"{jump.Target}")));
                             break;
                         }
+                    case IrJumpIfNotTrue jump:
+                        {
+                            LoadValue(jump.Condition, X64Register.rax);
+                            _instructions.Add(new(X64Opcode.test,
+                                X64Operand.Reg(X64Register.rax),
+                                X64Operand.Reg(X64Register.rax)));
+                            _instructions.Add(new(X64Opcode.jz, X64Operand.Label($"{jump.Target}")));
+                            break;
+                        }
+                    default:
+                        throw new ArgumentException("Cannot generate instruction for: " + _irInstructions[idx - 1]);
                 }
             }
 
@@ -200,7 +207,7 @@ namespace Best_language.src.back.Generators
                              X64Operand.Reg(X64Register.rax),
                              X64Operand.Reg(X64Register.rcx)));
 
-                    _instructions.Add(new(X64Opcode.setne, X64Operand.Reg(X64Register.al))); 
+                    _instructions.Add(new(X64Opcode.setne, X64Operand.Reg(X64Register.al)));
 
                     _instructions.Add(new(X64Opcode.movzx,
                         X64Operand.Reg(X64Register.rax),

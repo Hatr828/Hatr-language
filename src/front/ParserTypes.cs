@@ -1,11 +1,3 @@
-using Best_language.src.middle;
-using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
-using System.Text;
-using System.Xml.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-
 namespace Best_language.src.front
 {
     public abstract class AstNode
@@ -88,7 +80,7 @@ namespace Best_language.src.front
         {
             get
             {
-                if(Initializer is not null) yield return Initializer;
+                if (Initializer is not null) yield return Initializer;
             }
         }
     }
@@ -103,7 +95,7 @@ namespace Best_language.src.front
         {
             get
             {
-                yield return Right;
+                if (Right is not null) yield return Right;
             }
         }
     }
@@ -133,9 +125,9 @@ namespace Best_language.src.front
             get
             {
                 yield return Expression;
-                foreach(AstNode node in CodeBlock) yield return node;
+                foreach (AstNode node in CodeBlock) yield return node;
                 foreach (AstNode node in ElseIfs ?? []) yield return node;
-                if(Else is not null) yield return Else;
+                if (Else is not null) yield return Else;
             }
         }
 
@@ -162,6 +154,39 @@ namespace Best_language.src.front
         {
             get
             {
+                foreach (AstNode node in CodeBlock ?? []) yield return node;
+            }
+        }
+    }
+    public class WhileDeclaration(Expression expression, List<AstNode> codeBlock, bool isDoWhile = false) : Statement
+    {
+        public List<AstNode> CodeBlock { get; } = codeBlock;
+        public Expression Expression { get; } = expression;
+        public bool IsDoWhile { get; } = isDoWhile;
+        public override string DName => $"{nameof(WhileDeclaration)}:";
+        public override IEnumerable<AstNode> Children
+        {
+            get
+            {
+                yield return Expression;
+                foreach (AstNode node in CodeBlock ?? []) yield return node;
+            }
+        }
+    }
+    public class ForDeclaration(AstNode? initializer, Expression? expression, Expression? step, List<AstNode> codeBlock) : Statement
+    {
+        public List<AstNode> CodeBlock { get; } = codeBlock;
+        public AstNode? Initializer { get; } = initializer;
+        public Expression? Expression { get; } = expression;
+        public Expression? Step { get; } = step;
+        public override string DName => $"{nameof(ForDeclaration)}:";
+        public override IEnumerable<AstNode> Children
+        {
+            get
+            {
+                if (Initializer is not null) yield return Initializer;
+                if (Expression is not null) yield return Expression;
+                if (Step is not null) yield return Step;
                 foreach (AstNode node in CodeBlock ?? []) yield return node;
             }
         }

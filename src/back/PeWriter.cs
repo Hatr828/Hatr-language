@@ -1,14 +1,7 @@
 ﻿using Best_language.src.back.Instructions;
-using System;
 using System.Buffers.Binary;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using System.Text;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Best_language.src.back
 {
@@ -79,7 +72,7 @@ namespace Best_language.src.back
 
             Write32(optional + 108, 16, file); // NumberOfRvaAndSizes
 
-            if(hasImports)
+            if (hasImports)
             {
                 //Import
                 Write32(optional + 120, (uint)importRva, file);
@@ -100,7 +93,7 @@ namespace Best_language.src.back
             code.CopyTo(file, headerSize);
             imports.CopyTo(file, importFileOffset);
 
-            foreach (PeImport fixup in  importFixups)
+            foreach (PeImport fixup in importFixups)
             {
                 uint targetRva = addresses[fixup];
                 long nextInstructionRva = (long)codeRva + fixup.Offset + 4;
@@ -113,7 +106,7 @@ namespace Best_language.src.back
         }
 
         public static byte[] BuildImports(IReadOnlyList<PeImport> fixups, int importRva,
-            out Dictionary<PeImport, uint> addresses, 
+            out Dictionary<PeImport, uint> addresses,
             out int directorySize, out int iatOffset, out int iatSize)
         {
             addresses = new();
@@ -140,7 +133,7 @@ namespace Best_language.src.back
 
             for (int i = 0; i < imports.Length; i++)
                 iltOffsets[i] = Reserve(checked((imports[i].Names.Length + 1) * 8), data);
-            
+
             iatOffset = data.Count;
 
             for (int i = 0; i < imports.Length; i++)
@@ -190,7 +183,7 @@ namespace Best_language.src.back
                 }
             }
 
-            foreach(PeImport fixup in fixups)
+            foreach (PeImport fixup in fixups)
             {
                 var key = (fixup.DLL.ToUpperInvariant(), fixup.Name);
                 addresses[fixup] = symbols[key];
@@ -201,7 +194,7 @@ namespace Best_language.src.back
 
         private static int Reserve(int size, List<byte> list)
         {
-            int offset = list.Count;   
+            int offset = list.Count;
 
             CollectionsMarshal.SetCount(list, checked(offset + size));
             CollectionsMarshal.AsSpan(list).Slice(offset, size).Clear();
@@ -218,7 +211,7 @@ namespace Best_language.src.back
             return offset;
         }
 
-        private static void WriteSection(byte[] file, int offset, string name, int virtualSize, 
+        private static void WriteSection(byte[] file, int offset, string name, int virtualSize,
             int rva, int rawSize, int rawOffset, uint characteristics)
         {
             Encoding.ASCII.GetBytes(name).CopyTo(file, offset);
@@ -239,4 +232,4 @@ namespace Best_language.src.back
 
         private static int Align(int value, int alignment) => checked((value + alignment - 1) & -alignment);
     }
-} 
+}

@@ -1,6 +1,4 @@
 ﻿using Best_language.src.back.Instructions;
-using System;
-using System.Collections.Generic;
 using System.Text;
 
 namespace Best_language.src.back.Printers
@@ -17,7 +15,7 @@ namespace Best_language.src.back.Printers
 
             foreach (var instruction in instructions)
             {
-                switch(instruction.Opcode)
+                switch (instruction.Opcode)
                 {
                     case X64Opcode.sub:
                     case X64Opcode.mov:
@@ -28,6 +26,7 @@ namespace Best_language.src.back.Printers
                     case X64Opcode.and:
                     case X64Opcode.sar:
                     case X64Opcode.test:
+                    case X64Opcode.cmp:
                     case X64Opcode.shl:
                         _sb.AppendLine($"    {instruction.Opcode} " +
                             $"{GetStringFromOperand(instruction.Operands[0])}," +
@@ -46,6 +45,7 @@ namespace Best_language.src.back.Printers
                     case X64Opcode.imul:
                     case X64Opcode.jmp:
                     case X64Opcode.jnz:
+                    case X64Opcode.jz:
                     case X64Opcode.push:
                         _sb.AppendLine($"    {instruction.Opcode} " +
                             $"{GetStringFromOperand(instruction.Operands[0])}");

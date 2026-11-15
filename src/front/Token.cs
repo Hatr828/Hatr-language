@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace Best_language.src.front
 {
     public struct Token
@@ -31,16 +27,21 @@ namespace Best_language.src.front
 
     public enum TokenKind
     {
-        Int, 
+        Int,
         Bool,
         True,
         False,
+
         Goto,
         If,
         ElseIf,
         Else,
 
-        QuestionMark, 
+        For,
+        Do,
+        While,
+
+        SemiColon,
         Equals,
         Colon,
         Not,
@@ -83,10 +84,10 @@ namespace Best_language.src.front
         GreaterThanOrEquals,
         LessThanOrEquals,
 
-        LeftParen,
         RightParen,
-        LeftBrace, 
+        LeftParen,
         RightBrace,
+        LeftBrace,
 
         Indent,
         Number,

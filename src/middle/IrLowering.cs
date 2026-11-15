@@ -1,11 +1,4 @@
 using Best_language.src.front;
-using System;
-using System.Collections.Generic;
-using System.Net.NetworkInformation;
-using System.Reflection.Emit;
-using System.Text;
-using System.Xml.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Best_language.src.middle
 {
@@ -20,11 +13,11 @@ namespace Best_language.src.middle
         private IrValue NewIrValue() => new(_nextId++);
         private string NewLabelName(string name) => $"{name}_{_nextLebelId++}";
 
-        public IrProgram Lower(BoundProgram mainNode) 
+        public IrProgram Lower(BoundProgram mainNode)
         {
             foreach (BoundFunction function in mainNode.Functions)
             {
-                
+
                 foreach (BoundStatement st in function.Statements)
                 {
                     LowerNode(st);
@@ -38,7 +31,7 @@ namespace Best_language.src.middle
 
         public void LowerNode(BoundStatement node)
         {
-            switch(node)
+            switch (node)
             {
                 case BoundVariableDeclaration variable:
                     {
@@ -49,41 +42,83 @@ namespace Best_language.src.middle
                         _variables.Add(variable.Name, res);
                         return;
                     }
-                case BoundIfDeclaration If:
+                case BoundWhileDeclaration @while:
                     {
-                        IrValue condition = LowerExpression(If.Expression);
+                        string whileLabel = NewLabelName("while");
+                        string endLabel = NewLabelName("end");
+
+                        Emit(new IrLabel(whileLabel));
+
+                        IrValue condition = LowerExpression(@while.Expression); ;
+
+                        Emit(new IrJumpIfNotTrue(condition, endLabel));
+
+                        foreach (var statement in @while.Statements)
+                            LowerNode(statement);
+
+                        Emit(new IrJump(whileLabel));
+                        Emit(new IrLabel(endLabel));
+                        return;
+                    }
+                case BoundForDeclaration @for:
+                    {
+                        if (@for.Initializer is not null) LowerNode(@for.Initializer);
+
+                        string forLabel = NewLabelName("for");
+                        string endLabel = NewLabelName("end");
+
+                        Emit(new IrLabel(forLabel));
+                        IrValue condition;
+
+                        if (@for.Expression is not null) condition = LowerExpression(@for.Expression);
+                        else condition = LowerExpression(new BoundBoolExpression(true));
+
+                        Emit(new IrJumpIfNotTrue(condition, endLabel));
+
+                        foreach (var statement in @for.Statements)
+                            LowerNode(statement);
+
+                        if (@for.Step is not null) LowerExpression(@for.Step);
+
+                        Emit(new IrJump(forLabel));
+                        Emit(new IrLabel(endLabel));
+                        return;
+                    }
+                case BoundIfDeclaration @if:
+                    {
+                        IrValue condition = LowerExpression(@if.Expression);
 
                         List<string> labels = new();
-                        for(int i = 0; i < If.ElseIfs?.Count; i++) labels.Add(NewLabelName("elseIf"));
+                        for (int i = 0; i < @if.ElseIfs?.Count; i++) labels.Add(NewLabelName("elseIf"));
                         string ifLabel = NewLabelName("if");
                         string endLabel = NewLabelName("end");
                         string elseLabel = NewLabelName("else");
 
                         Emit(new IrJumpIfTrue(condition, ifLabel));
 
-                        for (int i = 0; i < If.ElseIfs?.Count; i++) Emit(new IrJumpIfTrue(LowerExpression(If.ElseIfs[i].Expression), labels[i]));
-                        if(If.Else is not null) Emit(new IrJump(elseLabel));
+                        for (int i = 0; i < @if.ElseIfs?.Count; i++) Emit(new IrJumpIfTrue(LowerExpression(@if.ElseIfs[i].Expression), labels[i]));
+                        if (@if.Else is not null) Emit(new IrJump(elseLabel));
                         Emit(new IrJump(endLabel)); //end label if there is no else and everything before is false. Redundant if there is else, possible size reduction for asm and therefore for .exe.
 
                         //if part
                         Emit(new IrLabel(ifLabel));
-                        foreach (var statement in If.Statements)
+                        foreach (var statement in @if.Statements)
                             LowerNode(statement);
                         Emit(new IrJump(endLabel));
 
                         // elseIfs parts
-                        for (int i = 0; i < If.ElseIfs?.Count; i++)
+                        for (int i = 0; i < @if.ElseIfs?.Count; i++)
                         {
                             Emit(new IrLabel(labels[i]));
-                            foreach (var statement in If.ElseIfs[i].Statements)
+                            foreach (var statement in @if.ElseIfs[i].Statements)
                                 LowerNode(statement);
                             Emit(new IrJump(endLabel));
                         }
                         // else part
-                        if (If.Else is not null)
+                        if (@if.Else is not null)
                         {
                             Emit(new IrLabel(elseLabel));
-                            foreach (var statement in If.Else.Statements)
+                            foreach (var statement in @if.Else.Statements)
                                 LowerNode(statement);
                         }
                         // end label
@@ -91,9 +126,9 @@ namespace Best_language.src.middle
                         return;
                     }
                 case BoundGotoDeclaration @goto:
-                        Emit(new IrLabel("user_" + @goto.Id)); return;
+                    Emit(new IrLabel("user_" + @goto.Id)); return;
                 case BoundGotoStatement @goto:
-                        Emit(new IrJump("user_" + @goto.ToId)); return;
+                    Emit(new IrJump("user_" + @goto.ToId)); return;
                 case BoundAssignmentStatement assignment:
                     {
                         var res = ResolveVariable(assignment.Name);
@@ -102,13 +137,18 @@ namespace Best_language.src.middle
                         Emit(new IrVariable(res, source));
                         return;
                     }
+                case BoundExpressionStatement ex:
+                    {
+                        LowerExpression(ex.Expression);
+                        return;
+                    }
             }
             throw new Exception("Cannot lower: " + node.GetType());
         }
 
         public IrValue LowerExpression(BoundExpression expression)
         {
-            switch(expression)
+            switch (expression)
             {
                 case BoundNumberExpression num:
                     return EmitConstant(num.Value);

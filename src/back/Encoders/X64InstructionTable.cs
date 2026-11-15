@@ -1,7 +1,4 @@
 ﻿using Best_language.src.back.Instructions;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Best_language.src.back.Encoders
 {
@@ -203,7 +200,7 @@ namespace Best_language.src.back.Encoders
                     }
                 ]
             });
-                
+
             // movzx r 16/32/64, r/m 8
             Add(new X64Form
             {
@@ -1532,6 +1529,19 @@ namespace Best_language.src.back.Encoders
                 ]
             });
 
+            // jz rel 32
+            Add(new X64Form
+            {
+                Kind = X64Opcode.jz,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x84,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.Relative, Role = X64OperandRole.Relative, Size = X64Size.dword }
+                ]
+            });
+
             // call rel32
             Add(new X64Form
             {
@@ -1568,7 +1578,7 @@ namespace Best_language.src.back.Encoders
 
         private static void Add(X64Form form)
         {
-            if(!_forms.TryGetValue(form.Kind, out var forms))
+            if (!_forms.TryGetValue(form.Kind, out var forms))
             {
                 forms = [form];
                 _forms.Add(form.Kind, forms);
