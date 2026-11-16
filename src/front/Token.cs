@@ -28,6 +28,9 @@ namespace Best_language.src.front
     public enum TokenKind
     {
         Int,
+        Long,
+        Char,
+        Short,
         Bool,
         True,
         False,
@@ -41,7 +44,12 @@ namespace Best_language.src.front
         Do,
         While,
 
+        Return,
+        Break,
+        Continue,
+
         SemiColon,
+        Comma,
         Equals,
         Colon,
         Not,

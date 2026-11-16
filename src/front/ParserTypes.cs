@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace Best_language.src.front
 {
     public abstract class AstNode
@@ -105,6 +107,18 @@ namespace Best_language.src.front
         public override string DName => $"{nameof(GotoStatement)}: {To}";
         public override IEnumerable<AstNode> Children => [];
     }
+    public class ReturnStatement(Expression expression) : Statement
+    {
+        public Expression Expression { get; } = expression;
+        public override string DName => $"{nameof(ReturnStatement)}";
+        public override IEnumerable<AstNode> Children
+        {
+            get
+            {
+                yield return Expression;
+            }
+        }
+    }
     public class GotoDeclaration(string name) : Statement
     {
         public string Name { get; } = name;
@@ -128,6 +142,33 @@ namespace Best_language.src.front
                 foreach (AstNode node in CodeBlock) yield return node;
                 foreach (AstNode node in ElseIfs ?? []) yield return node;
                 if (Else is not null) yield return Else;
+            }
+        }
+
+    }
+    public class ParamDeclaration(string name, VariableType type, Expression? initializer) : Statement
+    {
+        public string Name { get; } = name;
+        public Expression? Initializer { get; } = initializer;
+        public VariableType Type { get; } = type;
+
+        public override string DName => $"{nameof(ParamDeclaration)}: {Name} ({Type})";
+        public override IEnumerable<AstNode> Children => [];
+    }
+    public class FuncDeclaration(VariableType type, string name, List<ParamDeclaration> @params, List<AstNode> codeBlock) : Statement
+    {
+        public VariableType ReturnType { get; } = type;
+        public string Name { get; } = name;
+        public List<AstNode> CodeBlock { get; } = codeBlock;
+        public List<ParamDeclaration> Params { get; } = @params;
+
+        public override string DName => $"{nameof(IfDeclaration)}:";
+        public override IEnumerable<AstNode> Children
+        {
+            get
+            {
+                foreach (AstNode node in Params) yield return node;
+                foreach (AstNode node in CodeBlock) yield return node;
             }
         }
 
@@ -220,9 +261,7 @@ namespace Best_language.src.front
 
     public enum VariableType
     {
-        Int,
-        Bool,
-        String
+        Int, Bool, Char, Short, Long, String,
     }
 
     public enum Operations

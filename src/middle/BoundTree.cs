@@ -19,7 +19,7 @@ namespace Best_language.src.middle
             {
                 statements.Add(BindStatement(node));
             }
-            return new BoundProgram(new List<BoundFunction>() { new BoundFunction(VariableType.Int, "main", statements) });
+            return new BoundProgram(statements);
         }
         private void PreProcessAst(List<AstNode> nodes)
         {
@@ -98,6 +98,24 @@ namespace Best_language.src.middle
                         scopes.RemoveScope();
                         return @while;
                     }
+                case FuncDeclaration func:
+                    {
+                        List<BoundStatement> codeBlock = new();
+                        List<BoundParamsDeclaration> @params = new();
+                        scopes.AddScope();
+                        foreach (var param in func.Params)
+                        {
+                            if(param.Initializer is not null)
+                                @params.Add(new(param.Type, param.Name, BindExpression(param.Initializer)));
+                            else
+                                @params.Add(new(param.Type, param.Name));
+
+                            if (!scopes.TryAddVariable(new(param.Type, param.Name))) throw new ArgumentException($"variable already exist: {param.Name}");
+                        }
+                        foreach (var statement in func.CodeBlock) codeBlock.Add(BindStatement(statement));
+                        scopes.RemoveScope();
+                        return new BoundFunction(func.ReturnType, func.Name, @params, codeBlock);
+                    }                             
                 case ForDeclaration forDeclaration:
                     {
                         scopes.AddScope();
@@ -127,19 +145,31 @@ namespace Best_language.src.middle
                             return new BoundGotoStatement(id);
                         throw new Exception($"@goto label: {@goto.To} not found");
                     }
+                case ReturnStatement st:
+                    {
+                        return new BoundReturnStatement(BindExpression(st.Expression));
+                    }
                 case AssignmentStatement assignment:
                     {
-                        if (!scopes.Lookup(assignment.Name, out _)) throw new Exception($"Variable {assignment.Name} not exist");
+                        if (!scopes.Lookup(assignment.Name, out VariableType type)) throw new Exception($"Variable {assignment.Name} not exist");
+
+                        BoundExpression ex;
+
                         if (assignment.Op is Operations op)
-                            return new BoundAssignmentStatement(assignment.Name, BindExpression(new BinaryExpression(new VariableExpression(assignment.Name), op, assignment.Right)));
-                        return new BoundAssignmentStatement(assignment.Name, BindExpression(assignment.Right!));
+                        {
+                            ex = BindExpression(new BinaryExpression(new VariableExpression(assignment.Name), op, assignment.Right));
+                            return new BoundAssignmentStatement(assignment.Name, ex, type);
+                        }
+
+                        ex = BindExpression(assignment.Right!);
+                        return new BoundAssignmentStatement(assignment.Name, ex, type);
                     }
                 case UnaryExpression unary:
                     {
                         return new BoundExpressionStatement(BindExpression(unary));
                     }
             }
-            throw new Exception("Failed to BindStatement");
+            throw new Exception("Failed to bind a statement");
         }
 
         public BoundExpression BindExpression(Expression expression)

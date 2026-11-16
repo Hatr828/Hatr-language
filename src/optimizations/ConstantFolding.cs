@@ -34,7 +34,7 @@ namespace Best_language.src.optimizations
                         if (constants.TryGetValue(variable.Right, out long value))
                         {
                             IrVariable v = new(variable.Left, variable.Right);
-                            res.Instructions.Add(new IrConstant(variable.Right, value));
+                            //res.Instructions.Add(new IrConstant(variable.Right, value));
                             res.Instructions.Add(v);
                         }
                         else

@@ -29,28 +29,44 @@ namespace Best_language.src.middle
             }
         }
     }
-    public class BoundProgram(List<BoundFunction> functions) : BoundNode
+    public class BoundProgram(List<BoundStatement> statements) : BoundNode
     {
-        public List<BoundFunction> Functions { get; } = functions;
+        public List<BoundStatement> Statements { get; } = statements;
         public override string DName => $"{nameof(BoundProgram)}";
         public override IEnumerable<BoundNode> Children
         {
             get
             {
-                foreach (BoundNode node in Functions) yield return node;
+                foreach (BoundNode node in Statements) yield return node;
             }
         }
     }
-    public class BoundFunction(VariableType type, string name, List<BoundStatement> statements) : BoundStatement
+    public class BoundParamsDeclaration(VariableType type, string name, BoundExpression? initializer = null) : BoundStatement
+    {
+        public VariableType Type { get; } = type;
+        public string Name { get; } = name;
+        public BoundExpression? Initializer { get; } = initializer;
+        public override string DName => $"{nameof(BoundParamsDeclaration)}: {Name} ({Type})";
+        public override IEnumerable<BoundNode> Children
+        {
+            get
+            {
+                if (Initializer is not null) yield return Initializer;
+            }
+        }
+    }
+    public class BoundFunction(VariableType type, string name, List<BoundParamsDeclaration> @params,  List<BoundStatement> statements) : BoundStatement
     {
         public VariableType Type { get; } = type;
         public string Name { get; } = name;
         public List<BoundStatement> Statements { get; } = statements;
+        public List<BoundParamsDeclaration> Params { get; } = @params;
         public override string DName => $"{nameof(BoundFunction)}: {Name} ({Type})";
         public override IEnumerable<BoundNode> Children
         {
             get
             {
+                foreach (BoundNode node in Params) yield return node;
                 foreach (BoundNode node in Statements) yield return node;
             }
         }
@@ -65,14 +81,15 @@ namespace Best_language.src.middle
         {
             get
             {
-                yield return Initializer;
+                if (Initializer is not null) yield return Initializer;
             }
         }
     }
-    public class BoundAssignmentStatement(string name, BoundExpression right) : BoundStatement
+    public class BoundAssignmentStatement(string name, BoundExpression right, VariableType type) : BoundStatement
     {
         public string Name { get; } = name;
         public BoundExpression Right { get; } = right;
+        public VariableType Type { get; } = type;
         public override string DName => $"{nameof(BoundAssignmentStatement)}: {Name}";
         public override IEnumerable<BoundNode> Children
         {
@@ -156,6 +173,18 @@ namespace Best_language.src.middle
                 if (Expression is not null) yield return Expression;
                 if (Step is not null) yield return Step;
                 foreach (BoundStatement node in Statements ?? []) yield return node;
+            }
+        }
+    }
+    public class BoundReturnStatement(BoundExpression expression) : BoundStatement 
+    {
+        public BoundExpression Expression { get; } = expression;
+        public override string DName => $"{nameof(BoundReturnStatement)}";
+        public override IEnumerable<BoundNode> Children
+        {
+            get
+            {
+                yield return Expression;
             }
         }
     }

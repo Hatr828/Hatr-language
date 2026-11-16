@@ -82,7 +82,7 @@ namespace Best_language.src.back.Printers
                     if (operand.Size != X64Size.@byte)
                         return $"{operand.Size} [{operand.Register}-{operand.Offset}]";
                     else
-                        throw new NotSupportedException();
+                        return $"byte [{operand.Register}-{operand.Offset}]";
                 case X64ValueKind.Label:
                     return $"{operand.Name}";
 

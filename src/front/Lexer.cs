@@ -9,6 +9,9 @@ namespace Best_language.src.front
         private Dictionary<string, TokenKind> _keywords = new()
         {
             ["INT"] = TokenKind.Int,
+            ["small"] = TokenKind.Long,
+            ["ranch"] = TokenKind.Char,
+            ["tall"] = TokenKind.Short,
             ["boom"] = TokenKind.Bool,
 
             ["fi"] = TokenKind.If,
@@ -16,6 +19,8 @@ namespace Best_language.src.front
             ["elf"] = TokenKind.Else,
             ["ttrruuee"] = TokenKind.True,
             ["ffaallssee"] = TokenKind.False,
+
+            ["rent"] = TokenKind.Return,
 
             ["whale"] = TokenKind.While,
             ["fire"] = TokenKind.For,
@@ -44,6 +49,7 @@ namespace Best_language.src.front
             ['!'] = TokenKind.Not,
 
             [':'] = TokenKind.Colon,
+            [','] = TokenKind.Comma,
 
             ['~'] = TokenKind.BitNot,
             ['|'] = TokenKind.BitOr,

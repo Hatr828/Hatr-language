@@ -8,9 +8,9 @@ namespace Best_language.src.back.Generators
     {
         private readonly IrProgram _irProgram = irProgram;
 
-        private readonly Dictionary<IrValue, int> _locals = new();
+        private readonly Dictionary<IrValue, (int, X64Size)> _locals = new();
 
-        private readonly Dictionary<IrValue, long> _constants = new();
+        private readonly Dictionary<IrValue, (long, VariableType)> _constants = new();
 
         private int offset;
 
@@ -36,12 +36,12 @@ namespace Best_language.src.back.Generators
                         {
                             OperationGen(binary);
 
-                            int slot = GetOrCreateSlot(binary.Left);
+                            (int slot, X64Size size) = GetOrCreateSlot(binary.Left);
                             _constants.Remove(binary.Left);
 
                             _instructions.Add(new(X64Opcode.mov,
-                                X64Operand.Mem(X64Register.rbp, slot, X64Size.qword),
-                                X64Operand.Reg(X64Register.rax)));
+                                X64Operand.Mem(X64Register.rbp, slot, size),
+                                X64Operand.Reg(GetRegister(size))));
                             break;
                         }
                     case IrUnary unary:
@@ -49,29 +49,29 @@ namespace Best_language.src.back.Generators
                             if (unary.Op is Operations.Plus) break;
                             OperationUnaryGen(unary);
 
-                            int slot = GetOrCreateSlot(unary.Right);
+                            (int slot, X64Size size) = GetOrCreateSlot(unary.Right);
                             _constants.Remove(unary.Right);
 
                             _instructions.Add(new(X64Opcode.mov,
-                                X64Operand.Mem(X64Register.rbp, slot, X64Size.qword),
-                                X64Operand.Reg(X64Register.rax)));
+                                X64Operand.Mem(X64Register.rbp, slot, size),
+                                X64Operand.Reg(GetRegister(size))));
                             break;
                         }
                     case IrVariable variable:
                         {
-                            LoadValue(variable.Right, X64Register.rax);
+                            LoadValue(variable.Right, GetRegister(variable.Right.Type));
 
-                            int slot = GetOrCreateSlot(variable.Left);
+                            (int slot, X64Size size) = GetOrCreateSlot(variable.Left);
                             _constants.Remove(variable.Left);
 
                             _instructions.Add(new(X64Opcode.mov,
-                                X64Operand.Mem(X64Register.rbp, slot, X64Size.qword),
-                                X64Operand.Reg(X64Register.rax)));
+                                X64Operand.Mem(X64Register.rbp, slot, size),
+                                X64Operand.Reg(GetRegister(size))));
                             break;
                         }
                     case IrConstant constant:
                         {
-                            _constants.Add(constant.Left, constant.Right);
+                            _constants.Add(constant.Left, (constant.Right, constant.TypeRight));
                             break;
                         }
                     case IrLabel label:
@@ -308,27 +308,71 @@ namespace Best_language.src.back.Generators
 
         private void LoadValue(IrValue value, X64Register register)
         {
-            if (_locals.TryGetValue(value, out int slot))
+            if (_locals.TryGetValue(value, out (int slot, X64Size size) val))
                 _instructions.Add(new(X64Opcode.mov,
                        X64Operand.Reg(register),
-                       X64Operand.Mem(X64Register.rbp, slot, X64Size.qword)));
-            else if (_constants.TryGetValue(value, out long constant))
+                       X64Operand.Mem(X64Register.rbp, val.slot, val.size)));
+            else if (_constants.TryGetValue(value, out (long val, VariableType type) constant))
                 _instructions.Add(new(X64Opcode.mov,
                        X64Operand.Reg(register),
-                       X64Operand.Imm(X64Size.qword, constant)));
+                       X64Operand.Imm(GetX64Size(constant.type), constant.val)));
             else
                 throw new InvalidOperationException($"Unknown IR value: {value}");
         }
 
-        private int GetOrCreateSlot(IrValue value)
+        private (int, X64Size) GetOrCreateSlot(IrValue value)
         {
-            if (_locals.TryGetValue(value, out int slot))
-                return slot;
+            if (_locals.TryGetValue(value, out (int, X64Size) val))
+                return val;
 
-            offset += 8;
-            _locals.Add(value, offset);
-            return offset;
+            int size = GetSlotSize(value);
+            X64Size x64Size = GetX64Size(size);
+
+            offset += size;
+            _locals.Add(value, (offset, x64Size));
+            return (offset, x64Size);
         }
+
+        private int GetSlotSize(IrValue value) => value.Type switch
+        {
+            VariableType.Bool => 1,
+            VariableType.Short => 2,
+            VariableType.Int => 4,
+            VariableType.Long => 8,
+            _ => throw new ArgumentException()
+        };
+        private X64Size GetX64Size(int slot) => slot switch
+        {
+            1 => X64Size.@byte,
+            2 => X64Size.word,
+            4 => X64Size.dword,
+            8 => X64Size.qword,
+            _ => throw new ArgumentException()
+        };
+        private X64Register GetRegister(X64Size size) => size switch
+        {
+            X64Size.@byte => X64Register.r8b,
+            X64Size.word => X64Register.cx,
+            X64Size.dword => X64Register.edx,
+            X64Size.qword => X64Register.rax,
+            _ => throw new ArgumentException()
+        };
+        private X64Size GetX64Size(VariableType type) => type switch
+        {
+            VariableType.Bool => X64Size.@byte,
+            VariableType.Short => X64Size.word,
+            VariableType.Int => X64Size.dword,
+            VariableType.Long => X64Size.qword,
+            _ => throw new ArgumentException()
+        };
+        private X64Register GetRegister(VariableType type) => type switch
+        {
+            VariableType.Bool => X64Register.r8b,
+            VariableType.Short => X64Register.cx,
+            VariableType.Int => X64Register.edx,
+            VariableType.Long => X64Register.rax,
+            _ => throw new ArgumentException()
+        };
 
         public void AppendStartFunc()
         {

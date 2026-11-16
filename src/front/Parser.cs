@@ -45,6 +45,9 @@ namespace Best_language.src.front
                             return new UnaryExpression(op, new VariableExpression(name));
                         }
                     case TokenKind.Bool:
+                    case TokenKind.Long:
+                    case TokenKind.Char:
+                    case TokenKind.Short:
                     case TokenKind.Int:
                         {
                             var type = _tokens[_idx++].kind;
@@ -62,6 +65,39 @@ namespace Best_language.src.front
                             {
                                 _idx++;
                                 return new VariableDeclaration(_tokens[_idx - 2].val!, VariableType.Int);
+                            }
+                            else if(_tokens[_idx].kind is TokenKind.RightParen)
+                            {
+                                _idx++;
+                                string name = _tokens[_idx - 2].val!;
+
+                                List<ParamDeclaration> @params = new();
+
+                                while (_tokens[_idx].kind != TokenKind.LeftParen)
+                                {
+                                    var typeParam = GetTypeFromToken(_tokens[_idx++].kind);
+                                    var NameParam = _tokens[_idx++].val!;
+                                    Expression? initializer = null;
+
+                                    if(_tokens[_idx].kind is TokenKind.Equals)
+                                    {
+                                        _idx++;
+
+                                        initializer = GetExpression();
+                                    }
+
+                                    if(_tokens[_idx].kind != TokenKind.LeftParen)
+                                        Requires(TokenKind.Comma);
+
+                                    @params.Add(new(NameParam, typeParam, initializer));
+                                }
+
+                                _idx++; // LeftParen
+                                Requires(TokenKind.RightBrace);
+                                List<AstNode> block = new();
+                                GetBlockCode(block);
+
+                                return new FuncDeclaration(GetTypeFromToken(type), name, @params, block); 
                             }
                             break;
                         }
@@ -219,6 +255,15 @@ namespace Best_language.src.front
 
                             Requires(TokenKind.SemiColon);
                             return temp2;
+                        }
+                    case TokenKind.Return:
+                        {
+                            _idx++;
+
+                            var ex = GetExpression();
+                            Requires(TokenKind.SemiColon);
+
+                            return new ReturnStatement(ex);
                         }
 
                     default: throw new Exception("Error in Parser, unknown token: " + _tokens[_idx].kind);
@@ -381,6 +426,9 @@ namespace Best_language.src.front
         public VariableType GetTypeFromToken(TokenKind kind) => kind switch
         {
             TokenKind.Bool => VariableType.Bool,
+            TokenKind.Long => VariableType.Long,
+            TokenKind.Short => VariableType.Short,
+            TokenKind.Char => VariableType.Char,
             TokenKind.Int => VariableType.Int,
             _ => throw new Exception("Unknown type")
         };

@@ -176,9 +176,39 @@ namespace Best_language.src.back.Encoders
             if ((form.Prefixes & X64Prefixes.Repne) != 0) bytes.Add(0xF2);
             if ((form.Prefixes & X64Prefixes.Rep) != 0) bytes.Add(0xF3);
 
-            bool rexW = form.SizeMode is X64OperandSizeMode.Fixed64 || (form.SizeMode is X64OperandSizeMode.Standard && size == 8);
+            byte rex = 0x40;
+            bool forceRex = false;
 
-            if (rexW) bytes.Add(0x48);
+            if(form.SizeMode is X64OperandSizeMode.Fixed64 || (form.SizeMode is X64OperandSizeMode.Standard && size == 8))
+            {
+                rex |= 0x08;
+            }
+
+            for(int i = 0; i < operands.Length; i++)
+            {
+                var spec = form.Operands[i];
+                var operand = operands[i];
+
+                if (operand.Kind is not X64ValueKind.Register and not X64ValueKind.Memory) continue;
+
+                var register = operand.Register!.Value;
+                int code = GetRegisterCode(register);
+
+                switch (spec.Role)
+                {
+                    case X64OperandRole.ModRmReg:
+                        if (code >= 8)
+                            rex |= 0x04;
+                        break;
+                    case X64OperandRole.ModRmRm:
+                    case X64OperandRole.OpcodeRegister:
+                        if (code >= 8)
+                            rex |= 0x01;
+                        break;
+                }
+            }
+
+            if (rex != 0x40 || forceRex) bytes.Add(rex);
 
             switch (form.Map)
             {
@@ -198,7 +228,7 @@ namespace Best_language.src.back.Encoders
             {
                 var operand = GetOperand(form, operands, X64OperandRole.OpcodeRegister);
 
-                opcode += GetRegisterCode(operand.Register!.Value);
+                opcode += GetRegisterCode(operand.Register!.Value) & 7;
             }
 
             bytes.Add(checked((byte)opcode));
@@ -250,7 +280,7 @@ namespace Best_language.src.back.Encoders
         }
         public void EncodeModRm(List<byte> bytes, int regField, X64Operand operand)
         {
-            if (regField > 7) throw new ArgumentException(nameof(regField));
+            regField &= 7;
 
             if (operand.Kind == X64ValueKind.Register)
             {
@@ -331,15 +361,16 @@ namespace Best_language.src.back.Encoders
         private byte GetRegisterCode(X64Register reg) => reg switch
         {
             X64Register.rax or X64Register.al => 0,
-            X64Register.rcx or X64Register.ecx or X64Register.cl => 1,
-            X64Register.rdx => 2,
+            X64Register.rcx or X64Register.ecx or X64Register.cl or X64Register.cx => 1,
+            X64Register.rdx or X64Register.edx or X64Register.dx => 2,
             X64Register.rbx => 3,
             X64Register.rsp => 4,
             X64Register.rbp => 5,
             X64Register.rsi => 6,
             X64Register.rdi => 7,
+            X64Register.r8 or X64Register.r8d or X64Register.r8w or X64Register.r8b => 8,
 
-            _ => throw new ArgumentException($"Unknow register: {reg}")
+           _ => throw new ArgumentException($"Unknow register: {reg}")
         };
     }
 }

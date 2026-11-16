@@ -4,7 +4,7 @@ namespace Best_language.src.middle
 {
     public abstract class IrInstruction;
 
-    public readonly record struct IrValue(int Id)
+    public readonly record struct IrValue(int Id, VariableType Type)
     {
         public override string ToString() => $"t{Id}";
     }
@@ -13,10 +13,11 @@ namespace Best_language.src.middle
         public string Name { get; } = name;
     }
 
-    public class IrConstant(IrValue left, long right) : IrInstruction
+    public class IrConstant(IrValue left, long right, VariableType type) : IrInstruction
     {
         public IrValue Left { get; } = left;
         public long Right { get; } = right;
+        public VariableType TypeRight { get; } = type;
     }
     public class IrJumpIfTrue(IrValue condition, string target) : IrInstruction
     {

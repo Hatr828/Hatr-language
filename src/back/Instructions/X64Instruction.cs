@@ -2,7 +2,10 @@
 {
     public enum X64Register : byte
     {
-        rax, rcx, rdx, rbx, rbs, rsp, rbp, rsi, rdi, ecx, al, cl
+        rax, rcx, rdx, rbx, rbs, rsp, rbp, rsi, rdi, r8,
+        edx, ecx, r8d,
+        dx, cx, r8w,
+        al, cl, r8b
     }
 
     public enum X64Opcode
@@ -178,8 +181,9 @@
         public static X64Size GetSize(X64Register reg) => reg switch
         {
             >= X64Register.rax and <= X64Register.rdi => X64Size.qword,
-            X64Register.ecx => X64Size.dword,
-            X64Register.al or X64Register.cl => X64Size.@byte,
+            X64Register.ecx or X64Register.edx => X64Size.dword,
+            X64Register.dx or X64Register.cx => X64Size.word,
+            X64Register.al or X64Register.cl or X64Register.r8b => X64Size.@byte,
 
             _ => throw new NotSupportedException()
         };

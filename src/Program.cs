@@ -14,12 +14,7 @@ namespace Best_language.src
         static void Main(string[] args)
         {
             string code = @"
-INT result = 0?
-
-fire )INT i = 1? i < 4? i++(
-}
-    result = result * 10 + i?
-{
+                boom a = ttrruuee?
                 ";
             Lexer lexer = new(code);
             var tokens = lexer.GetTokens();

@@ -10,23 +10,17 @@ namespace Best_language.src.middle
 
         private Dictionary<string, IrValue> _variables = new();
 
-        private IrValue NewIrValue() => new(_nextId++);
+        private IrValue NewIrValue(VariableType type) => new(_nextId++, type);
         private string NewLabelName(string name) => $"{name}_{_nextLebelId++}";
 
         public IrProgram Lower(BoundProgram mainNode)
         {
-            foreach (BoundFunction function in mainNode.Functions)
+            foreach (BoundStatement st in mainNode.Statements)
             {
-
-                foreach (BoundStatement st in function.Statements)
-                {
-                    LowerNode(st);
-                }
-
-                return _currentProgram;
+                LowerNode(st);
             }
 
-            throw new Exception("BoundProgram is empty");
+            return _currentProgram;
         }
 
         public void LowerNode(BoundStatement node)
@@ -151,9 +145,9 @@ namespace Best_language.src.middle
             switch (expression)
             {
                 case BoundNumberExpression num:
-                    return EmitConstant(num.Value);
+                    return EmitConstant(num.Value, num.Type);
                 case BoundBoolExpression ex:
-                    return EmitConstant(ex.Value ? 1 : 0);
+                    return EmitConstant(ex.Value ? 1 : 0, ex.Type);
                 case BoundVariableExpression variable:
                     return ResolveVariable(variable.Name);
                 case BoundBinaryExpression binary:
@@ -190,15 +184,15 @@ namespace Best_language.src.middle
             }
             throw new Exception("Cannot lower: " + expression.GetType());
         }
-        private IrValue EmitConstant(long value)
+        private IrValue EmitConstant(long value, VariableType type)
         {
-            var result = NewIrValue();
-            Emit(new IrConstant(result, value));
+            var result = NewIrValue(type);
+            Emit(new IrConstant(result, value, type));
             return result;
         }
         private IrValue EmitCopy(IrValue source)
         {
-            var result = NewIrValue();
+            var result = NewIrValue(source.Type);
             Emit(new IrVariable(result, source));
             return result;
         }
