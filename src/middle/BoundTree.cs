@@ -53,9 +53,12 @@ namespace Best_language.src.middle
                         BoundVariableDeclaration temp;
 
                         if (variable.Initializer is not null)
-                            temp = new BoundVariableDeclaration(variable.Type, variable.Name, BindExpression(variable.Initializer));
+                        {
+                            var initializer = BindExpression(variable.Initializer);
+                            temp = new BoundVariableDeclaration(variable.Type, variable.Name, BindConversion(initializer, variable.Type));
+                        }
                         else
-                            temp = new BoundVariableDeclaration(variable.Type, variable.Name, null!);
+                            temp = new BoundVariableDeclaration(variable.Type, variable.Name, null);
 
                         if (!scopes.TryAddVariable(new(variable.Type, variable.Name))) throw new Exception($"Error in TryAddVariable");
                         return temp;
@@ -151,7 +154,7 @@ namespace Best_language.src.middle
                     }
                 case AssignmentStatement assignment:
                     {
-                        if (!scopes.Lookup(assignment.Name, out VariableType type)) throw new Exception($"Variable {assignment.Name} not exist");
+                        if (!scopes.Lookup(assignment.Name, out TypeSymbol type)) throw new Exception($"Variable {assignment.Name} not exist");
 
                         BoundExpression ex;
 
@@ -182,12 +185,12 @@ namespace Best_language.src.middle
                     }
                 case VariableExpression variable:
                     {
-                        if (!scopes.Lookup(variable.Name, out VariableType type)) throw new Exception($"Variable {variable.Name} not exist");
+                        if (!scopes.Lookup(variable.Name, out TypeSymbol type)) throw new Exception($"Variable {variable.Name} not exist");
                         return new BoundVariableExpression(type, variable.Name);
                     }
                 case BoolExpression ex:
                     {
-                        return new BoundBoolExpression(ex.Value);
+                        return new BoundBoolExpression(ex.Value, ex.Type);
                     }
                 case BinaryExpression binary:
                     {
@@ -206,6 +209,18 @@ namespace Best_language.src.middle
                     }
             }
             throw new Exception("Failed to BindExpression");
+        }
+
+        private BoundExpression BindConversion(BoundExpression expression, TypeSymbol targetType)
+        {
+            if(expression.Type == targetType) return expression;
+
+            if(expression.Type is IntegerTypeSymbol or BoolTypeSymbol && targetType is IntegerTypeSymbol or BoolTypeSymbol)
+            {
+                return new BoundConversionExpression(expression, targetType);
+            }
+
+            throw new ArgumentException($"Cannot convert {expression.Type.Name} to {targetType.Name}");
         }
     }
 }

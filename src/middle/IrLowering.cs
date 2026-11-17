@@ -1,4 +1,5 @@
 using Best_language.src.front;
+using System.Numerics;
 
 namespace Best_language.src.middle
 {
@@ -10,7 +11,7 @@ namespace Best_language.src.middle
 
         private Dictionary<string, IrValue> _variables = new();
 
-        private IrValue NewIrValue(VariableType type) => new(_nextId++, type);
+        private IrValue NewIrValue(TypeSymbol type) => new(_nextId++, type);
         private string NewLabelName(string name) => $"{name}_{_nextLebelId++}";
 
         public IrProgram Lower(BoundProgram mainNode)
@@ -65,7 +66,7 @@ namespace Best_language.src.middle
                         IrValue condition;
 
                         if (@for.Expression is not null) condition = LowerExpression(@for.Expression);
-                        else condition = LowerExpression(new BoundBoolExpression(true));
+                        else condition = LowerExpression(new BoundBoolExpression(true, new BoolTypeSymbol()));
 
                         Emit(new IrJumpIfNotTrue(condition, endLabel));
 
@@ -147,7 +148,7 @@ namespace Best_language.src.middle
                 case BoundNumberExpression num:
                     return EmitConstant(num.Value, num.Type);
                 case BoundBoolExpression ex:
-                    return EmitConstant(ex.Value ? 1 : 0, ex.Type);
+                    return EmitConstant((ulong)(ex.Value ? 1 : 0), ex.Type);
                 case BoundVariableExpression variable:
                     return ResolveVariable(variable.Name);
                 case BoundBinaryExpression binary:
@@ -181,10 +182,22 @@ namespace Best_language.src.middle
                         Emit(new IrUnary(unary.Op, res2));
                         return res2;
                     }
+                case BoundConversionExpression conversion:
+                    {
+                        var right = LowerExpression(conversion.Expression);
+
+                        if (right.Type == conversion.Type) return right;
+
+                        IrValue left = NewIrValue(conversion.Type);
+
+                        Emit(new IrConversion(left, right));
+
+                        return left;
+                    }
             }
             throw new Exception("Cannot lower: " + expression.GetType());
         }
-        private IrValue EmitConstant(long value, VariableType type)
+        private IrValue EmitConstant(ulong value, TypeSymbol type)
         {
             var result = NewIrValue(type);
             Emit(new IrConstant(result, value, type));

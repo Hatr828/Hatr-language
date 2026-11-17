@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace Best_language.src.front
@@ -21,11 +22,18 @@ namespace Best_language.src.front
     }
 
     public abstract class Expression : AstNode;
-    public class NumberExpression(long value, VariableType type) : Expression
+    public class NumberExpression(ulong value, TypeSymbol type) : Expression
     {
-        public long Value { get; } = value;
-        public VariableType Type { get; } = type;
+        public ulong Value { get; } = value;
+        public TypeSymbol Type { get; } = type;
         public override string DName => $"{nameof(NumberExpression)}: {Value} ({Type})";
+        public override IEnumerable<AstNode> Children => [];
+    }
+    public class DoubleExpression(double value, TypeSymbol type) : Expression
+    {
+        public double Value { get; } = value;
+        public TypeSymbol Type { get; } = type;
+        public override string DName => $"{nameof(DoubleExpression)}: {Value} ({Type})";
         public override IEnumerable<AstNode> Children => [];
     }
     public class VariableExpression(string name) : Expression
@@ -34,10 +42,10 @@ namespace Best_language.src.front
         public override string DName => $"{nameof(VariableExpression)}: {Name}";
         public override IEnumerable<AstNode> Children => [];
     }
-    public class BoolExpression(bool value) : Expression
+    public class BoolExpression(bool value, TypeSymbol type) : Expression
     {
         public bool Value { get; } = value;
-        public VariableType Type { get; } = VariableType.Bool;
+        public TypeSymbol Type { get; } = type;
         public override string DName => $"{nameof(BoolExpression)}: {Value}";
         public override IEnumerable<AstNode> Children => [];
     }
@@ -71,12 +79,12 @@ namespace Best_language.src.front
     }
 
     public abstract class Statement : AstNode;
-    public class VariableDeclaration(string name, VariableType type, Expression? initializer = null) : Statement
+    public class VariableDeclaration(string name, TypeSymbol type, Expression? initializer = null) : Statement
     {
         public string Name { get; } = name;
         public Expression? Initializer { get; } = initializer;
 
-        public VariableType Type { get; } = type;
+        public TypeSymbol Type { get; } = type;
         public override string DName => $"{nameof(VariableDeclaration)}: {Name} ({Type})";
         public override IEnumerable<AstNode> Children
         {
@@ -146,18 +154,18 @@ namespace Best_language.src.front
         }
 
     }
-    public class ParamDeclaration(string name, VariableType type, Expression? initializer) : Statement
+    public class ParamDeclaration(string name, TypeSymbol type, Expression? initializer) : Statement
     {
         public string Name { get; } = name;
         public Expression? Initializer { get; } = initializer;
-        public VariableType Type { get; } = type;
+        public TypeSymbol Type { get; } = type;
 
         public override string DName => $"{nameof(ParamDeclaration)}: {Name} ({Type})";
         public override IEnumerable<AstNode> Children => [];
     }
-    public class FuncDeclaration(VariableType type, string name, List<ParamDeclaration> @params, List<AstNode> codeBlock) : Statement
+    public class FuncDeclaration(TypeSymbol type, string name, List<ParamDeclaration> @params, List<AstNode> codeBlock) : Statement
     {
-        public VariableType ReturnType { get; } = type;
+        public TypeSymbol ReturnType { get; } = type;
         public string Name { get; } = name;
         public List<AstNode> CodeBlock { get; } = codeBlock;
         public List<ParamDeclaration> Params { get; } = @params;
@@ -257,11 +265,6 @@ namespace Best_language.src.front
                 if (!hasNext) break;
             }
         }
-    }
-
-    public enum VariableType
-    {
-        Int, Bool, Char, Short, Long, String,
     }
 
     public enum Operations

@@ -1,10 +1,11 @@
 using Best_language.src.front;
+using System.Numerics;
 
 namespace Best_language.src.middle
 {
     public abstract class IrInstruction;
 
-    public readonly record struct IrValue(int Id, VariableType Type)
+    public readonly record struct IrValue(int Id, TypeSymbol Type)
     {
         public override string ToString() => $"t{Id}";
     }
@@ -13,11 +14,11 @@ namespace Best_language.src.middle
         public string Name { get; } = name;
     }
 
-    public class IrConstant(IrValue left, long right, VariableType type) : IrInstruction
+    public class IrConstant(IrValue left, ulong right, TypeSymbol type) : IrInstruction
     {
         public IrValue Left { get; } = left;
-        public long Right { get; } = right;
-        public VariableType TypeRight { get; } = type;
+        public ulong Right { get; } = right;
+        public TypeSymbol TypeRight { get; } = type;
     }
     public class IrJumpIfTrue(IrValue condition, string target) : IrInstruction
     {
@@ -36,6 +37,11 @@ namespace Best_language.src.middle
     public class IrBinary(Operations op, IrValue left, IrValue right) : IrInstruction
     {
         public Operations Op { get; } = op;
+        public IrValue Left { get; } = left;
+        public IrValue Right { get; } = right;
+    }
+    public class IrConversion(IrValue left, IrValue right) : IrInstruction
+    {
         public IrValue Left { get; } = left;
         public IrValue Right { get; } = right;
     }
@@ -91,6 +97,11 @@ namespace Best_language.src.middle
                 case IrConstant number:
                     {
                         Console.WriteLine($"IrConstant: {number.Left} ({number.Right})");
+                        break;
+                    }
+                case IrConversion conversion:
+                    {
+                        Console.WriteLine($"IrConversion: {conversion.Left} ({conversion.Right})");
                         break;
                     }
                 case IrJumpIfTrue jump:

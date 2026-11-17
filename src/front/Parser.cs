@@ -3,6 +3,7 @@ namespace Best_language.src.front
     class Parser
     {
         private List<Token> _tokens = new List<Token>();
+        private TypeTable _typeTable = new();
 
         private int _idx;
 
@@ -44,18 +45,24 @@ namespace Best_language.src.front
 
                             return new UnaryExpression(op, new VariableExpression(name));
                         }
+                    case TokenKind.Signed:
+                    case TokenKind.UnSigned:
                     case TokenKind.Bool:
                     case TokenKind.Long:
                     case TokenKind.Char:
+                    case TokenKind.Void:
                     case TokenKind.Short:
                     case TokenKind.Int:
+                    case TokenKind.Double:
+                    case TokenKind.Float:
                         {
-                            var type = _tokens[_idx++].kind;
+                            var type = ParseType();
+
                             Requires(TokenKind.Indent);
                             if (_tokens[_idx].kind is TokenKind.Equals)
                             {
                                 _idx++;
-                                var temp = new VariableDeclaration(_tokens[_idx - 2].val!, GetTypeFromToken(type), GetExpression());
+                                var temp = new VariableDeclaration(_tokens[_idx - 2].val!, type, GetExpression());
 
                                 Requires(TokenKind.SemiColon);
 
@@ -64,7 +71,7 @@ namespace Best_language.src.front
                             else if (_tokens[_idx].kind is TokenKind.SemiColon)
                             {
                                 _idx++;
-                                return new VariableDeclaration(_tokens[_idx - 2].val!, VariableType.Int);
+                                return new VariableDeclaration(_tokens[_idx - 2].val!, type);
                             }
                             else if(_tokens[_idx].kind is TokenKind.RightParen)
                             {
@@ -75,7 +82,7 @@ namespace Best_language.src.front
 
                                 while (_tokens[_idx].kind != TokenKind.LeftParen)
                                 {
-                                    var typeParam = GetTypeFromToken(_tokens[_idx++].kind);
+                                    var typeParam = ParseType();
                                     var NameParam = _tokens[_idx++].val!;
                                     Expression? initializer = null;
 
@@ -97,7 +104,7 @@ namespace Best_language.src.front
                                 List<AstNode> block = new();
                                 GetBlockCode(block);
 
-                                return new FuncDeclaration(GetTypeFromToken(type), name, @params, block); 
+                                return new FuncDeclaration(type, name, @params, block); 
                             }
                             break;
                         }
@@ -315,7 +322,18 @@ namespace Best_language.src.front
                     }
                 case TokenKind.Number:
                     {
-                        left = new NumberExpression(int.Parse(_tokens[_idx++].val!), VariableType.Int);
+                        if(_tokens[_idx + 1].kind is TokenKind.Dot)
+                        {
+                            var @double = _tokens[_idx].val! + _tokens[_idx + 1].val! + _tokens[_idx + 2].val!;
+                            if (_tokens[_idx + 3].kind is TokenKind.F)
+                            {
+                                left = new DoubleExpression(float.Parse(@double), _typeTable.Float);
+                                _idx++;
+                            }
+                            else left = new DoubleExpression(double.Parse(@double), _typeTable.Double);
+                            _idx += 3;
+                        }
+                        else left = ParseNumber();
                         break;
                     }
                 case TokenKind.Indent:
@@ -325,13 +343,13 @@ namespace Best_language.src.front
                     }
                 case TokenKind.False:
                     {
-                        left = new BoolExpression(false);
+                        left = new BoolExpression(false, _typeTable.Bool);
                         _idx++;
                         break;
                     }
                 case TokenKind.True:
                     {
-                        left = new BoolExpression(true);
+                        left = new BoolExpression(true, _typeTable.Bool);
                         _idx++;
                         break;
                     }
@@ -362,6 +380,131 @@ namespace Best_language.src.front
             }
 
             return left;
+        }
+       
+        public TypeSymbol ParseType()
+        {
+            bool hasInt = false, hasChar = false, hasShort = false, hasDouble = false;
+            int longCount = 0;
+            bool? isSigned = null;
+
+            int start = _idx;
+
+            while(_tokens[_idx].kind is TokenKind.Signed or TokenKind.UnSigned or TokenKind.Long or TokenKind.Int or TokenKind.Char or TokenKind.Short or TokenKind.Short)
+            {
+                if (_tokens[_idx].kind is TokenKind.Int)
+                {
+                    if (hasInt) throw new ArgumentException("cannot have two ints");
+                    hasInt = true;
+                }
+                if (_tokens[_idx].kind is TokenKind.Double)
+                {
+                    if (hasDouble) throw new ArgumentException("cannot have two doubles");
+                    hasDouble = true;
+                }
+                else if (_tokens[_idx].kind is TokenKind.Short)
+                {
+                    if (hasShort) throw new ArgumentException("cannot have two shorts");
+                    hasShort = true;
+                }
+                else if (_tokens[_idx].kind is TokenKind.Char)
+                {
+                    if (hasChar) throw new ArgumentException("cannot have two chars");
+                    hasChar = true;
+                }
+                else if (_tokens[_idx].kind is TokenKind.Long) longCount++;
+                else if (_tokens[_idx].kind is TokenKind.Signed)
+                {
+                    if (isSigned is not null) throw new ArgumentException("cannot have two signed/unsigned");
+                    isSigned = true;
+                }
+                else if (_tokens[_idx].kind is TokenKind.UnSigned)
+                {
+                    if (isSigned is not null) throw new ArgumentException("cannot have two signed/unsigned");
+                    isSigned = false;
+                }
+                _idx++;
+            }
+
+            if(start == _idx)
+            {
+                if (_tokens[_idx].kind is TokenKind.Bool)
+                {
+                    _idx++;
+                    return _typeTable.Bool;
+                }
+                else if (_tokens[_idx].kind is TokenKind.Void)
+                {
+                    _idx++;
+                    return _typeTable.Void;
+                }
+                else if (_tokens[_idx].kind is TokenKind.Float)
+                {
+                    _idx++;
+                    return _typeTable.Float;
+                }
+            }
+
+            if ((hasChar || hasShort) && longCount != 0) throw new ArgumentException("Cannot have char/short with long");
+
+            if (isSigned is not null && hasDouble) throw new ArgumentException("Cannot have signed/unsigned with double");
+
+            if (longCount > 2) throw new ArgumentException("Cannot have more than 2 longs");
+
+            bool signed = isSigned ?? true;
+
+            if(hasChar)
+            {
+                if (isSigned is null) return _typeTable.Char;
+
+                return signed ? _typeTable.Int8 : _typeTable.UInt8;
+            }
+
+            if(hasShort) return signed ? _typeTable.Int16 : _typeTable.UInt16;
+
+            if(longCount == 2) return signed ? _typeTable.Int64 : _typeTable.UInt64;
+
+            if (hasDouble) return _typeTable.Double;
+
+            if (longCount == 1) return signed ? _typeTable.Long : _typeTable.ULong;
+
+            return signed ? _typeTable.Int32 : _typeTable.UInt32;
+        }
+
+        public NumberExpression ParseNumber()
+        {
+            NumberExpression res;
+            switch (_tokens[_idx + 1].kind)
+            {
+                case TokenKind.F: 
+                    throw new ArgumentException("cannot have XF, should be: X.XF");
+                case TokenKind.U:
+                    res = new NumberExpression(uint.Parse(_tokens[_idx++].val!), _typeTable.UInt32);
+                    break;
+                case TokenKind.L:
+                    res = new NumberExpression(unchecked((uint)int.Parse(_tokens[_idx++].val!)), _typeTable.Int32);
+                    break;
+                case TokenKind.UL:
+                    res = new NumberExpression(uint.Parse(_tokens[_idx++].val!), _typeTable.UInt32);
+                    break;
+                case TokenKind.LU:
+                    res = new NumberExpression(uint.Parse(_tokens[_idx++].val!), _typeTable.UInt32);
+                    break;
+                case TokenKind.LL:
+                    res = new NumberExpression(unchecked((ulong)long.Parse(_tokens[_idx++].val!)), _typeTable.Int64);
+                    break;
+                case TokenKind.LLU:
+                    res = new NumberExpression(ulong.Parse(_tokens[_idx++].val!), _typeTable.UInt64);
+                    break;
+                case TokenKind.ULL:
+                    res = new NumberExpression(ulong.Parse(_tokens[_idx++].val!), _typeTable.UInt64);
+                    break;
+                default:
+                    res = new NumberExpression(unchecked((uint)int.Parse(_tokens[_idx].val!)), _typeTable.Int32);
+                    break;
+            }
+            _idx++;
+            return res;
         }
 
         private void Requires(TokenKind kind)
@@ -423,13 +566,19 @@ namespace Best_language.src.front
 
             _ => throw new Exception("Unknown Operation")
         };
-        public VariableType GetTypeFromToken(TokenKind kind) => kind switch
+        public TypeSymbol GetTypeFromToken(TokenKind kind, bool isSigned) => (kind, isSigned) switch
         {
-            TokenKind.Bool => VariableType.Bool,
-            TokenKind.Long => VariableType.Long,
-            TokenKind.Short => VariableType.Short,
-            TokenKind.Char => VariableType.Char,
-            TokenKind.Int => VariableType.Int,
+            (TokenKind.Bool, false) => _typeTable.Bool,
+
+            (TokenKind.Long, true) => _typeTable.Int64,
+            (TokenKind.Int, true) => _typeTable.Int32,
+            (TokenKind.Short, true) => _typeTable.Int16,
+            (TokenKind.Char, true) => _typeTable.Int8,
+
+            (TokenKind.Long, false) => _typeTable.UInt64,
+            (TokenKind.Int, false) => _typeTable.UInt32,
+            (TokenKind.Short, false) => _typeTable.UInt16,
+            (TokenKind.Char, false) => _typeTable.UInt8,
             _ => throw new Exception("Unknown type")
         };
     }

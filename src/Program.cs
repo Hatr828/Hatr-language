@@ -14,7 +14,7 @@ namespace Best_language.src
         static void Main(string[] args)
         {
             string code = @"
-                boom a = ttrruuee?
+                signed long long a = 0UL;
                 ";
             Lexer lexer = new(code);
             var tokens = lexer.GetTokens();
@@ -33,8 +33,6 @@ namespace Best_language.src
 
             IrLowering ir = new();
             IrProgram irProgram = ir.Lower(boundProgram);
-            IrPrinter.Print(irProgram);
-            Console.WriteLine("\n ---- \n");
 
             // irProgram = Optimizations.ConstantFolding.Start(irProgram);
             IrPrinter.Print(irProgram);
@@ -46,7 +44,6 @@ namespace Best_language.src
             string assembly = X64Printer.GenerateAsm(instructions);
             Console.WriteLine(assembly);
 
-            Console.WriteLine("\n ---- \n");
             BuildAndRun(assembly);
             Console.WriteLine("\n ---- \n");
 

@@ -360,7 +360,7 @@ namespace Best_language.src.back.Encoders
         }
         private byte GetRegisterCode(X64Register reg) => reg switch
         {
-            X64Register.rax or X64Register.al => 0,
+            X64Register.rax or X64Register.eax or X64Register.ax or X64Register.al => 0,
             X64Register.rcx or X64Register.ecx or X64Register.cl or X64Register.cx => 1,
             X64Register.rdx or X64Register.edx or X64Register.dx => 2,
             X64Register.rbx => 3,

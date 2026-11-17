@@ -20,6 +20,8 @@ namespace Best_language.src.back.Printers
                     case X64Opcode.sub:
                     case X64Opcode.mov:
                     case X64Opcode.movzx:
+                    case X64Opcode.movsx:
+                    case X64Opcode.movsxd:
                     case X64Opcode.add:
                     case X64Opcode.or:
                     case X64Opcode.xor:

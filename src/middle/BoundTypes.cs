@@ -1,4 +1,6 @@
 using Best_language.src.front;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace Best_language.src.middle
 {
@@ -8,13 +10,13 @@ namespace Best_language.src.middle
         public abstract IEnumerable<BoundNode> Children { get; }
     }
     public abstract class BoundStatement : BoundNode;
-    public abstract class BoundExpression(VariableType type) : BoundNode
+    public abstract class BoundExpression(TypeSymbol type) : BoundNode
     {
-        public VariableType Type { get; } = type;
+        public TypeSymbol Type { get; } = type;
     }
-    public class BoundVariable(VariableType type, string name)
+    public class BoundVariable(TypeSymbol type, string name)
     {
-        public VariableType Type { get; } = type;
+        public TypeSymbol Type { get; } = type;
         public string Name { get; } = name;
     }
     public class BoundExpressionStatement(BoundExpression expression) : BoundStatement
@@ -41,9 +43,9 @@ namespace Best_language.src.middle
             }
         }
     }
-    public class BoundParamsDeclaration(VariableType type, string name, BoundExpression? initializer = null) : BoundStatement
+    public class BoundParamsDeclaration(TypeSymbol type, string name, BoundExpression? initializer = null) : BoundStatement
     {
-        public VariableType Type { get; } = type;
+        public TypeSymbol Type { get; } = type;
         public string Name { get; } = name;
         public BoundExpression? Initializer { get; } = initializer;
         public override string DName => $"{nameof(BoundParamsDeclaration)}: {Name} ({Type})";
@@ -55,9 +57,9 @@ namespace Best_language.src.middle
             }
         }
     }
-    public class BoundFunction(VariableType type, string name, List<BoundParamsDeclaration> @params,  List<BoundStatement> statements) : BoundStatement
+    public class BoundFunction(TypeSymbol type, string name, List<BoundParamsDeclaration> @params,  List<BoundStatement> statements) : BoundStatement
     {
-        public VariableType Type { get; } = type;
+        public TypeSymbol Type { get; } = type;
         public string Name { get; } = name;
         public List<BoundStatement> Statements { get; } = statements;
         public List<BoundParamsDeclaration> Params { get; } = @params;
@@ -71,11 +73,11 @@ namespace Best_language.src.middle
             }
         }
     }
-    public class BoundVariableDeclaration(VariableType type, string name, BoundExpression initializer) : BoundStatement
+    public class BoundVariableDeclaration(TypeSymbol type, string name, BoundExpression? initializer) : BoundStatement
     {
-        public VariableType Type { get; } = type;
+        public TypeSymbol Type { get; } = type;
         public string Name { get; } = name;
-        public BoundExpression Initializer { get; } = initializer;
+        public BoundExpression? Initializer { get; } = initializer;
         public override string DName => $"{nameof(BoundVariableDeclaration)}: {Name} ({Type})";
         public override IEnumerable<BoundNode> Children
         {
@@ -85,11 +87,11 @@ namespace Best_language.src.middle
             }
         }
     }
-    public class BoundAssignmentStatement(string name, BoundExpression right, VariableType type) : BoundStatement
+    public class BoundAssignmentStatement(string name, BoundExpression right, TypeSymbol type) : BoundStatement
     {
         public string Name { get; } = name;
         public BoundExpression Right { get; } = right;
-        public VariableType Type { get; } = type;
+        public TypeSymbol Type { get; } = type;
         public override string DName => $"{nameof(BoundAssignmentStatement)}: {Name}";
         public override IEnumerable<BoundNode> Children
         {
@@ -200,25 +202,37 @@ namespace Best_language.src.middle
         public override string DName => $"{nameof(BoundGotoStatement)}: {ToId}";
         public override IEnumerable<BoundNode> Children => [];
     }
-    public class BoundNumberExpression(VariableType type, long value) : BoundExpression(type)
+    public class BoundNumberExpression(TypeSymbol type, ulong value) : BoundExpression(type)
     {
-        public long Value { get; } = value;
+        public ulong Value { get; } = value;
         public override string DName => $"{nameof(BoundNumberExpression)}: {Value}";
         public override IEnumerable<BoundNode> Children => [];
     }
-    public class BoundVariableExpression(VariableType type, string name) : BoundExpression(type)
+    public class BoundConversionExpression(BoundExpression expression, TypeSymbol targetype) : BoundExpression(targetype)
+    {
+        public BoundExpression Expression { get; } = expression;
+        public override string DName => $"{nameof(BoundConversionExpression)}";
+        public override IEnumerable<BoundNode> Children
+        {
+            get
+            {
+                yield return Expression;
+            }
+        }
+    }
+    public class BoundVariableExpression(TypeSymbol type, string name) : BoundExpression(type)
     {
         public string Name { get; } = name;
         public override string DName => $"{nameof(BoundVariableExpression)}: {Name}";
         public override IEnumerable<BoundNode> Children => [];
     }
-    public class BoundBoolExpression(bool value) : BoundExpression(VariableType.Bool)
+    public class BoundBoolExpression(bool value, TypeSymbol type) : BoundExpression(type)
     {
         public bool Value { get; } = value;
         public override string DName => $"{nameof(BoundBoolExpression)}: {Value}";
         public override IEnumerable<BoundNode> Children => [];
     }
-    public class BoundBinaryExpression(VariableType type, Operations op, BoundExpression left, BoundExpression right) : BoundExpression(type)
+    public class BoundBinaryExpression(TypeSymbol type, Operations op, BoundExpression left, BoundExpression right) : BoundExpression(type)
     {
         public BoundExpression Left { get; } = left;
         public Operations Op { get; } = op;
@@ -233,7 +247,7 @@ namespace Best_language.src.middle
             }
         }
     }
-    public class BoundUnaryExpression(VariableType type, Operations op, BoundExpression right) : BoundExpression(type)
+    public class BoundUnaryExpression(TypeSymbol type, Operations op, BoundExpression right) : BoundExpression(type)
     {
         public Operations Op { get; } = op;
         public BoundExpression Right { get; } = right;
@@ -255,7 +269,7 @@ namespace Best_language.src.middle
         {
             return _variables[^1].TryAdd(variable.Name, variable);
         }
-        public bool Lookup(string name, out VariableType type)
+        public bool Lookup(string name, out TypeSymbol type)
         {
             for (int i = 1; i <= _variables.Count; i++)
             {
@@ -265,7 +279,7 @@ namespace Best_language.src.middle
                     return true;
                 }
             }
-            type = VariableType.Int;
+            type = new VoidTypeSymbol();
             return false;
         }
         public void AddScope()

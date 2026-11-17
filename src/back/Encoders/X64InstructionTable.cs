@@ -201,6 +201,80 @@ namespace Best_language.src.back.Encoders
                 ]
             });
 
+            // movsx r 16/32/64, r/m 8
+            Add(new X64Form
+            {
+                Kind = X64Opcode.movsx,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0xBE,
+                SizeMode = X64OperandSizeMode.Standard,
+
+                Operands = [
+                    new()
+                    {
+                        Kind = X64OperandKind.Register,
+                        Role = X64OperandRole.ModRmReg,
+                        Size = X64Size.operand
+                    },
+                    new()
+                    {
+                        Kind = X64OperandKind.RegisterOrMemory,
+                        Role = X64OperandRole.ModRmRm,
+                        Size = X64Size.@byte,
+                        SmallerThanOperandSize = true
+                    }
+                ]
+            });
+
+            // movsx r 32/64, r/m 16
+            Add(new X64Form
+            {
+                Kind = X64Opcode.movsx,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0xBF,
+                SizeMode = X64OperandSizeMode.Standard,
+
+                Operands = [
+                    new()
+                    {
+                        Kind = X64OperandKind.Register,
+                        Role = X64OperandRole.ModRmReg,
+                        Size = X64Size.operand
+                    },
+                    new()
+                    {
+                        Kind = X64OperandKind.RegisterOrMemory,
+                        Role = X64OperandRole.ModRmRm,
+                        Size = X64Size.word,
+                        SmallerThanOperandSize = true
+                    }
+                           ]
+            });
+
+            // movsxd r 64, r/m 32
+            Add(new X64Form
+            {
+                Kind = X64Opcode.movsxd,
+                Map = X64OpcodeMap.Primary,
+                Opcode = 0x63,
+                SizeMode = X64OperandSizeMode.Fixed64,
+
+                Operands = [
+                    new()
+                    {
+                        Kind = X64OperandKind.Register,
+                        Role = X64OperandRole.ModRmReg,
+                        Size = X64Size.qword
+                    },
+                    new()
+                    {
+                        Kind = X64OperandKind.RegisterOrMemory,
+                        Role = X64OperandRole.ModRmRm,
+                        Size = X64Size.dword
+                    }
+                ]
+            });
+
             // movzx r 16/32/64, r/m 8
             Add(new X64Form
             {
