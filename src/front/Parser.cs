@@ -3,8 +3,7 @@ namespace Best_language.src.front
     class Parser
     {
         private List<Token> _tokens = new List<Token>();
-        private TypeTable _typeTable = new();
-
+        public TypeTable _typeTable = new();
         private int _idx;
 
         public Parser(List<Token> tokens)
@@ -324,7 +323,7 @@ namespace Best_language.src.front
                     {
                         if(_tokens[_idx + 1].kind is TokenKind.Dot)
                         {
-                            var @double = _tokens[_idx].val! + _tokens[_idx + 1].val! + _tokens[_idx + 2].val!;
+                            var @double = _tokens[_idx].val! + "." + _tokens[_idx + 2].val!;
                             if (_tokens[_idx + 3].kind is TokenKind.F)
                             {
                                 left = new DoubleExpression(float.Parse(@double), _typeTable.Float);
@@ -390,14 +389,14 @@ namespace Best_language.src.front
 
             int start = _idx;
 
-            while(_tokens[_idx].kind is TokenKind.Signed or TokenKind.UnSigned or TokenKind.Long or TokenKind.Int or TokenKind.Char or TokenKind.Short or TokenKind.Short)
+            while(_tokens[_idx].kind is TokenKind.Signed or TokenKind.UnSigned or TokenKind.Long or TokenKind.Int or TokenKind.Char or TokenKind.Short or TokenKind.Short or TokenKind.Double)
             {
                 if (_tokens[_idx].kind is TokenKind.Int)
                 {
                     if (hasInt) throw new ArgumentException("cannot have two ints");
                     hasInt = true;
                 }
-                if (_tokens[_idx].kind is TokenKind.Double)
+                else if (_tokens[_idx].kind is TokenKind.Double)
                 {
                     if (hasDouble) throw new ArgumentException("cannot have two doubles");
                     hasDouble = true;

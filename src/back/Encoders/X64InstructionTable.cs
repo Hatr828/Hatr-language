@@ -325,6 +325,29 @@ namespace Best_language.src.back.Encoders
                 ]
             });
 
+            // shr r/m 16/32/64, imm 8
+            Add(new X64Form
+            {
+                Kind = X64Opcode.shr,
+                Opcode = 0xC1,
+                Extension = 5,
+                SizeMode = X64OperandSizeMode.Standard,
+
+                Operands = [
+                new()
+                {
+                    Kind = X64OperandKind.RegisterOrMemory,
+                    Role = X64OperandRole.ModRmRm,
+                    Size = X64Size.operand
+                },
+                new()
+                {
+                    Kind = X64OperandKind.Immediate,
+                    Role = X64OperandRole.Immediate,
+                    Size = X64Size.@byte
+                }]
+             });
+
             // or r/m 8, r 8
             Add(new X64Form
             {
@@ -1647,6 +1670,515 @@ namespace Best_language.src.back.Encoders
                 Kind = X64Opcode.ret,
                 Opcode = 0xC3,
                 SizeMode = X64OperandSizeMode.None
+            });
+
+            ////////// double/float
+
+            // movss xmm, xmm/m 32
+            Add(new X64Form
+            {
+                Kind = X64Opcode.movss,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x10,
+                Prefixes = X64Prefixes.Rep,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands =
+                [
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.dword },
+                    new() { Kind = X64OperandKind.XmmRegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.dword }
+                ]
+            });
+
+            // movss m 32, xmm
+            Add(new X64Form
+            {
+                Kind = X64Opcode.movss,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x11,
+                Prefixes = X64Prefixes.Rep,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.Memory, Role = X64OperandRole.ModRmRm, Size = X64Size.dword },
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.dword }
+                ]
+            });
+
+            // movsd xmm, xmm/m 64
+            Add(new X64Form
+            {
+                Kind = X64Opcode.movsd,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x10,
+                Prefixes = X64Prefixes.Repne,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.qword },
+                    new() { Kind = X64OperandKind.XmmRegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.qword }
+                ]
+            });
+
+            // movsd m 64, xmm
+            Add(new X64Form
+            {
+                Kind = X64Opcode.movsd,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x11,
+                Prefixes = X64Prefixes.Repne,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.Memory, Role = X64OperandRole.ModRmRm, Size = X64Size.qword },
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.qword }
+                ]
+            });
+
+            // addss xmm, xmm/m 32
+            Add(new X64Form
+            {
+                Kind = X64Opcode.addss,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x58,
+                Prefixes = X64Prefixes.Rep,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.dword },
+                    new() { Kind = X64OperandKind.XmmRegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.dword }
+                ]
+            });
+
+            // addsd xmm, xmm/m 64
+            Add(new X64Form
+            {
+                Kind = X64Opcode.addsd,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x58,
+                Prefixes = X64Prefixes.Repne,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.qword },
+                    new() { Kind = X64OperandKind.XmmRegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.qword }
+                ]
+            });
+
+            // subss xmm, xmm/m 32
+            Add(new X64Form
+            {
+                Kind = X64Opcode.subss,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x5C,
+                Prefixes = X64Prefixes.Rep,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.dword },
+                    new() { Kind = X64OperandKind.XmmRegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.dword }
+                ]
+            });
+
+            // subsd xmm, xmm/m 64
+            Add(new X64Form
+            {
+                Kind = X64Opcode.subsd,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x5C,
+                Prefixes = X64Prefixes.Repne,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.qword },
+                    new() { Kind = X64OperandKind.XmmRegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.qword }
+                ]
+            });
+
+            // mulss xmm, xmm/m 32
+            Add(new X64Form
+            {
+                Kind = X64Opcode.mulss,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x59,
+                Prefixes = X64Prefixes.Rep,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.dword },
+                    new() { Kind = X64OperandKind.XmmRegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.dword }
+                ]
+            });
+
+            // mulsd xmm, xmm/m 64
+            Add(new X64Form
+            {
+                Kind = X64Opcode.mulsd,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x59,
+                Prefixes = X64Prefixes.Repne,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.qword },
+                    new() { Kind = X64OperandKind.XmmRegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.qword }
+                ]
+            });
+
+            // divss xmm, xmm/m 32
+            Add(new X64Form
+            {
+                Kind = X64Opcode.divss,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x5E,
+                Prefixes = X64Prefixes.Rep,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.dword },
+                    new() { Kind = X64OperandKind.XmmRegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.dword }
+                ]
+            });
+
+            // divsd xmm, xmm/m 64
+            Add(new X64Form
+            {
+                Kind = X64Opcode.divsd,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x5E,
+                Prefixes = X64Prefixes.Repne,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.qword },
+                    new() { Kind = X64OperandKind.XmmRegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.qword }
+                ]
+            });
+
+            // ucomiss xmm, xmm/m 32
+            Add(new X64Form
+            {
+                Kind = X64Opcode.ucomiss,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x2E,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.dword },
+                    new() { Kind = X64OperandKind.XmmRegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.dword }
+                ]
+            });
+
+            // ucomisd xmm, xmm/m 64
+            Add(new X64Form
+            {
+                Kind = X64Opcode.ucomisd,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x2E,
+                Prefixes = X64Prefixes.OperandSize,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.qword },
+                    new() { Kind = X64OperandKind.XmmRegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.qword }
+                ]
+            });
+
+            // cvtsi2ss xmm, r/m 32
+            // cvtsi2ss xmm, r/m 64
+            Add(new X64Form
+            {
+                Kind = X64Opcode.cvtsi2ss,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x2A,
+                Prefixes = X64Prefixes.Rep,
+                SizeMode = X64OperandSizeMode.Integer32Or64,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.dword },
+                    new() { Kind = X64OperandKind.RegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.operand }
+                ]
+            });
+
+            // cvtsi2sd xmm, r/m 32
+            // cvtsi2sd xmm, r/m 64
+            Add(new X64Form
+            {
+                Kind = X64Opcode.cvtsi2sd,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x2A,
+                Prefixes = X64Prefixes.Repne,
+                SizeMode = X64OperandSizeMode.Integer32Or64,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.qword },
+                    new() { Kind = X64OperandKind.RegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.operand }
+                ]
+            });
+
+            // cvttss2si r 32, xmm/m 32
+            // cvttss2si r 64, xmm/m 32
+            Add(new X64Form
+            {
+                Kind = X64Opcode.cvttss2si,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x2C,
+                Prefixes = X64Prefixes.Rep,
+                SizeMode = X64OperandSizeMode.Integer32Or64,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.Register, Role = X64OperandRole.ModRmReg, Size = X64Size.operand },
+                    new() { Kind = X64OperandKind.XmmRegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.dword }
+                ]
+            });
+
+            // cvttsd2si r 32, xmm/m 64
+            // cvttsd2si r 64, xmm/m 64
+            Add(new X64Form
+            {
+                Kind = X64Opcode.cvttsd2si,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x2C,
+                Prefixes = X64Prefixes.Repne,
+                SizeMode = X64OperandSizeMode.Integer32Or64,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.Register, Role = X64OperandRole.ModRmReg, Size = X64Size.operand },
+                    new() { Kind = X64OperandKind.XmmRegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.qword }
+                ]
+            });
+
+            // cvtss2sd xmm, xmm/m 32
+            Add(new X64Form
+            {
+                Kind = X64Opcode.cvtss2sd,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x5A,
+                Prefixes = X64Prefixes.Rep,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.qword },
+                    new() { Kind = X64OperandKind.XmmRegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.dword }
+                ]
+            });
+
+            // cvtsd2ss xmm, xmm/m 64
+            Add(new X64Form
+            {
+                Kind = X64Opcode.cvtsd2ss,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x5A,
+                Prefixes = X64Prefixes.Repne,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.dword },
+                    new() { Kind = X64OperandKind.XmmRegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.qword }
+                ]
+            });
+
+            // movd xmm, r/m 32
+            Add(new X64Form
+            {
+                Kind = X64Opcode.movd,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x6E,
+                Prefixes = X64Prefixes.OperandSize,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.dword },
+                    new() { Kind = X64OperandKind.RegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.dword }
+                ]
+            });
+
+            // movd r/m 32, xmm
+            Add(new X64Form
+            {
+                Kind = X64Opcode.movd,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x7E,
+                Prefixes = X64Prefixes.OperandSize,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.RegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.dword },
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.dword }
+                ]
+            });
+
+            // movq xmm, r/m 64
+            Add(new X64Form
+            {
+                Kind = X64Opcode.movq,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x6E,
+                Prefixes = X64Prefixes.OperandSize,
+                SizeMode = X64OperandSizeMode.Fixed64,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.qword },
+                    new() { Kind = X64OperandKind.RegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.qword }
+                ]
+            });
+
+            // movq r/m 64, xmm
+            Add(new X64Form
+            {
+                Kind = X64Opcode.movq,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x7E,
+                Prefixes = X64Prefixes.OperandSize,
+                SizeMode = X64OperandSizeMode.Fixed64,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.RegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.qword },
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.qword }
+                ]
+            });
+
+            // movq xmm, xmm/m 64
+            Add(new X64Form
+            {
+                Kind = X64Opcode.movq,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x7E,
+                Prefixes = X64Prefixes.Rep,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.qword },
+                new() { Kind = X64OperandKind.XmmRegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.qword }
+                ]
+            });
+
+            // movq m 64, xmm
+            Add(new X64Form
+            {
+                Kind = X64Opcode.movq,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0xD6,
+                Prefixes = X64Prefixes.OperandSize,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.Memory, Role = X64OperandRole.ModRmRm, Size = X64Size.qword },
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.qword }
+                ]
+            });
+
+            // xorps xmm, xmm/m 128
+            Add(new X64Form
+            {
+                Kind = X64Opcode.xorps,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x57,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.oword },
+                    new() { Kind = X64OperandKind.XmmRegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.oword }
+                ]
+            });
+
+            // xorpd xmm, xmm/m 128
+            Add(new X64Form
+            {
+                Kind = X64Opcode.xorpd,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x57,
+                Prefixes = X64Prefixes.OperandSize,
+                SizeMode = X64OperandSizeMode.None,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.XmmRegister, Role = X64OperandRole.ModRmReg, Size = X64Size.oword },
+                    new() { Kind = X64OperandKind.XmmRegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.oword }
+                ]
+            });
+
+            // seta r/m 8
+            Add(new X64Form
+            {
+                Kind = X64Opcode.seta,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x97,
+                Extension = 0,
+                SizeMode = X64OperandSizeMode.Byte,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.RegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.@byte }
+                ]
+            });
+
+            // setae r/m 8
+            Add(new X64Form
+            {
+                Kind = X64Opcode.setae,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x93,
+                Extension = 0,
+                SizeMode = X64OperandSizeMode.Byte,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.RegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.@byte }
+                ]
+            });
+
+            // setb r/m 8
+            Add(new X64Form
+            {
+                Kind = X64Opcode.setb,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x92,
+                Extension = 0,
+                SizeMode = X64OperandSizeMode.Byte,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.RegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.@byte }
+                ]
+            });
+
+            // setbe r/m 8
+            Add(new X64Form
+            {
+                Kind = X64Opcode.setbe,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x96,
+                Extension = 0,
+                SizeMode = X64OperandSizeMode.Byte,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.RegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.@byte }
+                ]
+            });
+
+            // setp r/m 8
+            Add(new X64Form
+            {
+                Kind = X64Opcode.setp,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x9A,
+                Extension = 0,
+                SizeMode = X64OperandSizeMode.Byte,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.RegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.@byte }
+                ]
+            });
+
+            // setnp r/m 8
+            Add(new X64Form
+            {
+                Kind = X64Opcode.setnp,
+                Map = X64OpcodeMap.Map0F,
+                Opcode = 0x9B,
+                Extension = 0,
+                SizeMode = X64OperandSizeMode.Byte,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.RegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.@byte }
+                ]
             });
         }
 

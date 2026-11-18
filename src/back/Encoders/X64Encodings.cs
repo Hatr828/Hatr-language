@@ -70,13 +70,18 @@ namespace Best_language.src.back.Encoders
                 var spec = form.Operands[i];
                 var operand = operands[i];
 
+                bool isXmm = operand.Kind is X64ValueKind.Register && operand.Register is >= X64Register.xmm0 and <= X64Register.xmm15;
+
                 bool matches = spec.Kind switch
                 {
-                    X64OperandKind.Register => operand.Kind is X64ValueKind.Register,
+                    X64OperandKind.Register => operand.Kind is X64ValueKind.Register && !isXmm,
                     X64OperandKind.Memory => operand.Kind is X64ValueKind.Memory,
-                    X64OperandKind.RegisterOrMemory => operand.Kind is X64ValueKind.Register or X64ValueKind.Memory,
+                    X64OperandKind.RegisterOrMemory => (operand.Kind is X64ValueKind.Register && !isXmm) || operand.Kind is X64ValueKind.Memory,
                     X64OperandKind.Immediate => operand.Kind is X64ValueKind.Immediate,
                     X64OperandKind.Relative => operand.Kind is X64ValueKind.Label,
+
+                    X64OperandKind.XmmRegister => isXmm,
+                    X64OperandKind.XmmRegisterOrMemory => isXmm || operand.Kind == X64ValueKind.Memory,
 
                     _ => false,
                 };
@@ -93,6 +98,8 @@ namespace Best_language.src.back.Encoders
 
                 if (operand.Kind is X64ValueKind.Register && (operand.Register is null || operand.Size != X64Operand.GetSize(operand.Register.Value))) return false;
 
+                if (isXmm) continue;
+                
                 if (spec.Size == X64Size.operand)
                 {
                     if (actualSize is 0) continue;
@@ -137,6 +144,10 @@ namespace Best_language.src.back.Encoders
                     size = 8;
                     break;
 
+                case X64OperandSizeMode.Integer32Or64:
+                    if (size != 4 && size != 8) return false;
+                    break;
+
                 default: return false;
             }
 
@@ -179,7 +190,7 @@ namespace Best_language.src.back.Encoders
             byte rex = 0x40;
             bool forceRex = false;
 
-            if(form.SizeMode is X64OperandSizeMode.Fixed64 || (form.SizeMode is X64OperandSizeMode.Standard && size == 8))
+            if(form.SizeMode is X64OperandSizeMode.Fixed64 || (form.SizeMode is X64OperandSizeMode.Standard or X64OperandSizeMode.Integer32Or64 && size == 8))
             {
                 rex |= 0x08;
             }
@@ -336,6 +347,8 @@ namespace Best_language.src.back.Encoders
             X64Size.dword => 4,
             X64Size.qword => 8,
 
+            X64Size.oword => 16,
+
             X64Size.operand => operandSize,
             X64Size.immediate => operandSize is 2 ? 2 : 4,
 
@@ -361,14 +374,23 @@ namespace Best_language.src.back.Encoders
         private byte GetRegisterCode(X64Register reg) => reg switch
         {
             X64Register.rax or X64Register.eax or X64Register.ax or X64Register.al => 0,
-            X64Register.rcx or X64Register.ecx or X64Register.cl or X64Register.cx => 1,
-            X64Register.rdx or X64Register.edx or X64Register.dx => 2,
-            X64Register.rbx => 3,
-            X64Register.rsp => 4,
-            X64Register.rbp => 5,
-            X64Register.rsi => 6,
-            X64Register.rdi => 7,
+            X64Register.rcx or X64Register.ecx or X64Register.cx or X64Register.cl => 1,
+            X64Register.rdx or X64Register.edx or X64Register.dx or X64Register.dl => 2,
+            X64Register.rbx or X64Register.ebx or X64Register.bx or X64Register.bl => 3,
+            X64Register.rsp or X64Register.esp or X64Register.sp or X64Register.spl => 4,
+            X64Register.rbp or X64Register.ebp or X64Register.bp or X64Register.bpl => 5,
+            X64Register.rsi or X64Register.esi or X64Register.si or X64Register.sil => 6,
+            X64Register.rdi or X64Register.edi or X64Register.di or X64Register.dil => 7,
             X64Register.r8 or X64Register.r8d or X64Register.r8w or X64Register.r8b => 8,
+            X64Register.r9 or X64Register.r9d or X64Register.r9w or X64Register.r9b => 9,
+            X64Register.r10 or X64Register.r10d or X64Register.r10w or X64Register.r10b => 10,
+            X64Register.r11 or X64Register.r11d or X64Register.r11w or X64Register.r11b => 11,
+            X64Register.r12 or X64Register.r12d or X64Register.r12w or X64Register.r12b => 12,
+            X64Register.r13 or X64Register.r13d or X64Register.r13w or X64Register.r13b => 13,
+            X64Register.r14 or X64Register.r14d or X64Register.r14w or X64Register.r14b => 14,
+            X64Register.r15 or X64Register.r15d or X64Register.r15w or X64Register.r15b => 15,
+
+            >= X64Register.xmm0 and <= X64Register.xmm15 => (byte)((int)reg - (int)X64Register.xmm0),
 
            _ => throw new ArgumentException($"Unknow register: {reg}")
         };

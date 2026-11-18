@@ -208,6 +208,12 @@ namespace Best_language.src.middle
         public override string DName => $"{nameof(BoundNumberExpression)}: {Value}";
         public override IEnumerable<BoundNode> Children => [];
     }
+    public class BoundDoubleExpression(TypeSymbol type, double value) : BoundExpression(type)
+    {
+        public double Value { get; } = value;
+        public override string DName => $"{nameof(BoundDoubleExpression)}: {Value}";
+        public override IEnumerable<BoundNode> Children => [];
+    }
     public class BoundConversionExpression(BoundExpression expression, TypeSymbol targetype) : BoundExpression(targetype)
     {
         public BoundExpression Expression { get; } = expression;
@@ -237,7 +243,7 @@ namespace Best_language.src.middle
         public BoundExpression Left { get; } = left;
         public Operations Op { get; } = op;
         public BoundExpression Right { get; } = right;
-        public override string DName => $"{nameof(BoundBinaryExpression)}: {Op}";
+        public override string DName => $"{nameof(BoundBinaryExpression)}: {Op} ({Type})";
         public override IEnumerable<BoundNode> Children
         {
             get
@@ -251,7 +257,7 @@ namespace Best_language.src.middle
     {
         public Operations Op { get; } = op;
         public BoundExpression Right { get; } = right;
-        public override string DName => $"{nameof(BoundUnaryExpression)}: {Op}";
+        public override string DName => $"{nameof(BoundUnaryExpression)}: {Op} ({Type})";
         public override IEnumerable<BoundNode> Children
         {
             get

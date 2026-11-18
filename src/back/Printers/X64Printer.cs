@@ -17,42 +17,6 @@ namespace Best_language.src.back.Printers
             {
                 switch (instruction.Opcode)
                 {
-                    case X64Opcode.sub:
-                    case X64Opcode.mov:
-                    case X64Opcode.movzx:
-                    case X64Opcode.movsx:
-                    case X64Opcode.movsxd:
-                    case X64Opcode.add:
-                    case X64Opcode.or:
-                    case X64Opcode.xor:
-                    case X64Opcode.and:
-                    case X64Opcode.sar:
-                    case X64Opcode.test:
-                    case X64Opcode.cmp:
-                    case X64Opcode.shl:
-                        _sb.AppendLine($"    {instruction.Opcode} " +
-                            $"{GetStringFromOperand(instruction.Operands[0])}," +
-                            $" {GetStringFromOperand(instruction.Operands[1])}");
-                        break;
-
-                    case X64Opcode.call:
-                    case X64Opcode.not:
-                    case X64Opcode.neg:
-                    case X64Opcode.sete:
-                    case X64Opcode.setl:
-                    case X64Opcode.setle:
-                    case X64Opcode.setg:
-                    case X64Opcode.setge:
-                    case X64Opcode.idiv:
-                    case X64Opcode.imul:
-                    case X64Opcode.jmp:
-                    case X64Opcode.jnz:
-                    case X64Opcode.jz:
-                    case X64Opcode.push:
-                        _sb.AppendLine($"    {instruction.Opcode} " +
-                            $"{GetStringFromOperand(instruction.Operands[0])}");
-                        break;
-
                     case X64Opcode.cqo:
                     case X64Opcode.ret:
                         _sb.AppendLine($"    {instruction.Opcode} ");
@@ -60,6 +24,25 @@ namespace Best_language.src.back.Printers
 
                     case X64Opcode.label:
                         _sb.AppendLine($"{GetStringFromOperand(instruction.Operands[0])}:");
+                        break;
+
+                    case >= X64Opcode.mov and <= X64Opcode.add:
+                    case >= X64Opcode.movss and <= X64Opcode.movq:
+                        _sb.AppendLine($"    {instruction.Opcode} " +
+                            $"{GetStringFromOperand(instruction.Operands[0])}," +
+                            $" {GetStringFromOperand(instruction.Operands[1])}");
+                        break;
+
+                    case >= X64Opcode.push and <= X64Opcode.setnp:
+                        _sb.AppendLine($"    {instruction.Opcode} " +
+                            $"{GetStringFromOperand(instruction.Operands[0])}");
+                        break;
+
+                    case X64Opcode.imul:
+                        _sb.AppendLine($"    {instruction.Opcode} " +
+                            $"{GetStringFromOperand(instruction.Operands[0])}," +
+                            $" {GetStringFromOperand(instruction.Operands[1])}," +
+                            $" {GetStringFromOperand(instruction.Operands[1])}");
                         break;
 
                     default:
@@ -82,9 +65,9 @@ namespace Best_language.src.back.Printers
 
                 case X64ValueKind.Memory:
                     if (operand.Size != X64Size.@byte)
-                        return $"{operand.Size} [{operand.Register}-{operand.Offset}]";
+                        return $"{operand.Size} [{operand.Register}{operand.Offset}]";
                     else
-                        return $"byte [{operand.Register}-{operand.Offset}]";
+                        return $"byte [{operand.Register}{operand.Offset}]";
                 case X64ValueKind.Label:
                     return $"{operand.Name}";
 

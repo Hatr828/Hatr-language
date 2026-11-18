@@ -14,7 +14,11 @@ namespace Best_language.src
         static void Main(string[] args)
         {
             string code = @"
-                signed long long a = 0UL;
+                double a = !0.0;
+                while(a < 10.0) 
+                {
+                    a++;
+                }
                 ";
             Lexer lexer = new(code);
             var tokens = lexer.GetTokens();
@@ -27,7 +31,7 @@ namespace Best_language.src
             Console.WriteLine("\n ---- \n");
 
             BoundTree boundTree = new();
-            BoundProgram boundProgram = boundTree.BindProgram(node);
+            BoundProgram boundProgram = boundTree.BindProgram(node, parser._typeTable);
             BoundTreePrinter.Print(boundProgram);
             Console.WriteLine("\n ---- \n");
 
@@ -102,8 +106,19 @@ namespace Best_language.src
 
             process.Start();
 
-            string output = process.StandardOutput.ReadToEnd();
-            string error = process.StandardError.ReadToEnd();
+            var outputTask = process.StandardOutput.ReadToEndAsync();
+            var errorTask = process.StandardError.ReadToEndAsync();
+
+            if (!process.WaitForExit(5000))
+            {
+                process.Kill(entireProcessTree: true);
+                process.WaitForExit();
+
+                throw new TimeoutException($"time out for: {fileName}");
+            }
+
+            string output = outputTask.GetAwaiter().GetResult();
+            string error = errorTask.GetAwaiter().GetResult();
 
             process.WaitForExit();
 

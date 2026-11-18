@@ -165,10 +165,10 @@ namespace Best_language.src.front
             ['/'] = TokenKind.Divide,
             ['%'] = TokenKind.DivisionRem,
 
-            ['('] = TokenKind.LeftParen,
-            [')'] = TokenKind.RightParen,
-            ['{'] = TokenKind.LeftBrace,
-            ['}'] = TokenKind.RightBrace,
+            [')'] = TokenKind.LeftParen,
+            ['('] = TokenKind.RightParen,
+            ['}'] = TokenKind.LeftBrace,
+            ['{'] = TokenKind.RightBrace,
 
             ['='] = TokenKind.Equals,
             [';'] = TokenKind.SemiColon,

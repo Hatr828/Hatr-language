@@ -147,40 +147,46 @@ namespace Best_language.src.middle
             {
                 case BoundNumberExpression num:
                     return EmitConstant(num.Value, num.Type);
+                case BoundDoubleExpression num:
+                    return EmitConstant(num.Value, num.Type);
                 case BoundBoolExpression ex:
                     return EmitConstant((ulong)(ex.Value ? 1 : 0), ex.Type);
                 case BoundVariableExpression variable:
                     return ResolveVariable(variable.Name);
                 case BoundBinaryExpression binary:
                     {
-                        var left = LowerExpression(binary.Left);
-                        var res = EmitCopy(left);
+                        var left = LowerExpression(binary.Left);    
                         var right = LowerExpression(binary.Right);
+                        var result = NewIrValue(binary.Type);
 
-                        Emit(new IrBinary(binary.Op, res, right));
+                        Emit(new IrBinary(binary.Op, left, right, result));
 
-                        return res;
+                        return result;
                     }
                 case BoundUnaryExpression unary:
                     {
-                        var right = LowerExpression(unary.Right);
-
-                        if (unary.Op is Operations.PlusPlusLeft or Operations.MinusMinusLeft)
+                        bool increment = unary.Op is Operations.PlusPlusLeft or Operations.PlusPlusRight or Operations.MinusMinusLeft or Operations.MinusMinusRight;
+                        
+                        if (increment)
                         {
-                            Emit(new IrUnary(unary.Op, right));
-                            return right;
+                            if (unary.Right is not BoundVariableExpression variable) throw new ArgumentException("Expected variable");
+
+                            var target = ResolveVariable(variable.Name);
+                            var right = EmitCopy(target);
+                            var result = NewIrValue(unary.Type);
+
+                            Emit(new IrUnary(unary.Op, right, result));
+                            Emit(new IrVariable(target, result));
+
+                            return unary.Op is Operations.PlusPlusRight or Operations.MinusMinusRight ? right : result;
                         }
 
-                        if (unary.Op is Operations.PlusPlusRight or Operations.MinusMinusRight)
-                        {
-                            var res = EmitCopy(right);
-                            Emit(new IrUnary(unary.Op, right));
-                            return res;
-                        }
+                        var right_ = LowerExpression(unary.Right);
+                        var result_ = NewIrValue(unary.Type);
 
-                        var res2 = EmitCopy(right);
-                        Emit(new IrUnary(unary.Op, res2));
-                        return res2;
+                        Emit(new IrUnary(unary.Op, right_, result_));
+
+                        return result_;
                     }
                 case BoundConversionExpression conversion:
                     {
@@ -201,6 +207,12 @@ namespace Best_language.src.middle
         {
             var result = NewIrValue(type);
             Emit(new IrConstant(result, value, type));
+            return result;
+        }
+        private IrValue EmitConstant(double value, TypeSymbol type)
+        {
+            var result = NewIrValue(type);
+            Emit(new IrFloatConstant(result, value, type));
             return result;
         }
         private IrValue EmitCopy(IrValue source)

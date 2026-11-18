@@ -2,47 +2,69 @@
 {
     public enum X64Register : byte
     {
-        rax, rcx, rdx, rbx, rbs, rsp, rbp, rsi, rdi, r8,
-        eax, edx, ecx, r8d,
-        ax, dx, cx, r8w,
-        al, cl, r8b
+        rax, rcx, rdx, rbx, rbs, rsp, rbp, rsi, rdi,
+        r8, r9, r10, r11, r12, r13, r14, r15,
+
+        eax, ecx, edx, ebx, esp, ebp, esi, edi,
+        r8d, r9d, r10d, r11d, r12d, r13d, r14d, r15d,
+
+        ax, cx, dx, bx, sp, bp, si, di,
+        r8w, r9w, r10w, r11w, r12w, r13w, r14w, r15w,
+
+        al, cl, dl, bl, spl, bpl, sil, dil,
+        r8b, r9b, r10b, r11b, r12b, r13b, r14b, r15b,
+
+        xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7, xmm8, xmm9, xmm10, xmm11, xmm12, xmm13, xmm14, xmm15,
     }
 
     public enum X64Opcode
     {
-        mov, movzx, movsxd, movsx,
-        or, and,
-        xor,
-        shl,
-        sar,
-        neg,
-        not,
-        cmp,
-        cqo,
+        // 0 operands
+        cqo, ret,
+        // 1 operands
         push,
-        sub,
-        add,
-        imul,
+        not, neg,
         idiv,
+        jnz, jz, jmp,
+        call, 
         label,
-        test,
-        jnz,
-        jz,
-        setg,
-        setge,
-        setl,
-        setle,
-        sete,
-        setne,
-        jmp,
-        call,
-        ret
+
+        setg, setge,
+        setl, setle,
+        sete, setne,
+        seta, setae,
+        setb, setbe,
+        setp, setnp,
+
+        // 2 operands
+        mov, movzx, movsxd, movsx,
+        or, and, xor,
+        shl, sar,
+        cmp, test,
+        sub, add, shr,
+
+        // varies
+        imul,
+
+        // float/double 2 operands
+
+        movss, movsd,
+        addss, addsd,
+        subss, subsd,
+        mulss, mulsd,
+        divss, divsd,
+        ucomiss, ucomisd,
+        cvtsi2ss, cvtsi2sd,
+        cvtsd2ss, cvtss2sd,
+        cvttss2si, cvttsd2si,
+        xorps, xorpd,
+        movd, movq,
     }
 
     public enum X64Size
     {
         none,
-        @byte = 1,  word = 2, dword = 4, qword = 8,  // Do not change numbers
+        @byte = 1,  word = 2, dword = 4, qword = 8, oword = 16,  // Do not change numbers
 
         operand,
         immediate
@@ -54,6 +76,7 @@
         Byte,
         Standard,
         Default64,
+        Integer32Or64,
         Fixed64
     }
 
@@ -64,6 +87,9 @@
         Memory,
         Immediate,
         Relative,
+
+        XmmRegisterOrMemory,
+        XmmRegister,
     }
 
     public enum X64OperandRole
@@ -175,10 +201,12 @@
 
         public static X64Size GetSize(X64Register reg) => reg switch
         {
-            >= X64Register.rax and <= X64Register.rdi => X64Size.qword,
-            X64Register.ecx or X64Register.edx or X64Register.eax => X64Size.dword,
-            X64Register.dx or X64Register.cx or X64Register.ax => X64Size.word,
-            X64Register.al or X64Register.cl or X64Register.r8b => X64Size.@byte,
+            >= X64Register.rax and <= X64Register.r15 => X64Size.qword,
+            >= X64Register.eax and <= X64Register.r15d => X64Size.dword,
+            >= X64Register.ax and <= X64Register.r15w => X64Size.word,
+            >= X64Register.al and <= X64Register.r15b => X64Size.@byte,
+
+            >= X64Register.xmm0 and <= X64Register.xmm15 => X64Size.oword,
 
             _ => throw new NotSupportedException()
         };

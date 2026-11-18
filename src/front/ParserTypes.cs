@@ -269,38 +269,41 @@ namespace Best_language.src.front
 
     public enum Operations
     {
-        Plus,
-        Minus,
-        Multiply,
-        Divide,
-        DivisionRem,
-
+        // do not move
         PlusEquals,
         MinusEquals,
         MultiplyEquals,
+        BitAndEquals,
+        BitOrEquals,
+        BitXorEquals,
+        Plus,
+        Minus,
+        Multiply,
+        BitXor,
+        BitAnd,
+        BitOr,
+
         DivideEquals,
+        Divide,
+        //
         DivisionRemEquals,
+        DivisionRem,
 
         PlusPlusRight,
         PlusPlusLeft,
         MinusMinusRight,
         MinusMinusLeft,
 
+        // do not move
         LessThan,
         LessThanOrEqual,
         GreaterThan,
         GreaterThanOrEqual,
-        EqualsEquals,
         NotEquals,
+        EqualsEquals,
+        //
 
         BitNot,
-        BitXor,
-        BitAnd,
-        BitOr,
-
-        BitAndEquals,
-        BitOrEquals,
-        BitXorEquals,
 
         RightShift,
         LeftShift,

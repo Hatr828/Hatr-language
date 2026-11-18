@@ -3,6 +3,7 @@ using Best_language.src.front;
 using Best_language.src.middle;
 using Microsoft.Win32;
 using System.Numerics;
+using System.Reflection.Emit;
 using System.Runtime.Serialization;
 
 namespace Best_language.src.back.Generators
@@ -14,6 +15,7 @@ namespace Best_language.src.back.Generators
         private readonly Dictionary<IrValue, (int, X64Size)> _locals = new();
 
         private readonly Dictionary<IrValue, (ulong, TypeSymbol)> _constants = new();
+        private readonly Dictionary<IrValue, (double, TypeSymbol)> _constantsFP = new();
 
         private int offset;
 
@@ -37,44 +39,80 @@ namespace Best_language.src.back.Generators
                 {
                     case IrBinary binary:
                         {
-                            OperationGen(binary);
+                            bool isFloat = binary.Right.Type is FloatTypeSymbol;
+                            bool resultFloat = binary.Result.Type is FloatTypeSymbol;
 
-                            (int slot, X64Size size) = GetOrCreateSlot(binary.Left);
-                            _constants.Remove(binary.Left);
+                            if (isFloat) OperationFloatGen(binary);
+                            else OperationGen(binary);
 
-                            Emit(new(X64Opcode.mov,
-                                X64Operand.Mem(X64Register.rbp, slot, size),
-                                X64Operand.Reg(GetRegister(size))));
+                            (int slot, X64Size size) = GetOrCreateSlot(binary.Result);
+
+                            if(resultFloat)
+                                Emit(new(size == X64Size.dword ? X64Opcode.movss : X64Opcode.movsd,
+                                    X64Operand.Mem(X64Register.rbp, -slot, size),
+                                    X64Operand.Reg(X64Register.xmm0)));
+                            else
+                                Emit(new(X64Opcode.mov,
+                                    X64Operand.Mem(X64Register.rbp, -slot, size),
+                                    X64Operand.Reg(GetRegisterSame(binary.Result))));
+
                             break;
                         }
                     case IrUnary unary:
                         {
-                            if (unary.Op is Operations.Plus) break;
-                            OperationUnaryGen(unary);
+                            bool rightFloat = unary.Right.Type is FloatTypeSymbol;
+                            bool resultFloat = unary.Result.Type is FloatTypeSymbol;
 
-                            (int slot, X64Size size) = GetOrCreateSlot(unary.Right);
+                            if (unary.Op is Operations.Plus)
+                            {
+                                LoadValue(unary.Right, rightFloat ? X64Register.xmm0 : GetRegisterSame(unary.Right));
+                            }
+                            else if (rightFloat) OperationUnaryFloatGen(unary);
+                            else OperationUnaryGen(unary);
+
+                            (int slot, X64Size size) = GetOrCreateSlot(unary.Result);
+
+                            if (resultFloat)
+                            {
+                                Emit(new(size == X64Size.dword ? X64Opcode.movss : X64Opcode.movsd,
+                                    X64Operand.Mem(X64Register.rbp, -slot, size),
+                                    X64Operand.Reg(X64Register.xmm0)));
+                            }
+                            else
+                                Emit(new(X64Opcode.mov,
+                                    X64Operand.Mem(X64Register.rbp, -slot, size),
+                                    X64Operand.Reg(GetRegisterSame(size))));
+
                             _constants.Remove(unary.Right);
+                            _constantsFP.Remove(unary.Right);
 
-                            Emit(new(X64Opcode.mov,
-                                X64Operand.Mem(X64Register.rbp, slot, size),
-                                X64Operand.Reg(GetRegister(size))));
                             break;
                         }
                     case IrVariable variable:
                         {
-                            LoadValue(variable.Right, GetRegister(variable.Right.Type));
+                            if (variable.Right.Type is FloatTypeSymbol)
+                                LoadValue(variable.Right, X64Register.xmm0);
+                            else
+                                LoadValue(variable.Right, GetRegister(variable.Right.Type));
 
                             (int slot, X64Size size) = GetOrCreateSlot(variable.Left);
                             _constants.Remove(variable.Left);
 
-                            Emit(new(X64Opcode.mov,
-                                X64Operand.Mem(X64Register.rbp, slot, size),
-                                X64Operand.Reg(GetRegister(size))));
+                            bool isFloat = variable.Right.Type is FloatTypeSymbol;
+
+                            Emit(new(isFloat ? X64Opcode.movsd : X64Opcode.mov,
+                                X64Operand.Mem(X64Register.rbp, -slot, size),
+                                X64Operand.Reg(isFloat ? X64Register.xmm0 : GetRegister(size))));
                             break;
                         }
                     case IrConstant constant:
                         {
                             _constants.Add(constant.Left, (constant.Right, constant.TypeRight));
+                            break;
+                        }
+                    case IrFloatConstant constant:
+                        {
+                            _constantsFP.Add(constant.Left, (constant.Right, constant.TypeRight));
                             break;
                         }
                     case IrLabel label:
@@ -89,86 +127,25 @@ namespace Best_language.src.back.Generators
                         }
                     case IrJumpIfTrue jump:
                         {
-                            LoadValue(jump.Condition, X64Register.rax);
-                            Emit(new(X64Opcode.test,
-                                X64Operand.Reg(X64Register.rax),
-                                X64Operand.Reg(X64Register.rax)));
+                            X64Register register = GetRegisterSame((jump.Condition)); 
+
+                            LoadValue(jump.Condition, register);
+                            Emit(new(X64Opcode.test, X64Operand.Reg(register), X64Operand.Reg(register)));
                             Emit(new(X64Opcode.jnz, X64Operand.Label($"{jump.Target}")));
                             break;
                         }
                     case IrJumpIfNotTrue jump:
                         {
-                            LoadValue(jump.Condition, X64Register.rax);
-                            Emit(new(X64Opcode.test,
-                                X64Operand.Reg(X64Register.rax),
-                                X64Operand.Reg(X64Register.rax)));
+                            X64Register register = GetRegisterSame((jump.Condition));
+
+                            LoadValue(jump.Condition, register);
+                            Emit(new(X64Opcode.test, X64Operand.Reg(register), X64Operand.Reg(register)));
                             Emit(new(X64Opcode.jz, X64Operand.Label($"{jump.Target}")));
                             break;
                         }
                     case IrConversion conversion:
                         {
-                            if (conversion.Left.Type is FloatTypeSymbol || conversion.Right.Type is FloatTypeSymbol) throw new ArgumentException("FP conversions are unsupported");
-
-                            int rightSize = GetSlotSize(conversion.Right);
-                            int leftSize = GetSlotSize(conversion.Left);
-
-                            (int rightOffset, X64Size size1) = GetOrCreateSlot(conversion.Right);
-                            (int leftOffset, X64Size size2) = GetOrCreateSlot(conversion.Left);
-
-                            bool rightSigned = conversion.Right.Type is IntegerTypeSymbol integer && integer.IsSigned;
-
-                            if (conversion.Left.Type is BoolTypeSymbol)
-                            {
-                                X64Register register = GetRegisterSame(rightSize);
-
-                                Emit(new(X64Opcode.mov,
-                                    X64Operand.Reg(register),
-                                    X64Operand.Mem(X64Register.rbp, rightOffset, size1)));
-
-                                Emit(new(X64Opcode.test,
-                                    X64Operand.Reg(register),
-                                    X64Operand.Reg(register)));
-
-                                Emit(new(X64Opcode.setne, X64Operand.Reg(X64Register.al)));
-
-                                Emit(new(X64Opcode.mov,
-                                    X64Operand.Mem(X64Register.rbp, leftOffset, X64Size.@byte),
-                                    X64Operand.Reg(X64Register.al)));
-
-                                break;
-                            }
-
-                            X64Register leftRegister = GetRegisterSame(leftSize);
-                            
-                            if(leftSize <= rightSize)
-                            {
-                                Emit(new(X64Opcode.mov,
-                                    X64Operand.Reg(leftRegister),
-                                    X64Operand.Mem(X64Register.rbp, rightOffset, size2)));
-                            }
-                            else if(rightSigned)
-                            {
-                                Emit(new(rightSize == 4 ? X64Opcode.movsxd : X64Opcode.movsx,
-                                   X64Operand.Reg(leftRegister),
-                                   X64Operand.Mem(X64Register.rbp, rightOffset, size1)));
-                            }
-                            else if(rightSize == 4)
-                            {
-                                Emit(new(X64Opcode.mov,
-                                   X64Operand.Reg(X64Register.eax),
-                                   X64Operand.Mem(X64Register.rbp, rightOffset, size1)));
-                            }
-                            else
-                            {
-                                Emit(new(X64Opcode.movzx,
-                                  X64Operand.Reg(leftRegister),
-                                  X64Operand.Mem(X64Register.rbp, rightOffset, size1)));
-                            }
-
-                            Emit(new(X64Opcode.mov,
-                                  X64Operand.Mem(X64Register.rbp, leftOffset, size2),
-                                  X64Operand.Reg(leftRegister)));
-
+                            ConversionGen(conversion);
                             break;
                         }
                     default:
@@ -183,6 +160,286 @@ namespace Best_language.src.back.Generators
             return _instructions;
         }
 
+        private void ULongToFloatConversion(IrConversion conversion, int rightSize, int leftSize)
+        {
+            string suffix = Guid.NewGuid().ToString("N");
+            string smallLabel = $"u64_fp_u64_{suffix}";
+            string endLabel = $"u64_to_fp_end_{suffix}";
+
+            var convertOpcode = leftSize == 4 ? X64Opcode.cvtsi2ss : X64Opcode.cvtsi2sd;
+
+            LoadValue(conversion.Right, X64Register.rax);
+
+            Emit(new(X64Opcode.mov, X64Operand.Reg(X64Register.rcx), X64Operand.Reg(X64Register.rax)));
+
+            Emit(new(X64Opcode.shr, X64Operand.Reg(X64Register.rcx), X64Operand.Imm(X64Size.@byte, 63)));
+
+            Emit(new(X64Opcode.test, X64Operand.Reg(X64Register.rcx), X64Operand.Reg(X64Register.rcx)));
+
+            Emit(new(X64Opcode.jz, X64Operand.Label(smallLabel)));
+
+            Emit(new(X64Opcode.mov, X64Operand.Reg(X64Register.rcx), X64Operand.Reg(X64Register.rax)));
+
+            Emit(new(X64Opcode.and, X64Operand.Reg(X64Register.rcx), X64Operand.Imm(X64Size.@byte, 1)));
+
+            Emit(new(X64Opcode.shr, X64Operand.Reg(X64Register.rax), X64Operand.Imm(X64Size.@byte, 1)));
+
+            Emit(new(X64Opcode.or, X64Operand.Reg(X64Register.rax), X64Operand.Reg(X64Register.rcx)));
+
+            Emit(new(convertOpcode, X64Operand.Reg(X64Register.xmm0), X64Operand.Reg(X64Register.rax)));
+
+            Emit(new(leftSize == 4 ? X64Opcode.addss : X64Opcode.addsd, 
+                X64Operand.Reg(X64Register.xmm0), X64Operand.Reg(X64Register.xmm0)));
+
+            Emit(new(X64Opcode.jmp, X64Operand.Label(endLabel)));
+
+            Emit(new(X64Opcode.label, X64Operand.Label(smallLabel)));
+
+            Emit(new(convertOpcode, X64Operand.Reg(X64Register.xmm0), X64Operand.Reg(X64Register.rax)));
+
+            Emit(new(X64Opcode.label, X64Operand.Label(endLabel)));
+
+            var destination = GetOrCreateSlot(conversion.Left);
+
+            Emit(new(leftSize == 4 ? X64Opcode.movss : X64Opcode.movsd, 
+                X64Operand.Mem(X64Register.rbp, -destination.Item1, destination.Item2), X64Operand.Reg(X64Register.xmm0)));
+
+            _constants.Remove(conversion.Left);
+            _constantsFP.Remove(conversion.Left);
+        }
+
+        private void FloatToUlongConversion(IrConversion conversion, int rightSize, int leftSize)
+        {
+            string suffix = Guid.NewGuid().ToString("N");
+            string smallLabel = $"fp_to_u64_{suffix}";
+            string endLabel = $"fp_to_u64_end_{suffix}";
+
+            var convertOpcode = rightSize == 4 ? X64Opcode.cvttss2si : X64Opcode.cvttsd2si;
+
+            LoadValue(conversion.Right, X64Register.xmm0);
+
+            if (rightSize == 4)
+            {
+                Emit(new(X64Opcode.mov, X64Operand.Reg(X64Register.eax), X64Operand.Imm(X64Size.dword, 0x5F000000)));
+
+                Emit(new(X64Opcode.movd, X64Operand.Reg(X64Register.xmm1), X64Operand.Reg(X64Register.eax)));
+            }
+            else
+            {
+                Emit(new(X64Opcode.mov, X64Operand.Reg(X64Register.rax), X64Operand.Imm(X64Size.qword, 0x43E0000000000000L)));
+
+                Emit(new(X64Opcode.movq, X64Operand.Reg(X64Register.xmm1), X64Operand.Reg(X64Register.rax)));
+            }
+
+            Emit(new(rightSize == 4 ? X64Opcode.ucomiss : X64Opcode.ucomisd,
+                X64Operand.Reg(X64Register.xmm0),
+                X64Operand.Reg(X64Register.xmm1)));
+
+            Emit(new(X64Opcode.setae, X64Operand.Reg(X64Register.al)));
+
+            Emit(new(X64Opcode.test, X64Operand.Reg(X64Register.al), X64Operand.Reg(X64Register.al)));
+
+            Emit(new(X64Opcode.jz, X64Operand.Label(smallLabel)));
+
+            Emit(new(rightSize == 4 ? X64Opcode.subss : X64Opcode.subsd,
+                X64Operand.Reg(X64Register.xmm0),
+                X64Operand.Reg(X64Register.xmm1)));
+
+            Emit(new(convertOpcode, X64Operand.Reg(X64Register.rax), X64Operand.Reg(X64Register.xmm0)));
+
+            Emit(new(X64Opcode.mov, X64Operand.Reg(X64Register.rcx), X64Operand.Imm(X64Size.qword, long.MinValue)));
+
+            Emit(new(X64Opcode.or, X64Operand.Reg(X64Register.rax), X64Operand.Reg(X64Register.rcx)));
+
+            Emit(new(X64Opcode.jmp, X64Operand.Label(endLabel)));
+
+            Emit(new(X64Opcode.label, X64Operand.Label(smallLabel)));
+
+            Emit(new(convertOpcode, X64Operand.Reg(X64Register.rax), X64Operand.Reg(X64Register.xmm0)));
+
+            Emit(new(X64Opcode.label, X64Operand.Label(endLabel)));
+
+            var destination = GetOrCreateSlot(conversion.Left);
+
+            Emit(new(X64Opcode.mov, X64Operand.Mem(X64Register.rbp, -destination.Item1, destination.Item2), X64Operand.Reg(X64Register.rax)));
+
+            _constants.Remove(conversion.Left);
+            _constantsFP.Remove(conversion.Left);
+        }
+
+        private void ConversionGen(IrConversion conversion)
+        {
+            int rightSize = GetSlotSize(conversion.Right);
+            int leftSize = GetSlotSize(conversion.Left);
+
+            bool rightFloat = conversion.Right.Type is FloatTypeSymbol;
+            bool leftFloat = conversion.Left.Type is FloatTypeSymbol;
+
+            bool rightSigned = conversion.Right.Type is IntegerTypeSymbol integer && integer.IsSigned;
+            bool leftSigned = conversion.Left.Type is IntegerTypeSymbol integer2 && integer2.IsSigned;
+
+            if (leftFloat && !rightFloat && rightSize == 8 && !rightSigned)
+            {
+                ULongToFloatConversion(conversion, rightSize, leftSize);
+                return;
+            }
+
+            if (rightFloat && conversion.Left.Type is IntegerTypeSymbol && leftSize == 8 && !leftSigned)
+            {
+                FloatToUlongConversion(conversion, rightSize, leftSize);
+                return;
+            }
+
+            X64Register rightRegister = rightFloat ? X64Register.xmm0 : GetRegisterSame(rightSize);
+
+            LoadValue(conversion.Right, rightRegister);
+
+            (int leftOffset, X64Size leftSizeX64) = GetOrCreateSlot(conversion.Left);
+
+            if (conversion.Left.Type is BoolTypeSymbol)
+            {
+                if(rightFloat)
+                {
+                    Emit(new(X64Opcode.xorps, X64Operand.Reg(X64Register.xmm1), X64Operand.Reg(X64Register.xmm1)));
+
+                    Emit(new(rightSize == 4 ? X64Opcode.ucomiss : X64Opcode.ucomisd, 
+                        X64Operand.Reg(X64Register.xmm0), X64Operand.Reg(X64Register.xmm1)));
+
+                    Emit(new(X64Opcode.setne, X64Operand.Reg(X64Register.al)));
+
+                    Emit(new(X64Opcode.setp, X64Operand.Reg(X64Register.cl)));
+
+                    Emit(new(X64Opcode.or, X64Operand.Reg(X64Register.al), X64Operand.Reg(X64Register.cl)));
+                }
+                else
+                {
+                    Emit(new(X64Opcode.test,
+                        X64Operand.Reg(rightRegister),
+                        X64Operand.Reg(rightRegister)));
+
+                    Emit(new(X64Opcode.setne, X64Operand.Reg(X64Register.al)));
+                }
+                Emit(new(X64Opcode.mov,
+                    X64Operand.Mem(X64Register.rbp, -leftOffset, X64Size.@byte),
+                    X64Operand.Reg(X64Register.al)));
+            }
+            else if (leftFloat)
+            {
+                if(rightFloat)
+                {
+                    if (rightSize != leftSize)
+                        Emit(new(leftSize == 8 ? X64Opcode.cvtss2sd : X64Opcode.cvtsd2ss, 
+                            X64Operand.Reg(X64Register.xmm0), X64Operand.Reg(X64Register.xmm0)));
+                }
+                else
+                {
+                    X64Register sourceRegister;
+
+                    if (rightSize < 4)
+                    {
+                        Emit(new(rightSigned ? X64Opcode.movsx : X64Opcode.movzx, 
+                            X64Operand.Reg(X64Register.eax), X64Operand.Reg(rightRegister)));
+
+                        sourceRegister = X64Register.eax;
+                    }
+                    else if (rightSize == 4 && rightSigned) sourceRegister = X64Register.eax;
+                    else sourceRegister = X64Register.rax;
+
+                    Emit(new(leftSize == 4 ? X64Opcode.cvtsi2ss : X64Opcode.cvtsi2sd, 
+                        X64Operand.Reg(X64Register.xmm0), X64Operand.Reg(sourceRegister)));
+                }
+
+                Emit(new(leftSize == 4 ? X64Opcode.movss : X64Opcode.movsd,
+                       X64Operand.Mem(X64Register.rbp, -leftOffset, leftSizeX64), X64Operand.Reg(X64Register.xmm0)));
+            }
+            else if (rightFloat)
+            {
+                X64Register resultRegister = leftSize == 8 || (leftSize == 4 && !leftSigned) ? X64Register.rax : X64Register.eax;
+
+                Emit(new(rightSize == 4 ? X64Opcode.cvttss2si : X64Opcode.cvttsd2si,
+                        X64Operand.Reg(resultRegister), X64Operand.Reg(X64Register.xmm0)));
+
+                Emit(new(X64Opcode.mov,
+                       X64Operand.Mem(X64Register.rbp, -leftOffset, leftSizeX64), X64Operand.Reg(GetRegisterSame(leftSize))));
+            }
+            else
+            {
+                X64Register leftRegister = GetRegisterSame(leftSize);
+
+                if (leftSize > rightSize)
+                {
+                    if (rightSigned)
+                        Emit(new(rightSize == 4 ? X64Opcode.movsxd : X64Opcode.movsx,
+                        X64Operand.Reg(leftRegister), X64Operand.Reg(rightRegister)));
+                    else if (rightSize != 4)
+                        Emit(new(X64Opcode.movzx,
+                        X64Operand.Reg(leftRegister), X64Operand.Reg(rightRegister)));
+                }
+
+                Emit(new(X64Opcode.mov,
+                       X64Operand.Mem(X64Register.rbp, -leftOffset, leftSizeX64), X64Operand.Reg(leftRegister)));
+            }
+
+            _constants.Remove(conversion.Left);
+            _constantsFP.Remove(conversion.Left);
+        }
+
+        private void OperationFloatGen(IrBinary binary)
+        {
+            LoadValue(binary.Left, X64Register.xmm0);
+            LoadValue(binary.Right, X64Register.xmm1);
+
+            int size = GetSlotSize(binary.Left);
+
+            bool isFloat = size == 4;
+
+            switch (binary.Op)
+            {
+                case >= Operations.PlusEquals and <= Operations.Divide:
+                    Emit(new(GetOpcodeFromOperationFloat(binary.Op, isFloat), X64Operand.Reg(X64Register.xmm0), X64Operand.Reg(X64Register.xmm1)));
+                    break;
+
+                case >= Operations.LessThan and <= Operations.EqualsEquals:
+                    CompareFloat(GetOpcodeFromOperationFloat(binary.Op, isFloat), isFloat);
+                    break;
+
+                default:
+                    throw new NotImplementedException($"Unsupported unary operation: {binary.Op}");
+            }
+        }
+        private X64Opcode GetOpcodeFromOperationInt(Operations op) => op switch
+        {
+            Operations.PlusEquals or Operations.Plus => X64Opcode.add,
+            Operations.MinusEquals or Operations.Minus => X64Opcode.sub,
+            Operations.MultiplyEquals or Operations.Multiply => X64Opcode.imul,
+            Operations.BitAndEquals or Operations.BitAnd => X64Opcode.and,
+            Operations.BitOrEquals or Operations.BitOr => X64Opcode.or,
+            Operations.BitXorEquals or Operations.BitXor => X64Opcode.xor,
+
+            Operations.GreaterThan => X64Opcode.setg,
+            Operations.GreaterThanOrEqual => X64Opcode.setge,
+            Operations.LessThan => X64Opcode.setl,
+            Operations.LessThanOrEqual => X64Opcode.setle,
+            Operations.NotEquals => X64Opcode.setne,
+
+            _ => throw new NotImplementedException()
+        };
+        private X64Opcode GetOpcodeFromOperationFloat(Operations op, bool isFloat) => op switch
+        {
+            Operations.PlusEquals or Operations.Plus => isFloat ? X64Opcode.addss : X64Opcode.addsd,
+            Operations.MinusEquals or Operations.Minus => isFloat ? X64Opcode.subss : X64Opcode.subsd,
+            Operations.MultiplyEquals or Operations.Multiply => isFloat ? X64Opcode.mulss : X64Opcode.mulsd,
+            Operations.DivideEquals or Operations.Divide => isFloat ? X64Opcode.divss : X64Opcode.divsd,
+
+            Operations.GreaterThan => X64Opcode.seta,
+            Operations.GreaterThanOrEqual => X64Opcode.setae,
+            Operations.LessThan => X64Opcode.setb,
+            Operations.LessThanOrEqual => X64Opcode.setbe,
+            Operations.NotEquals => X64Opcode.setne,
+            Operations.EqualsEquals => X64Opcode.sete,
+
+            _ => throw new NotImplementedException()
+        };
         private void OperationGen(IrBinary binary)
         {
             LoadValue(binary.Left, X64Register.rax);
@@ -190,25 +447,12 @@ namespace Best_language.src.back.Generators
 
             switch (binary.Op)
             {
-                case Operations.PlusEquals:
-                case Operations.Plus:
-                    Emit(new(X64Opcode.add,
-                               X64Operand.Reg(X64Register.rax),
-                               X64Operand.Reg(X64Register.rcx)));
+                case >= Operations.PlusEquals and <= Operations.BitOr:
+                    Emit(new(GetOpcodeFromOperationInt(binary.Op), X64Operand.Reg(X64Register.rax), X64Operand.Reg(X64Register.rcx)));
                     break;
 
-                case Operations.MinusEquals:
-                case Operations.Minus:
-                    Emit(new(X64Opcode.sub,
-                               X64Operand.Reg(X64Register.rax),
-                               X64Operand.Reg(X64Register.rcx)));
-                    break;
-
-                case Operations.MultiplyEquals:
-                case Operations.Multiply:
-                    Emit(new(X64Opcode.imul,
-                               X64Operand.Reg(X64Register.rax),
-                               X64Operand.Reg(X64Register.rcx)));
+                case >= Operations.LessThan and <= Operations.NotEquals:
+                    Compare(GetOpcodeFromOperationInt(binary.Op));
                     break;
 
                 case Operations.DivideEquals:
@@ -221,33 +465,7 @@ namespace Best_language.src.back.Generators
                 case Operations.DivisionRem:
                     Emit(new(X64Opcode.cqo));
                     Emit(new(X64Opcode.idiv, X64Operand.Reg(X64Register.rcx)));
-                    Emit(new(X64Opcode.mov,
-                               X64Operand.Reg(X64Register.rax),
-                               X64Operand.Reg(X64Register.rdx)));
-                    break;
-
-                case Operations.GreaterThan:
-                    Compare(X64Opcode.setg);
-                    break;
-
-                case Operations.GreaterThanOrEqual:
-                    Compare(X64Opcode.setge);
-                    break;
-
-                case Operations.LessThan:
-                    Compare(X64Opcode.setl);
-                    break;
-
-                case Operations.LessThanOrEqual:
-                    Compare(X64Opcode.setle);
-                    break;
-
-                case Operations.EqualsEquals:
-                    Compare(X64Opcode.sete);
-                    break;
-
-                case Operations.NotEquals:
-                    Compare(X64Opcode.setne);
+                    Emit(new(X64Opcode.mov, X64Operand.Reg(X64Register.rax), X64Operand.Reg(X64Register.rdx)));
                     break;
 
                 case Operations.And:
@@ -282,28 +500,6 @@ namespace Best_language.src.back.Generators
                         X64Operand.Reg(X64Register.rax),
                         X64Operand.Reg(X64Register.al)));
                     break;
-
-                case Operations.BitAndEquals:
-                case Operations.BitAnd:
-                    Emit(new(X64Opcode.and,
-                             X64Operand.Reg(X64Register.rax),
-                             X64Operand.Reg(X64Register.rcx)));
-                    break;
-
-                case Operations.BitOrEquals:
-                case Operations.BitOr:
-                    Emit(new(X64Opcode.or,
-                             X64Operand.Reg(X64Register.rax),
-                             X64Operand.Reg(X64Register.rcx)));
-                    break;
-
-                case Operations.BitXorEquals:
-                case Operations.BitXor:
-                    Emit(new(X64Opcode.xor,
-                             X64Operand.Reg(X64Register.rax),
-                             X64Operand.Reg(X64Register.rcx)));
-                    break;
-
                 case Operations.LeftShiftEquals:
                 case Operations.LeftShift:
                     Emit(new(X64Opcode.shl,
@@ -319,14 +515,14 @@ namespace Best_language.src.back.Generators
                     break;
 
                 default:
-                    throw new NotImplementedException($"Unsupported binary operation: {binary.Op}");
+                    throw new NotImplementedException($"Unsupported unary operation: {binary.Op}");
             }
         }
-        private void OperationUnaryGen(IrUnary binary)
+        private void OperationUnaryGen(IrUnary unary)
         {
-            LoadValue(binary.Right, X64Register.rax);
+            LoadValue(unary.Right, X64Register.rax);
 
-            switch (binary.Op)
+            switch (unary.Op)
             {
                 case Operations.Minus:
                     Emit(new(X64Opcode.neg, X64Operand.Reg(X64Register.rax)));
@@ -358,38 +554,157 @@ namespace Best_language.src.back.Generators
                          X64Operand.Imm(X64Size.word, 1)));
                     break;
                 default:
-                    throw new NotImplementedException($"Unsupported binary operation: {binary.Op}");
+                    throw new NotImplementedException($"Unsupported unary operation: {unary.Op}");
+            }
+        }
+        private void OperationUnaryFloatGen(IrUnary unary)
+        {
+            LoadValue(unary.Right, X64Register.xmm0);
+
+            int size = GetSlotSize(unary.Right);
+            bool isFloat = size == 4;
+            bool increment = false;
+
+            switch (unary.Op)
+            {
+                case Operations.Minus:
+                    long mask = isFloat ? 0x80000000L : long.MinValue;
+
+                    Emit(new(X64Opcode.mov,
+                        X64Operand.Reg(X64Register.rax),
+                        X64Operand.Imm(X64Size.qword, mask)));
+
+                    Emit(new(isFloat ? X64Opcode.movd : X64Opcode.movq,
+                        X64Operand.Reg(X64Register.xmm1),
+                        X64Operand.Reg(isFloat ? X64Register.eax : X64Register.rax)));
+
+                    Emit(new(isFloat ? X64Opcode.xorps : X64Opcode.xorpd,
+                        X64Operand.Reg(X64Register.xmm0),
+                        X64Operand.Reg(X64Register.xmm1)));
+
+                    break;
+                case Operations.Not:
+                    Emit(new(X64Opcode.xorps,
+                       X64Operand.Reg(X64Register.xmm1),
+                       X64Operand.Reg(X64Register.xmm1)));
+
+                    Emit(new(isFloat ? X64Opcode.ucomiss : X64Opcode.ucomisd,
+                       X64Operand.Reg(X64Register.xmm0),
+                       X64Operand.Reg(X64Register.xmm1)));
+
+                    Emit(new(X64Opcode.sete, X64Operand.Reg(X64Register.al)));
+
+                    Emit(new(X64Opcode.setnp, X64Operand.Reg(X64Register.cl)));
+
+                    Emit(new(X64Opcode.and, X64Operand.Reg(X64Register.al), X64Operand.Reg(X64Register.cl)));
+
+                    Emit(new(X64Opcode.movzx, X64Operand.Reg(X64Register.eax), X64Operand.Reg(X64Register.al)));
+
+                    break;
+                case Operations.PlusPlusRight:
+                case Operations.PlusPlusLeft:
+                    increment = true;
+                    goto case Operations.MinusMinusRight;
+                case Operations.MinusMinusRight:
+                case Operations.MinusMinusLeft:
+                    long bits = isFloat ? BitConverter.SingleToInt32Bits(1.0f) : BitConverter.DoubleToInt64Bits(1.0);
+
+                    Emit(new(X64Opcode.mov,
+                        X64Operand.Reg(X64Register.rax),
+                        X64Operand.Imm(X64Size.qword, bits)));
+
+                    Emit(new(isFloat ? X64Opcode.movd : X64Opcode.movq,
+                        X64Operand.Reg(X64Register.xmm1),
+                        X64Operand.Reg(isFloat ? X64Register.eax : X64Register.rax)));
+
+                    X64Opcode op = increment ? (isFloat ? X64Opcode.addss : X64Opcode.addsd) : (isFloat ? X64Opcode.subss : X64Opcode.subsd);
+
+                    Emit(new(op, X64Operand.Reg(X64Register.xmm0), X64Operand.Reg(X64Register.xmm1)));
+
+                    break;
+                default:
+                    throw new NotImplementedException($"Unsupported unary operation: {unary.Op}");
             }
         }
 
         private void Compare(X64Opcode op)
         {
             Emit(new(X64Opcode.cmp,
-                        X64Operand.Reg(X64Register.rax),
-                        X64Operand.Reg(X64Register.rcx)));
+                X64Operand.Reg(X64Register.rax),
+                X64Operand.Reg(X64Register.rcx)));
 
             Emit(new(op, X64Operand.Reg(X64Register.al)));
 
             Emit(new(X64Opcode.movzx,
-                       X64Operand.Reg(X64Register.rax),
-                       X64Operand.Reg(X64Register.al)));
+                X64Operand.Reg(X64Register.rax),
+                X64Operand.Reg(X64Register.al)));
+        }
+        private void CompareFloat(X64Opcode op, bool isFloat)
+        {
+            Emit(new(isFloat ? X64Opcode.ucomiss : X64Opcode.ucomisd,
+                X64Operand.Reg(X64Register.xmm0),
+                X64Operand.Reg(X64Register.xmm1)));
+
+            Emit(new(op, X64Operand.Reg(X64Register.al)));
+
+            if(op is X64Opcode.setne or X64Opcode.setb or X64Opcode.setbe)
+            {
+                Emit(new(X64Opcode.setnp, X64Operand.Reg(X64Register.cl)));
+
+                Emit(new(X64Opcode.and,
+                    X64Operand.Reg(X64Register.al),
+                    X64Operand.Reg(X64Register.cl)));
+            }
+            else if (op is X64Opcode.setne)
+            {
+                Emit(new(X64Opcode.setp, X64Operand.Reg(X64Register.cl)));
+
+                Emit(new(X64Opcode.or,
+                    X64Operand.Reg(X64Register.al),
+                    X64Operand.Reg(X64Register.cl)));
+            }
+
+            Emit(new(X64Opcode.movzx,
+                X64Operand.Reg(X64Register.eax),
+                X64Operand.Reg(X64Register.al)));
         }
 
         private void LoadValue(IrValue value, X64Register register)
         {
             if (_locals.TryGetValue(value, out (int slot, X64Size size) val))
-                Emit(new(X64Opcode.mov,
+                if (register >= X64Register.xmm0 && register <= X64Register.xmm15)
+                    Emit(new(X64Opcode.movsd,
                        X64Operand.Reg(register),
-                       X64Operand.Mem(X64Register.rbp, val.slot, val.size)));
+                       X64Operand.Mem(X64Register.rbp, -val.slot, val.size)));
+                else
+                    Emit(new(X64Opcode.mov,
+                        X64Operand.Reg(register),
+                        X64Operand.Mem(X64Register.rbp, -val.slot, val.size)));
             else if (_constants.TryGetValue(value, out (ulong val, TypeSymbol type) constant))
             {
-                if(constant.type is IntegerTypeSymbol type)
+                if (constant.type is IntegerTypeSymbol type)
                 {
-                    if(type.IsSigned is false)
-                        Emit(new(X64Opcode.mov,
-                            X64Operand.Reg(register),
-                            X64Operand.Imm(GetX64Size(constant.type), (long)constant.val)));
+                    Emit(new(X64Opcode.mov,
+                        X64Operand.Reg(register),
+                        X64Operand.Imm(GetX64Size(constant.type), (long)constant.val)));
                 }
+                else throw new ArgumentException();
+            }
+            else if (_constantsFP.TryGetValue(value, out (double val, TypeSymbol type) constantFP))
+            {
+                if (constantFP.type is FloatTypeSymbol type)
+                {
+                    long bits = BitConverter.DoubleToInt64Bits(constantFP.val);
+
+                    Emit(new(X64Opcode.mov,
+                        X64Operand.Reg(X64Register.rax),
+                        X64Operand.Imm(X64Size.qword, bits)));
+
+                    Emit(new(X64Opcode.movq,
+                        X64Operand.Reg(register),
+                        X64Operand.Reg(X64Register.rax)));
+                }
+                else throw new ArgumentException();
             }
             else
                 throw new InvalidOperationException($"Unknown IR value: {value}");
@@ -432,6 +747,22 @@ namespace Best_language.src.back.Generators
             8 => X64Register.rax,
             _ => throw new ArgumentException()
         };
+        private X64Register GetRegisterSame(IrValue value) => value.Type switch
+        {
+            BoolTypeSymbol => X64Register.al,
+            IntegerTypeSymbol type => GetRegisterSame((int)type.Size),
+            FloatTypeSymbol type => GetRegisterSame((int)type.Size),
+            PointerTypeSymbol => X64Register.rax,
+            _ => throw new ArgumentException()
+        };
+        private X64Register GetRegisterSame(X64Size size) => size switch
+        {
+            X64Size.@byte => X64Register.al,
+            X64Size.word => X64Register.ax,
+            X64Size.dword => X64Register.eax,
+            X64Size.qword => X64Register.rax,
+            _ => throw new ArgumentException()
+        };
         private X64Register GetRegister(X64Size size) => size switch
         {
             X64Size.@byte => X64Register.r8b,
@@ -455,7 +786,7 @@ namespace Best_language.src.back.Generators
             FloatTypeSymbol tmp => GetRegister((int)tmp.Size),
             PointerTypeSymbol => X64Register.rax,
             _ => throw new ArgumentException()
-        };                                           
+        };
         private X64Register GetRegister(int size) => size switch
         {
             1 => X64Register.r8b,
