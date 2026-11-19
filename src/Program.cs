@@ -15,10 +15,16 @@ namespace Best_language.src
         {
             string code = @"
                 double a = !0.0;
+                a = 10.0;
                 while(a < 10.0) 
                 {
-                    a++;
+                    -++a;
+                    int a;
+                    a = 1;
+                    a = 2;
                 }
+                if(true) {}
+                else if(0.0) {}
                 ";
             Lexer lexer = new(code);
             var tokens = lexer.GetTokens();

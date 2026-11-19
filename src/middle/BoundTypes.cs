@@ -14,10 +14,9 @@ namespace Best_language.src.middle
     {
         public TypeSymbol Type { get; } = type;
     }
-    public class BoundVariable(TypeSymbol type, string name)
+    public class BoundVariable(VariableSymbol variable)
     {
-        public TypeSymbol Type { get; } = type;
-        public string Name { get; } = name;
+        public VariableSymbol Variable { get; } = variable;
     }
     public class BoundExpressionStatement(BoundExpression expression) : BoundStatement
     {
@@ -73,12 +72,11 @@ namespace Best_language.src.middle
             }
         }
     }
-    public class BoundVariableDeclaration(TypeSymbol type, string name, BoundExpression? initializer) : BoundStatement
+    public class BoundVariableDeclaration(VariableSymbol variable, BoundExpression? initializer) : BoundStatement
     {
-        public TypeSymbol Type { get; } = type;
-        public string Name { get; } = name;
+        public VariableSymbol Variable { get; } = variable;
         public BoundExpression? Initializer { get; } = initializer;
-        public override string DName => $"{nameof(BoundVariableDeclaration)}: {Name} ({Type})";
+        public override string DName => $"{nameof(BoundVariableDeclaration)}: {Variable.Name} ({Variable.Type})";
         public override IEnumerable<BoundNode> Children
         {
             get
@@ -87,12 +85,11 @@ namespace Best_language.src.middle
             }
         }
     }
-    public class BoundAssignmentStatement(string name, BoundExpression right, TypeSymbol type) : BoundStatement
+    public class BoundAssignmentStatement(VariableSymbol variable, BoundExpression right) : BoundStatement
     {
-        public string Name { get; } = name;
+        public VariableSymbol Variable { get; } = variable;
         public BoundExpression Right { get; } = right;
-        public TypeSymbol Type { get; } = type;
-        public override string DName => $"{nameof(BoundAssignmentStatement)}: {Name}";
+        public override string DName => $"{nameof(BoundAssignmentStatement)}: {Variable.Name}";
         public override IEnumerable<BoundNode> Children
         {
             get
@@ -226,10 +223,10 @@ namespace Best_language.src.middle
             }
         }
     }
-    public class BoundVariableExpression(TypeSymbol type, string name) : BoundExpression(type)
+    public class BoundVariableExpression(VariableSymbol variable) : BoundExpression(variable.Type)
     {
-        public string Name { get; } = name;
-        public override string DName => $"{nameof(BoundVariableExpression)}: {Name}";
+        public VariableSymbol Variable { get; } = variable;
+        public override string DName => $"{nameof(BoundVariableExpression)}: {Variable.Name} ({Variable.Type})";
         public override IEnumerable<BoundNode> Children => [];
     }
     public class BoundBoolExpression(bool value, TypeSymbol type) : BoundExpression(type)
@@ -267,13 +264,27 @@ namespace Best_language.src.middle
         }
     }
 
+    public class VariableSymbol(string name, TypeSymbol type)
+    {
+        public string Name { get; } = name;
+        public TypeSymbol Type { get; } = type;
+    }
+
     public class BoundScopes
     {
-        private readonly List<Dictionary<string, BoundVariable>> _variables = new();
+        private readonly List<Dictionary<string, VariableSymbol>> _variables = new();
 
-        public bool TryAddVariable(BoundVariable variable)
+        public bool TryAddVariable(VariableSymbol variable)
         {
             return _variables[^1].TryAdd(variable.Name, variable);
+        }
+        public bool DoesExistInSameScope(string name)
+        {
+            if (_variables[^1].TryGetValue(name, out var variable))
+            {
+                return true;
+            }
+            return false;
         }
         public bool Lookup(string name, out TypeSymbol type)
         {
@@ -286,6 +297,18 @@ namespace Best_language.src.middle
                 }
             }
             type = new VoidTypeSymbol();
+            return false;
+        }
+        public bool TryGetVariable(string name, out VariableSymbol variable)
+        {
+            for (int i = 1; i <= _variables.Count; i++)
+            {
+                if (_variables[^i].TryGetValue(name, out variable!))
+                {
+                    return true;
+                }
+            }
+            variable = null!;
             return false;
         }
         public void AddScope()

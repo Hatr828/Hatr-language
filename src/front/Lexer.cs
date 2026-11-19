@@ -1,12 +1,12 @@
 namespace Best_language.src.front
 {
-    public class Lexer
+    public sealed class Lexer
     {
         private readonly string _code;
 
         private int _idx;
 
-        private Dictionary<string, TokenKind> _keywords = new()
+        private readonly Dictionary<string, TokenKind> _keywords = new()
         {
             ["INT"] = TokenKind.Int,
             ["void"] = TokenKind.Void,
@@ -51,7 +51,7 @@ namespace Best_language.src.front
             ["f"] = TokenKind.F,
         };
 
-        private Dictionary<char, TokenKind> _chars = new()
+        private readonly Dictionary<char, TokenKind> _chars = new()
         {
             ['*'] = TokenKind.Multiply,
             ['+'] = TokenKind.Plus,
@@ -80,7 +80,7 @@ namespace Best_language.src.front
             ['^'] = TokenKind.BitXor,
         };
 
-        private Dictionary<string, TokenKind> _doubleChars = new()
+        private readonly Dictionary<string, TokenKind> _doubleChars = new()
         {
             [">="] = TokenKind.GreaterThanOrEquals,
             ["=="] = TokenKind.EqualsEquals,
@@ -106,7 +106,7 @@ namespace Best_language.src.front
             ["&="] = TokenKind.BitAndEquals,
         };
 
-        private static Dictionary<(string, string), TokenKind> _specialKeywords = new();
+        private readonly Dictionary<(string, string), TokenKind> _specialKeywords = new();
 
         public Lexer(string code)
         {
@@ -181,12 +181,12 @@ namespace Best_language.src.front
                     _idx++;
                     continue;
                 }
-                if (_specialKeywords.Count > 0 && temp is '\n' or ' ' or '\t' or '\r')
+                if (_specialKeywords.Count > 0)
                 {
-                    _idx++;
                     var secondWord = GetSecondWordWithoutChangingIdx(out int idx);
                     if (_specialKeywords.TryGetValue((word.ToString(), secondWord.ToString()), out TokenKind token2))
                     {
+                        _idx = idx;
                         res.Add(new(token2));
                         continue;
                     }
@@ -227,12 +227,17 @@ namespace Best_language.src.front
             int startIdx = _idx;
             idx = _idx;
 
+            if (_code[_idx] is '\n' or ' ' or '\t' or '\r')
+            {
+                idx++; startIdx++;
+            }
+
             while (idx < _code.Length && char.IsLetterOrDigit(_code[idx]) || _code[idx] is '_')
             {
                 idx++;
             }
 
-            return _code.AsSpan(startIdx.._idx);
+            return _code.AsSpan(startIdx..idx);
         }
     }
 }

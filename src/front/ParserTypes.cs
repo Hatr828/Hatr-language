@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Best_language.src.front
 {
-    public abstract class AstNode
+    public closed class AstNode
     {
         public abstract string DName { get; }
         public abstract IEnumerable<AstNode> Children { get; }
@@ -109,21 +109,33 @@ namespace Best_language.src.front
             }
         }
     }
+    public class ExpressionStatement(Expression right) : Statement
+    {
+        public Expression Right { get; } = right;
+        public override string DName => $"{nameof(ExpressionStatement)}";
+        public override IEnumerable<AstNode> Children
+        {
+            get
+            {
+                if (Right is not null) yield return Right;
+            }
+        }
+    }
     public class GotoStatement(string to) : Statement
     {
         public string To { get; } = to;
         public override string DName => $"{nameof(GotoStatement)}: {To}";
         public override IEnumerable<AstNode> Children => [];
     }
-    public class ReturnStatement(Expression expression) : Statement
+    public class ReturnStatement(Expression? expression = null) : Statement
     {
-        public Expression Expression { get; } = expression;
+        public Expression? Expression { get; } = expression;
         public override string DName => $"{nameof(ReturnStatement)}";
         public override IEnumerable<AstNode> Children
         {
             get
             {
-                yield return Expression;
+                if (Expression is not null) yield return Expression;
             }
         }
     }

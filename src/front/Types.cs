@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -18,17 +19,29 @@ namespace Best_language.src.front
         public bool IsSigned { get; } = isSigned;
         public override string ToString() => $"{nameof(IntegerTypeSymbol)} ({Name}: {Size}, {IsSigned})";
     }
+
     public class FloatTypeSymbol(string name, TypeSize size) : TypeSymbol(name)
     {
         public TypeSize Size { get; } = size;
         public override string ToString() => $"{nameof(FloatTypeSymbol)} ({Name}: {Size})";
     }
-    public class BoolTypeSymbol() : TypeSymbol("bool");
-    public class VoidTypeSymbol() : TypeSymbol("void");
+
+    public class BoolTypeSymbol() : TypeSymbol("bool")
+    {
+        public override string ToString() => $"{nameof(BoolTypeSymbol)} ({Name})";
+    }
+
+    public class VoidTypeSymbol() : TypeSymbol("void")
+    {
+        public override string ToString() => $"{nameof(VoidTypeSymbol)} ({Name})";
+    }
+
     public class PointerTypeSymbol(TypeSymbol elementType) : TypeSymbol($"{elementType}*")
     {
         public TypeSymbol ElementType { get; } = elementType;
+        public override string ToString() => $"{nameof(PointerTypeSymbol)} ({Name}: {ElementType})";
     }
+
     public class EnumTypeSymbol(string name, IntegerTypeSymbol enumType) : TypeSymbol(name)
     {
         public TypeSymbol EnumType { get; } = enumType;
