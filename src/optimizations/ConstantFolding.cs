@@ -1,6 +1,5 @@
 using Best_language.src.front;
 using Best_language.src.middle;
-using System.Numerics;
 
 namespace Best_language.src.optimizations
 {
@@ -13,21 +12,21 @@ namespace Best_language.src.optimizations
                 return null!;
             }
 
-            private static long Combine(long left, Operations op, long right) => op switch
+            private static long Combine(long left, Operation op, long right) => op switch
             {
-                Operations.Plus => left + right,
-                Operations.Minus => left - right,
-                Operations.Multiply => left * right,
-                Operations.Divide => left / right,
+                Operation.Plus => left + right,
+                Operation.Minus => left - right,
+                Operation.Multiply => left * right,
+                Operation.Divide => left / right,
 
-                Operations.LessThan => left < right ? 1 : 0,
-                Operations.LessThanOrEqual => left <= right ? 1 : 0,
-                Operations.GreaterThan => left > right ? 1 : 0,
-                Operations.GreaterThanOrEqual => left >= right ? 1 : 0,
-                Operations.EqualsEquals => left == right ? 1 : 0,
+                Operation.LessThan => left < right ? 1 : 0,
+                Operation.LessThanOrEqual => left <= right ? 1 : 0,
+                Operation.GreaterThan => left > right ? 1 : 0,
+                Operation.GreaterThanOrEqual => left >= right ? 1 : 0,
+                Operation.EqualsEquals => left == right ? 1 : 0,
 
-                Operations.And => left == 1 && right == 1 ? 1 : 0,
-                Operations.Or => left == 1 || right == 1 ? 1 : 0,
+                Operation.And => left == 1 && right == 1 ? 1 : 0,
+                Operation.Or => left == 1 || right == 1 ? 1 : 0,
             };
         }
     }

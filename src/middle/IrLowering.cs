@@ -101,7 +101,7 @@ namespace Best_language.src.middle
                     }
                 case BoundUnaryExpression unary:
                     {
-                        bool increment = unary.Op is Operations.PlusPlusLeft or Operations.PlusPlusRight or Operations.MinusMinusLeft or Operations.MinusMinusRight;
+                        bool increment = unary.Op is Operation.PlusPlusLeft or Operation.PlusPlusRight or Operation.MinusMinusLeft or Operation.MinusMinusRight;
                         
                         if (increment)
                         {
@@ -114,7 +114,7 @@ namespace Best_language.src.middle
                             Emit(new IrUnary(unary.Op, right, result));
                             Emit(new IrVariable(target, result));
 
-                            return unary.Op is Operations.PlusPlusRight or Operations.MinusMinusRight ? right : result;
+                            return unary.Op is Operation.PlusPlusRight or Operation.MinusMinusRight ? right : result;
                         }
 
                         var right_ = LowerExpression(unary.Right);

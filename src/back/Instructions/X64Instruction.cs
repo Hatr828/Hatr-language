@@ -17,7 +17,7 @@
         xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7, xmm8, xmm9, xmm10, xmm11, xmm12, xmm13, xmm14, xmm15,
     }
 
-    public enum X64Opcode
+    public enum X64Opcode : short
     {
         // 0 operands
         cqo, ret,
@@ -38,6 +38,7 @@
 
         // 2 operands
         mov, movzx, movsxd, movsx,
+        lea,
         or, and, xor,
         shl, sar,
         cmp, test,
@@ -61,7 +62,7 @@
         movd, movq,
     }
 
-    public enum X64Size
+    public enum X64Size : byte
     {
         none,
         @byte = 1,  word = 2, dword = 4, qword = 8, oword = 16,  // Do not change numbers
@@ -70,7 +71,7 @@
         immediate
     }
 
-    public enum X64OperandSizeMode
+    public enum X64OperandSizeMode : byte
     {
         None,
         Byte,
@@ -80,7 +81,7 @@
         Fixed64
     }
 
-    public enum X64OperandKind
+    public enum X64OperandKind : byte
     {
         Register,
         RegisterOrMemory,
@@ -92,7 +93,7 @@
         XmmRegister,
     }
 
-    public enum X64OperandRole
+    public enum X64OperandRole : byte
     {
         ModRmReg,
         ModRmRm,
@@ -107,13 +108,13 @@
         SignExtended,
         SignExtendedWhenOperand64,
     }
-    public enum X64OpcodeMap
+    public enum X64OpcodeMap : byte
     {
         Primary,
         Map0F
     }
     [Flags]
-    public enum X64Prefixes
+    public enum X64Prefixes : byte
     {
         None = 0,
         OperandSize = 1,

@@ -1,3 +1,5 @@
+using System.Collections.Frozen;
+
 namespace Best_language.src.front
 {
     public sealed class Lexer
@@ -6,107 +8,13 @@ namespace Best_language.src.front
 
         private int _idx;
 
-        private readonly Dictionary<string, TokenKind> _keywords = new()
-        {
-            ["INT"] = TokenKind.Int,
-            ["void"] = TokenKind.Void,
-            ["single"] = TokenKind.Double,
-            ["afloat"] = TokenKind.Float,
-            ["small"] = TokenKind.Long,
-            ["ranch"] = TokenKind.Char,
-            ["tall"] = TokenKind.Short,
-            ["boom"] = TokenKind.Bool,
+        private readonly Dictionary<string, TokenKind> _keywords;
 
-            ["unsigned"] = TokenKind.Signed,
-            ["signed"] = TokenKind.UnSigned,
+        private readonly Dictionary<char, TokenKind> _chars;
 
-            ["fi"] = TokenKind.If,
-            ["elfi"] = TokenKind.ElseIf,
-            ["elf"] = TokenKind.Else,
-            ["ttrruuee"] = TokenKind.True,
-            ["ffaallssee"] = TokenKind.False,
+        private readonly Dictionary<string, TokenKind> _doubleChars;
 
-            ["rent"] = TokenKind.Return,
-
-            ["whale"] = TokenKind.While,
-            ["fire"] = TokenKind.For,
-            ["done"] = TokenKind.Do,
-
-            ["goat"] = TokenKind.Goto,
-
-            ["U"] = TokenKind.U,
-            ["L"] = TokenKind.L,
-            ["UL"] = TokenKind.UL,
-            ["LU"] = TokenKind.LU,
-            ["ULL"] = TokenKind.ULL,
-            ["LLU"] = TokenKind.LLU,
-            ["F"] = TokenKind.F,
-
-            ["u"] = TokenKind.U,
-            ["l"] = TokenKind.L,
-            ["ul"] = TokenKind.UL,
-            ["lu"] = TokenKind.LU,
-            ["ull"] = TokenKind.ULL,
-            ["llu"] = TokenKind.LLU,
-            ["f"] = TokenKind.F,
-        };
-
-        private readonly Dictionary<char, TokenKind> _chars = new()
-        {
-            ['*'] = TokenKind.Multiply,
-            ['+'] = TokenKind.Plus,
-            ['-'] = TokenKind.Minus,
-            ['/'] = TokenKind.Divide,
-            ['%'] = TokenKind.DivisionRem,
-
-            ['('] = TokenKind.LeftParen,
-            [')'] = TokenKind.RightParen,
-            ['{'] = TokenKind.LeftBrace,
-            ['}'] = TokenKind.RightBrace,
-
-            ['='] = TokenKind.Equals,
-            ['?'] = TokenKind.SemiColon,
-            ['>'] = TokenKind.GreaterThan,
-            ['<'] = TokenKind.LessThan,
-            ['!'] = TokenKind.Not,
-
-            [':'] = TokenKind.Colon,
-            [','] = TokenKind.Comma,
-            ['.'] = TokenKind.Dot,
-
-            ['~'] = TokenKind.BitNot,
-            ['|'] = TokenKind.BitOr,
-            ['&'] = TokenKind.BitAnd,
-            ['^'] = TokenKind.BitXor,
-        };
-
-        private readonly Dictionary<string, TokenKind> _doubleChars = new()
-        {
-            [">="] = TokenKind.GreaterThanOrEquals,
-            ["=="] = TokenKind.EqualsEquals,
-            ["!="] = TokenKind.NotEquals,
-            ["<="] = TokenKind.LessThanOrEquals,
-            ["&&"] = TokenKind.And,
-            ["||"] = TokenKind.Or,
-
-            ["++"] = TokenKind.PlusPlus,
-            ["--"] = TokenKind.MinusMinus,
-
-            ["<<"] = TokenKind.LeftShift,
-            [">>"] = TokenKind.RightShift,
-
-            ["+="] = TokenKind.PlusEquals,
-            ["-="] = TokenKind.MinusEquals,
-            ["*="] = TokenKind.MultiplyEquals,
-            ["/="] = TokenKind.DivideEquals,
-            ["%="] = TokenKind.DivisionRemEquals,
-
-            ["^="] = TokenKind.BitXorEquals,
-            ["|="] = TokenKind.BitOrEquals,
-            ["&="] = TokenKind.BitAndEquals,
-        };
-
-        private readonly Dictionary<(string, string), TokenKind> _specialKeywords = new();
+        private readonly Dictionary<(string, string), TokenKind> _specialKeywords;
 
         public Lexer(string code)
         {
@@ -117,6 +25,11 @@ namespace Best_language.src.front
             _chars = CSyntax.chars;
             _doubleChars = CSyntax.doubleChars;
             _specialKeywords = CSyntax.specialKeywords;
+#else
+            _keywords = HatrSyntax.keywords;
+            _chars = HatrSyntax.chars;
+            _doubleChars = HatrSyntax.doubleChars;
+            _specialKeywords = HatrSyntax.specialKeywords;
 #endif
         }
 

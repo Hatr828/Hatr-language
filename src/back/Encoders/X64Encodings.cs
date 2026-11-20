@@ -188,7 +188,6 @@ namespace Best_language.src.back.Encoders
             if ((form.Prefixes & X64Prefixes.Rep) != 0) bytes.Add(0xF3);
 
             byte rex = 0x40;
-            bool forceRex = false;
 
             if(form.SizeMode is X64OperandSizeMode.Fixed64 || (form.SizeMode is X64OperandSizeMode.Standard or X64OperandSizeMode.Integer32Or64 && size == 8))
             {
@@ -219,7 +218,7 @@ namespace Best_language.src.back.Encoders
                 }
             }
 
-            if (rex != 0x40 || forceRex) bytes.Add(rex);
+            if (rex != 0x40) bytes.Add(rex);
 
             switch (form.Map)
             {

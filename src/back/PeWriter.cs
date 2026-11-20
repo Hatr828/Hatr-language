@@ -7,14 +7,15 @@ namespace Best_language.src.back
 {
     public class PeWriter
     {
-        private const int fileAlignment = 0x200;
-        private const int sectionAlignment = 0x1000;
-        private const int headerSize = 0x200;
-        private const int codeRva = 0x1000;
-        private const ulong imageBase = 0x140000000;
-        private const int coff = 0x84;
-        private const int optional = 0x98;
-        private const int section = 0x188;
+        private const int fileAlignment = 512;
+        private const int sectionAlignment = 1024 * 4;
+        private const int headerSize = 512;
+        private const int codeRva = 1024 * 4;
+        private const ulong imageBase = 5UL * 1024 * 1024 * 1024;// 5GB
+        private const int coff = 68;
+        private const int optional = coff + 20;
+        public const int optionalHeaderSize = 0xF0; // 240
+        private const int section = optional + optionalHeaderSize;
 
         public static byte[] Build(byte[] code, IReadOnlyList<PeImport> importFixups)
         {
@@ -34,15 +35,15 @@ namespace Best_language.src.back
 
             //DOS header
             Write16(0, 0x5A4D, file);
-            Write32(60, 0x80, file);
+            Write32(60, 64, file);
 
             //PE signature
-            Write32(0x80, 0x00004550, file);
+            Write32(64, 0x4550, file);
 
             //coff
             Write16(coff, 0x8664, file); // Machine
             Write16(coff + 2, (ushort)(hasImports ? 2 : 1), file);  // NumberOfSections
-            Write16(coff + 16, 0xF0, file); // SizeOfOptionalHeader
+            Write16(coff + 16, optionalHeaderSize, file); // SizeOfOptionalHeader
             Write16(coff + 18, 0x23, file); // Characteristics
 
             //optional
@@ -65,10 +66,10 @@ namespace Best_language.src.back
             Write16(optional + 68, 3, file); // Subsystem
             Write16(optional + 70, 0x100, file); // DllCharacteristics
 
-            Write64(optional + 72, 0x100000, file); // SizeOfStackReserve
-            Write64(optional + 80, 0x1000, file); // SizeOfStackCommit
-            Write64(optional + 88, 0x100000, file); // SizeOfHeapReserve
-            Write64(optional + 96, 0x1000, file); // SizeOfHeapCommit
+            Write64(optional + 72, 1024 * 1024, file); // SizeOfStackReserve
+            Write64(optional + 80, 1024 * 4, file); // SizeOfStackCommit
+            Write64(optional + 88, 1024 * 1024, file); // SizeOfHeapReserve
+            Write64(optional + 96, 1024 * 4, file); // SizeOfHeapCommit
 
             Write32(optional + 108, 16, file); // NumberOfRvaAndSizes
 

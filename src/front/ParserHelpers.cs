@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Best_language.src.front
@@ -22,37 +24,48 @@ namespace Best_language.src.front
             _idx++;
         }
 
-        private (Operations, int) GetOperatorAndPriority() => _tokens[_idx++].kind switch
+        private (Operation, int) GetOperatorAndPriority() => _tokens[_idx++].kind switch
         {
-            TokenKind.PlusPlus => (Operations.PlusPlusLeft, 90),
-            TokenKind.MinusMinus => (Operations.MinusMinusLeft, 90),
+            TokenKind.Multiply => (Operation.Multiply, 70),
+            TokenKind.Divide => (Operation.Divide, 70),
+            TokenKind.DivisionRem => (Operation.DivisionRem, 70),
 
-            TokenKind.Not => (Operations.Not, 80),
+            TokenKind.Plus => (Operation.Plus, 60),
+            TokenKind.Minus => (Operation.Minus, 60),
 
-            TokenKind.Multiply => (Operations.Multiply, 70),
-            TokenKind.Divide => (Operations.Divide, 70),
-            TokenKind.DivisionRem => (Operations.DivisionRem, 70),
+            TokenKind.LeftShift => (Operation.LeftShift, 50),
+            TokenKind.RightShift => (Operation.RightShift, 50),
 
-            TokenKind.Plus => (Operations.Plus, 60),
-            TokenKind.Minus => (Operations.Minus, 60),
+            TokenKind.GreaterThan => (Operation.GreaterThan, 40),
+            TokenKind.GreaterThanOrEquals => (Operation.GreaterThanOrEqual, 40),
+            TokenKind.LessThan => (Operation.LessThan, 40),
+            TokenKind.LessThanOrEquals => (Operation.LessThanOrEqual, 40),
 
-            TokenKind.LeftShift => (Operations.LeftShift, 50),
-            TokenKind.RightShift => (Operations.RightShift, 50),
+            TokenKind.EqualsEquals => (Operation.EqualsEquals, 30),
+            TokenKind.NotEquals => (Operation.NotEquals, 30),
 
-            TokenKind.GreaterThan => (Operations.GreaterThan, 40),
-            TokenKind.GreaterThanOrEquals => (Operations.GreaterThanOrEqual, 40),
-            TokenKind.LessThan => (Operations.LessThan, 40),
-            TokenKind.LessThanOrEquals => (Operations.LessThanOrEqual, 40),
+            TokenKind.BitAnd => (Operation.BitAnd, 25),
+            TokenKind.BitXor => (Operation.BitXor, 20),
+            TokenKind.BitOr => (Operation.BitOr, 15),
 
-            TokenKind.EqualsEquals => (Operations.EqualsEquals, 30),
-            TokenKind.NotEquals => (Operations.NotEquals, 30),
+            TokenKind.And => (Operation.And, 10),
+            TokenKind.Or => (Operation.Or, 5),
 
-            TokenKind.BitAnd => (Operations.BitAnd, 25),
-            TokenKind.BitXor => (Operations.BitXor, 20),
-            TokenKind.BitOr => (Operations.BitOr, 15),
+            _ => throw new ArgumentException($"Unknown Operation: {_tokens[_idx - 1].kind}")
+        };
 
-            TokenKind.And => (Operations.And, 10),
-            TokenKind.Or => (Operations.Or, 5),
+        private (Operation, int) GetOperatorAndPriorityUnary() => _tokens[_idx++].kind switch
+        {
+            TokenKind.PlusPlus => (Operation.PlusPlusLeft, 90),
+            TokenKind.MinusMinus => (Operation.MinusMinusLeft, 90),
+            TokenKind.Plus => (Operation.Plus, 90),
+            TokenKind.Minus => (Operation.Minus, 90),
+
+            TokenKind.Not => (Operation.Not, 90),
+            TokenKind.BitNot => (Operation.BitNot, 90),
+            TokenKind.BitAnd => (Operation.ReferenceOf, 90),
+
+            TokenKind.Multiply => (Operation.Dereference, 90),
 
             _ => throw new ArgumentException($"Unknown Operation: {_tokens[_idx - 1].kind}")
         };
@@ -70,33 +83,22 @@ namespace Best_language.src.front
             _ => false
         };
 
-        private Operations GetOperatorEquals() => _tokens[_idx++].kind switch
+        private Operation GetOperatorEquals() => _tokens[_idx++].kind switch
         {
-            TokenKind.PlusEquals => Operations.PlusEquals,
-            TokenKind.MinusEquals => Operations.MinusEquals,
-            TokenKind.MultiplyEquals => Operations.MultiplyEquals,
-            TokenKind.DivideEquals => Operations.DivideEquals,
-            TokenKind.DivisionRemEquals => Operations.DivisionRemEquals,
+            TokenKind.PlusEquals => Operation.PlusEquals,
+            TokenKind.MinusEquals => Operation.MinusEquals,
+            TokenKind.MultiplyEquals => Operation.MultiplyEquals,
+            TokenKind.DivideEquals => Operation.DivideEquals,
+            TokenKind.DivisionRemEquals => Operation.DivisionRemEquals,
 
-            TokenKind.BitAndEquals => Operations.BitAndEquals,
-            TokenKind.BitOrEquals => Operations.BitOrEquals,
-            TokenKind.BitXorEquals => Operations.BitXorEquals,
+            TokenKind.BitAndEquals => Operation.BitAndEquals,
+            TokenKind.BitOrEquals => Operation.BitOrEquals,
+            TokenKind.BitXorEquals => Operation.BitXorEquals,
 
-            TokenKind.RightShiftEquals => Operations.RightShiftEquals,
-            TokenKind.LeftShiftEquals => Operations.LeftShiftEquals,
+            TokenKind.RightShiftEquals => Operation.RightShiftEquals,
+            TokenKind.LeftShiftEquals => Operation.LeftShiftEquals,
 
             _ => throw new ArgumentException("Unknown Operation")
-        };
-
-        private TypeSymbol GetTypeFromToken(TokenKind kind, bool isSigned) => kind switch
-        {
-            TokenKind.Bool => _typeTable.Bool,
-
-            TokenKind.Long => isSigned ? _typeTable.Int64 : _typeTable.UInt64,
-            TokenKind.Int => isSigned ? _typeTable.Int32 : _typeTable.UInt32,
-            TokenKind.Short => isSigned ? _typeTable.Int16 : _typeTable.UInt16,
-            TokenKind.Char => isSigned ? _typeTable.Int8 : _typeTable.UInt8,
-            _ => throw new ArgumentException("Unknown type")
         };
 
         private bool IsExpression(TokenKind kind) => kind switch
@@ -107,99 +109,92 @@ namespace Best_language.src.front
 
             _ => false,
         };
+        private Dictionary<TokenKind[], TypeSymbol> _types = new(new TokenKindSpanComparer())
+        {
+            [[TokenKind.Bool]] = _typeTable.Bool,
 
+            [[TokenKind.Char]] = _typeTable.Char,
+            [[TokenKind.Signed, TokenKind.Char]] = _typeTable.Int8,
+            [[TokenKind.UnSigned, TokenKind.Char]] = _typeTable.Int8,
+
+            [[TokenKind.Short]] = _typeTable.Int16,
+            [[TokenKind.Short, TokenKind.Int]] = _typeTable.Int16,
+            [[TokenKind.Signed, TokenKind.Short]] = _typeTable.Int16,
+            [[TokenKind.Signed, TokenKind.Short, TokenKind.Int]] = _typeTable.Int16,
+
+            [[TokenKind.UnSigned, TokenKind.Short, TokenKind.Int]] = _typeTable.UInt16,
+            [[TokenKind.UnSigned, TokenKind.Short]] = _typeTable.UInt16,
+
+            [[TokenKind.Int]] = _typeTable.Int32,
+            [[TokenKind.Signed, TokenKind.Int]] = _typeTable.Int32,
+            [[TokenKind.Signed]] = _typeTable.Int32,
+
+            [[TokenKind.UnSigned, TokenKind.Int]] = _typeTable.UInt32,
+            [[TokenKind.UnSigned]] = _typeTable.UInt32,
+
+            [[TokenKind.Long]] = _typeTable.Int32,
+            [[TokenKind.Long, TokenKind.Int]] = _typeTable.Int32,
+            [[TokenKind.Signed, TokenKind.Long]] = _typeTable.Int32,
+            [[TokenKind.Signed, TokenKind.Long, TokenKind.Int]] = _typeTable.Int32,
+
+            [[TokenKind.UnSigned, TokenKind.Long]] = _typeTable.UInt32,
+            [[TokenKind.UnSigned, TokenKind.Long, TokenKind.Int]] = _typeTable.UInt32,
+
+            [[TokenKind.Long, TokenKind.Long]] = _typeTable.Int64,
+            [[TokenKind.Long, TokenKind.Long, TokenKind.Int]] = _typeTable.Int64,
+            [[TokenKind.Signed, TokenKind.Long, TokenKind.Long]] = _typeTable.Int64,
+            [[TokenKind.Signed, TokenKind.Long, TokenKind.Long, TokenKind.Int]] = _typeTable.Int64,
+
+            [[TokenKind.UnSigned, TokenKind.Long, TokenKind.Long]] = _typeTable.UInt64,
+            [[TokenKind.UnSigned, TokenKind.Long, TokenKind.Long, TokenKind.Int]] = _typeTable.UInt64,
+
+            [[TokenKind.Float]] = _typeTable.Float,
+
+            [[TokenKind.Double]] = _typeTable.Double,
+            [[TokenKind.Double, TokenKind.Long]] = _typeTable.Double,
+
+        };
         private TypeSymbol ParseType()
         {
-            bool hasInt = false, hasChar = false, hasShort = false, hasDouble = false;
-            int longCount = 0;
-            bool? isSigned = null;
-
-            int start = _idx;
-
-            while (_tokens[_idx].kind is TokenKind.Signed or TokenKind.UnSigned or TokenKind.Long or TokenKind.Int or TokenKind.Char or TokenKind.Short or TokenKind.Short or TokenKind.Double)
+            List<TokenKind> tmp = new();
+            while (_tokens[_idx].kind is >= TokenKind.Int and <= TokenKind.UnSigned)
             {
-                if (_tokens[_idx].kind is TokenKind.Int)
-                {
-                    if (hasInt) throw new ArgumentException("cannot have two ints");
-                    hasInt = true;
-                }
-                else if (_tokens[_idx].kind is TokenKind.Double)
-                {
-                    if (hasDouble) throw new ArgumentException("cannot have two doubles");
-                    hasDouble = true;
-                }
-                else if (_tokens[_idx].kind is TokenKind.Short)
-                {
-                    if (hasShort) throw new ArgumentException("cannot have two shorts");
-                    hasShort = true;
-                }
-                else if (_tokens[_idx].kind is TokenKind.Char)
-                {
-                    if (hasChar) throw new ArgumentException("cannot have two chars");
-                    hasChar = true;
-                }
-
-                else if (_tokens[_idx].kind is TokenKind.Long) longCount++;
-
-                else if (_tokens[_idx].kind is TokenKind.Signed)
-                {
-                    if (isSigned is not null) throw new ArgumentException("cannot have two signed/unsigned");
-                    isSigned = true;
-                }
-                else if (_tokens[_idx].kind is TokenKind.UnSigned)
-                {
-                    if (isSigned is not null) throw new ArgumentException("cannot have two signed/unsigned");
-                    isSigned = false;
-                }
-                _idx++;
+                tmp.Add(_tokens[_idx++].kind); 
             }
 
-            if (start == _idx)
-            {
-                if (_tokens[_idx].kind is TokenKind.Bool)
-                {
-                    _idx++;
-                    return _typeTable.Bool;
-                }
-                else if (_tokens[_idx].kind is TokenKind.Void)
-                {
-                    _idx++;
-                    return _typeTable.Void;
-                }
-                else if (_tokens[_idx].kind is TokenKind.Float)
-                {
-                    _idx++;
-                    return _typeTable.Float;
-                }
-            }
-
-            if ((hasChar || hasShort) && longCount != 0) throw new ArgumentException("Cannot have char/short with long");
-
-            if (isSigned is not null && hasDouble) throw new ArgumentException("Cannot have signed/unsigned with double");
-
-            if ((hasChar || hasShort || hasInt) && hasDouble) throw new ArgumentException("Cannot have int/char/short with double");
-
-            if (longCount > 2) throw new ArgumentException("Cannot have more than 2 longs");
-
-            bool signed = isSigned ?? true;
-
-            if (hasChar)
-            {
-                if (isSigned is null) return _typeTable.Char;
-
-                return signed ? _typeTable.Int8 : _typeTable.UInt8;
-            }
-
-            if (hasShort) return signed ? _typeTable.Int16 : _typeTable.UInt16;
-
-            if (longCount == 2) return signed ? _typeTable.Int64 : _typeTable.UInt64;
-
-            if (hasDouble) return _typeTable.Double;
-
-            if (longCount == 1) return signed ? _typeTable.Long : _typeTable.ULong;
-
-            return signed ? _typeTable.Int32 : _typeTable.UInt32;
+            if (!_types.GetAlternateLookup<ReadOnlySpan<TokenKind>>().TryGetValue(CollectionsMarshal.AsSpan(tmp), out var res))
+                throw new InvalidOperationException($"Unknown type: {string.Join(" ", tmp)}");
+            return res;
         }
 
+        private class TokenKindSpanComparer : IEqualityComparer<TokenKind[]>, IAlternateEqualityComparer<ReadOnlySpan<TokenKind>, TokenKind[]>
+        {
+            public bool Equals(TokenKind[]? x, TokenKind[]? y)
+            {
+                if (ReferenceEquals(x, y)) return true;
+                if (x is null || y is null) return false;
+                return x.AsSpan().SequenceEqual(y);
+            }
+
+            public bool Equals(ReadOnlySpan<TokenKind> alternate, TokenKind[] other)
+            {
+                return alternate.SequenceEqual(other);
+            }
+
+            public TokenKind[] Create(ReadOnlySpan<TokenKind> alternate)
+            {
+                return alternate.ToArray();
+            }
+
+            public int GetHashCode(TokenKind[] obj) => GetHashCode(obj.AsSpan());
+
+            public int GetHashCode(ReadOnlySpan<TokenKind> alternate)
+            {
+                var hash = new HashCode();
+                hash.AddBytes(MemoryMarshal.AsBytes(alternate));
+                return hash.ToHashCode();
+            }
+
+        }
     }
 }

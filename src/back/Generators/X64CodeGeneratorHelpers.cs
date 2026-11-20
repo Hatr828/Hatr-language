@@ -3,6 +3,8 @@ using Best_language.src.front;
 using Best_language.src.middle;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Numerics;
 using System.Text;
 
 namespace Best_language.src.back.Generators
@@ -15,13 +17,13 @@ namespace Best_language.src.back.Generators
 
             switch (unary.Op)
             {
-                case Operations.Minus:
+                case Operation.Minus:
                     Emit(new(X64Opcode.neg, X64Operand.Reg(X64Register.rax)));
                     break;
-                case Operations.BitNot:
+                case Operation.BitNot:
                     Emit(new(X64Opcode.not, X64Operand.Reg(X64Register.rax)));
                     break;
-                case Operations.Not:
+                case Operation.Not:
                     Emit(new(X64Opcode.test,
                          X64Operand.Reg(X64Register.rax),
                          X64Operand.Reg(X64Register.rax)));
@@ -32,14 +34,14 @@ namespace Best_language.src.back.Generators
                          X64Operand.Reg(X64Register.rax),
                          X64Operand.Reg(X64Register.al)));
                     break;
-                case Operations.PlusPlusRight:
-                case Operations.PlusPlusLeft:
+                case Operation.PlusPlusRight:
+                case Operation.PlusPlusLeft:
                     Emit(new(X64Opcode.add,
                          X64Operand.Reg(X64Register.rax),
                          X64Operand.Imm(X64Size.word, 1)));
                     break;
-                case Operations.MinusMinusRight:
-                case Operations.MinusMinusLeft:
+                case Operation.MinusMinusRight:
+                case Operation.MinusMinusLeft:
                     Emit(new(X64Opcode.sub,
                          X64Operand.Reg(X64Register.rax),
                          X64Operand.Imm(X64Size.word, 1)));
@@ -58,7 +60,7 @@ namespace Best_language.src.back.Generators
 
             switch (unary.Op)
             {
-                case Operations.Minus:
+                case Operation.Minus:
                     long mask = isFloat ? 0x80000000L : long.MinValue;
 
                     Emit(new(X64Opcode.mov,
@@ -74,7 +76,7 @@ namespace Best_language.src.back.Generators
                         X64Operand.Reg(X64Register.xmm1)));
 
                     break;
-                case Operations.Not:
+                case Operation.Not:
                     Emit(new(X64Opcode.xorps,
                        X64Operand.Reg(X64Register.xmm1),
                        X64Operand.Reg(X64Register.xmm1)));
@@ -92,12 +94,12 @@ namespace Best_language.src.back.Generators
                     Emit(new(X64Opcode.movzx, X64Operand.Reg(X64Register.eax), X64Operand.Reg(X64Register.al)));
 
                     break;
-                case Operations.PlusPlusRight:
-                case Operations.PlusPlusLeft:
+                case Operation.PlusPlusRight:
+                case Operation.PlusPlusLeft:
                     increment = true;
-                    goto case Operations.MinusMinusRight;
-                case Operations.MinusMinusRight:
-                case Operations.MinusMinusLeft:
+                    goto case Operation.MinusMinusRight;
+                case Operation.MinusMinusRight:
+                case Operation.MinusMinusLeft:
                     long bits = isFloat ? BitConverter.SingleToInt32Bits(1.0f) : BitConverter.DoubleToInt64Bits(1.0);
 
                     Emit(new(X64Opcode.mov,
@@ -117,37 +119,92 @@ namespace Best_language.src.back.Generators
                     throw new NotImplementedException($"Unsupported unary operation: {unary.Op}");
             }
         }
-
-        private X64Opcode GetOpcodeFromOperationInt(Operations op) => op switch
+        private void OperationUnaryPointerGen(IrUnary unary)
         {
-            Operations.PlusEquals or Operations.Plus => X64Opcode.add,
-            Operations.MinusEquals or Operations.Minus => X64Opcode.sub,
-            Operations.MultiplyEquals or Operations.Multiply => X64Opcode.imul,
-            Operations.BitAndEquals or Operations.BitAnd => X64Opcode.and,
-            Operations.BitOrEquals or Operations.BitOr => X64Opcode.or,
-            Operations.BitXorEquals or Operations.BitXor => X64Opcode.xor,
+            switch (unary.Op)
+            {
+                case Operation.ReferenceOf:
+                    (var offset, _) = GetOrCreateSlot(unary.Right);
 
-            Operations.GreaterThan => X64Opcode.setg,
-            Operations.GreaterThanOrEqual => X64Opcode.setge,
-            Operations.LessThan => X64Opcode.setl,
-            Operations.LessThanOrEqual => X64Opcode.setle,
-            Operations.NotEquals => X64Opcode.setne,
+                    Emit(new(X64Opcode.lea,
+                        X64Operand.Reg(X64Register.rax),
+                        X64Operand.Mem(X64Register.rbp, -offset, X64Size.qword)));
+                    break;
+                case Operation.Dereference:
+                    LoadValue(unary.Right, X64Register.rax);
+
+                    int res = GetSlotSize(unary.Result);
+                    X64Size size = GetX64Size(unary.Result.Type);
+
+                    if (unary.Result.Type is FloatTypeSymbol)
+                        Emit(new(res == 4 ? X64Opcode.movss : X64Opcode.movsd,
+                            X64Operand.Reg(X64Register.xmm0),
+                            X64Operand.Mem(X64Register.rax, -0, size)));
+                    else
+                        Emit(new(X64Opcode.mov, X64Operand.Reg(GetRegisterSame(res)),
+                              X64Operand.Mem(X64Register.rax, -0, size)));
+                    break;
+                case Operation.Not:
+                    LoadValue(unary.Right, X64Register.rax);
+
+                    Emit(new(X64Opcode.test, X64Operand.Reg(X64Register.rax), X64Operand.Reg(X64Register.rax)));
+
+                    Emit(new(X64Opcode.sete, X64Operand.Reg(X64Register.al)));
+
+                    Emit(new(X64Opcode.movzx, X64Operand.Reg(X64Register.rax), X64Operand.Reg(X64Register.al)));
+                    break;
+                case Operation.MinusMinusLeft:
+                case Operation.PlusPlusLeft:
+                case Operation.MinusMinusRight:
+                case Operation.PlusPlusRight:
+                    var pointer = (PointerTypeSymbol)unary.Right.Type;
+
+                    int step = GetTypeSize(pointer.ElementType);
+
+                    LoadValue(unary.Right, X64Register.rax);
+
+                    bool increment = unary.Op is Operation.PlusPlusRight or Operation.PlusPlusLeft;
+
+                    Emit(new(increment ? X64Opcode.add : X64Opcode.sub,
+                        X64Operand.Reg(X64Register.rax),
+                        X64Operand.Imm(X64Size.dword, step)));
+
+                    break;
+                default:
+                    throw new NotImplementedException($"Unsupported unary operation: {unary.Op}");
+            }
+        }
+
+        private X64Opcode GetOpcodeFromOperationInt(Operation op) => op switch
+        {
+            Operation.PlusEquals or Operation.Plus => X64Opcode.add,
+            Operation.MinusEquals or Operation.Minus => X64Opcode.sub,
+            Operation.MultiplyEquals or Operation.Multiply => X64Opcode.imul,
+            Operation.BitAndEquals or Operation.BitAnd => X64Opcode.and,
+            Operation.BitOrEquals or Operation.BitOr => X64Opcode.or,
+            Operation.BitXorEquals or Operation.BitXor => X64Opcode.xor,
+
+            Operation.GreaterThan => X64Opcode.setg,
+            Operation.GreaterThanOrEqual => X64Opcode.setge,
+            Operation.LessThan => X64Opcode.setl,
+            Operation.LessThanOrEqual => X64Opcode.setle,
+            Operation.NotEquals => X64Opcode.setne,
 
             _ => throw new NotImplementedException()
         };
-        private X64Opcode GetOpcodeFromOperationFloat(Operations op, bool isFloat) => op switch
+        private X64Opcode GetOpcodeFromOperationFloat(Operation op, bool isFloat) => op switch
         {
-            Operations.PlusEquals or Operations.Plus => isFloat ? X64Opcode.addss : X64Opcode.addsd,
-            Operations.MinusEquals or Operations.Minus => isFloat ? X64Opcode.subss : X64Opcode.subsd,
-            Operations.MultiplyEquals or Operations.Multiply => isFloat ? X64Opcode.mulss : X64Opcode.mulsd,
-            Operations.DivideEquals or Operations.Divide => isFloat ? X64Opcode.divss : X64Opcode.divsd,
+            Operation.PlusEquals or Operation.Plus => isFloat ? X64Opcode.addss : X64Opcode.addsd,
+            Operation.MinusEquals or Operation.Minus => isFloat ? X64Opcode.subss : X64Opcode.subsd,
+            Operation.MultiplyEquals or Operation.Multiply => isFloat ? X64Opcode.mulss : X64Opcode.mulsd,
+            Operation.DivideEquals or Operation.Divide => isFloat ? X64Opcode.divss : X64Opcode.divsd,
 
-            Operations.GreaterThan => X64Opcode.seta,
-            Operations.GreaterThanOrEqual => X64Opcode.setae,
-            Operations.LessThan => X64Opcode.setb,
-            Operations.LessThanOrEqual => X64Opcode.setbe,
-            Operations.NotEquals => X64Opcode.setne,
-            Operations.EqualsEquals => X64Opcode.sete,
+            Operation.GreaterThan => X64Opcode.seta,
+            Operation.GreaterThanOrEqual => X64Opcode.setae,
+            Operation.LessThan => X64Opcode.setb,
+            Operation.LessThanOrEqual => X64Opcode.setbe,
+            Operation.NotEquals => X64Opcode.setne,
+            Operation.EqualsEquals => X64Opcode.sete,
 
             _ => throw new NotImplementedException()
         };
@@ -378,6 +435,15 @@ namespace Best_language.src.back.Generators
             4 => X64Size.dword,
             8 => X64Size.qword,
             _ => throw new ArgumentException()
+        };
+        private int GetTypeSize(TypeSymbol type) => type switch
+        {
+            BoolTypeSymbol => 1,
+            FloatTypeSymbol @float => (int)@float.Size,
+            IntegerTypeSymbol integer => (int)integer.Size,
+            PointerTypeSymbol => 8,
+
+            _ => throw new NotImplementedException(),
         };
 
         private X64Register GetRegisterSame(int size) => size switch

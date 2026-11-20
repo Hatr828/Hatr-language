@@ -49,10 +49,10 @@ namespace Best_language.src.front
         public override string DName => $"{nameof(BoolExpression)}: {Value}";
         public override IEnumerable<AstNode> Children => [];
     }
-    public class BinaryExpression(Expression left, Operations op, Expression right) : Expression
+    public class BinaryExpression(Expression left, Operation op, Expression right) : Expression
     {
         public Expression Left { get; } = left;
-        public Operations Op { get; } = op;
+        public Operation Op { get; } = op;
         public Expression Right { get; } = right;
         public override string DName => $"{nameof(BinaryExpression)}: {Op}";
         public override IEnumerable<AstNode> Children
@@ -64,9 +64,9 @@ namespace Best_language.src.front
             }
         }
     }
-    public class UnaryExpression(Operations op, Expression right) : Expression
+    public class UnaryExpression(Operation op, Expression right) : Expression
     {
-        public Operations Op { get; } = op;
+        public Operation Op { get; } = op;
         public Expression Right { get; } = right;
         public override string DName => $"{nameof(UnaryExpression)}: {Op}";
         public override IEnumerable<AstNode> Children
@@ -94,11 +94,11 @@ namespace Best_language.src.front
             }
         }
     }
-    public class AssignmentStatement(string name, Operations? op, Expression right) : Statement
+    public class AssignmentStatement(string name, Operation? op, Expression right) : Statement
     {
         public string Name { get; } = name;
 
-        public Operations? Op = op;
+        public Operation? Op = op;
         public Expression Right { get; } = right;
         public override string DName => $"{nameof(AssignmentStatement)}: {Name} ({Op})";
         public override IEnumerable<AstNode> Children
@@ -279,7 +279,7 @@ namespace Best_language.src.front
         }
     }
 
-    public enum Operations
+    public enum Operation
     {
         // do not move
         PlusEquals,
@@ -298,6 +298,8 @@ namespace Best_language.src.front
         DivideEquals,
         Divide,
         //
+        Dereference,
+        ReferenceOf,
         DivisionRemEquals,
         DivisionRem,
 

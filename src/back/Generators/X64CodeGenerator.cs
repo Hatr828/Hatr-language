@@ -42,8 +42,8 @@ namespace Best_language.src.back.Generators
                             bool isFloat = binary.Right.Type is FloatTypeSymbol;
                             bool resultFloat = binary.Result.Type is FloatTypeSymbol;
 
-                            if (isFloat) OperationFloatGen(binary);
-                            else OperationGen(binary);
+                            if (isFloat) OperationBinaryFloatGen(binary);
+                            else OperationBinaryGen(binary);
 
                             (int slot, X64Size size) = GetOrCreateSlot(binary.Result);
 
@@ -63,10 +63,12 @@ namespace Best_language.src.back.Generators
                             bool rightFloat = unary.Right.Type is FloatTypeSymbol;
                             bool resultFloat = unary.Result.Type is FloatTypeSymbol;
 
-                            if (unary.Op is Operations.Plus)
+                            if (unary.Op is Operation.Plus)
                             {
                                 LoadValue(unary.Right, rightFloat ? X64Register.xmm0 : GetRegisterSame(unary.Right));
                             }
+                            else if (unary.Right.Type is PointerTypeSymbol || unary.Result.Type is PointerTypeSymbol)
+                                OperationUnaryPointerGen(unary);
                             else if (rightFloat) OperationUnaryFloatGen(unary);
                             else OperationUnaryGen(unary);
 
@@ -82,9 +84,6 @@ namespace Best_language.src.back.Generators
                                 Emit(new(X64Opcode.mov,
                                     X64Operand.Mem(X64Register.rbp, -slot, size),
                                     X64Operand.Reg(GetRegisterSame(size))));
-
-                            _constants.Remove(unary.Right);
-                            _constantsFP.Remove(unary.Right);
 
                             break;
                         }
@@ -277,7 +276,7 @@ namespace Best_language.src.back.Generators
             _constantsFP.Remove(conversion.Left);
         }
 
-        private void OperationFloatGen(IrBinary binary)
+        private void OperationBinaryFloatGen(IrBinary binary)
         {
             LoadValue(binary.Left, X64Register.xmm0);
             LoadValue(binary.Right, X64Register.xmm1);
@@ -288,11 +287,11 @@ namespace Best_language.src.back.Generators
 
             switch (binary.Op)
             {
-                case >= Operations.PlusEquals and <= Operations.Divide:
+                case >= Operation.PlusEquals and <= Operation.Divide:
                     Emit(new(GetOpcodeFromOperationFloat(binary.Op, isFloat), X64Operand.Reg(X64Register.xmm0), X64Operand.Reg(X64Register.xmm1)));
                     break;
 
-                case >= Operations.LessThan and <= Operations.EqualsEquals:
+                case >= Operation.LessThan and <= Operation.EqualsEquals:
                     CompareFloat(GetOpcodeFromOperationFloat(binary.Op, isFloat), isFloat);
                     break;
 
@@ -300,33 +299,33 @@ namespace Best_language.src.back.Generators
                     throw new NotImplementedException($"Unsupported unary operation: {binary.Op}");
             }
         }
-        private void OperationGen(IrBinary binary)
+        private void OperationBinaryGen(IrBinary binary)
         {
             LoadValue(binary.Left, X64Register.rax);
             LoadValue(binary.Right, X64Register.rcx);
 
             switch (binary.Op)
             {
-                case >= Operations.PlusEquals and <= Operations.BitOr:
+                case >= Operation.PlusEquals and <= Operation.BitOr:
                     Emit(new(GetOpcodeFromOperationInt(binary.Op), X64Operand.Reg(X64Register.rax), X64Operand.Reg(X64Register.rcx)));
                     break;
 
-                case >= Operations.LessThan and <= Operations.NotEquals:
+                case >= Operation.LessThan and <= Operation.NotEquals:
                     Compare(GetOpcodeFromOperationInt(binary.Op));
                     break;
 
-                case Operations.Divide:
+                case Operation.Divide:
                     Emit(new(X64Opcode.cqo));
                     Emit(new(X64Opcode.idiv, X64Operand.Reg(X64Register.rcx)));
                     break;
 
-                case Operations.DivisionRem:
+                case Operation.DivisionRem:
                     Emit(new(X64Opcode.cqo));
                     Emit(new(X64Opcode.idiv, X64Operand.Reg(X64Register.rcx)));
                     Emit(new(X64Opcode.mov, X64Operand.Reg(X64Register.rax), X64Operand.Reg(X64Register.rdx)));
                     break;
 
-                case Operations.And:
+                case Operation.And:
                     Emit(new(X64Opcode.sub,
                               X64Operand.Reg(X64Register.rax),
                               X64Operand.Reg(X64Register.rax)));
@@ -347,7 +346,7 @@ namespace Best_language.src.back.Generators
                           X64Operand.Reg(X64Register.al)));
                     break;
 
-                case Operations.Or:
+                case Operation.Or:
                     Emit(new(X64Opcode.or,
                              X64Operand.Reg(X64Register.rax),
                              X64Operand.Reg(X64Register.rcx)));
@@ -358,13 +357,13 @@ namespace Best_language.src.back.Generators
                         X64Operand.Reg(X64Register.rax),
                         X64Operand.Reg(X64Register.al)));
                     break;
-                case Operations.LeftShift:
+                case Operation.LeftShift:
                     Emit(new(X64Opcode.shl,
                              X64Operand.Reg(X64Register.rax),
                              X64Operand.Reg(X64Register.cl)));
                     break;
 
-                case Operations.RightShift:
+                case Operation.RightShift:
                     Emit(new(X64Opcode.sar,
                              X64Operand.Reg(X64Register.rax),
                              X64Operand.Reg(X64Register.cl)));
@@ -374,6 +373,6 @@ namespace Best_language.src.back.Generators
                     throw new NotImplementedException($"Unsupported unary operation: {binary.Op}");
             }
         }
-       
+
     }
 }

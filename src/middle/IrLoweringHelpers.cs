@@ -1,7 +1,4 @@
 ﻿using Best_language.src.front;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Best_language.src.middle
 {

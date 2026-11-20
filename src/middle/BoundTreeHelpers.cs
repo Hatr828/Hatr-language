@@ -1,102 +1,259 @@
 ﻿using Best_language.src.front;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Best_language.src.middle
 {
     public partial class BoundTree
     {
+        private Dictionary<(Operation op, System.Type, System.Type), BinaryRule> _binaryRules = new()
+        {
+            // IntegerArithmetic
+            [(Operation.Plus, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.IntegerArithmetic,
+            [(Operation.Minus, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.IntegerArithmetic,
+            [(Operation.Multiply, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.IntegerArithmetic,
+            [(Operation.Divide, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.IntegerArithmetic,
+            //
+
+            // Arithmetic
+            [(Operation.Plus, typeof(FloatTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.Arithmetic,
+            [(Operation.Minus, typeof(FloatTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.Arithmetic,
+            [(Operation.Multiply, typeof(FloatTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.Arithmetic,
+            [(Operation.Divide, typeof(FloatTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.Arithmetic,
+
+            [(Operation.Plus, typeof(IntegerTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.Arithmetic,
+            [(Operation.Minus, typeof(IntegerTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.Arithmetic,
+            [(Operation.Multiply, typeof(IntegerTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.Arithmetic,
+            [(Operation.Divide, typeof(IntegerTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.Arithmetic,
+
+            [(Operation.Plus, typeof(FloatTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.Arithmetic,
+            [(Operation.Minus, typeof(FloatTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.Arithmetic,
+            [(Operation.Multiply, typeof(FloatTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.Arithmetic,
+            [(Operation.Divide, typeof(FloatTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.Arithmetic,
+            //
+
+            // Logical
+            [(Operation.And, typeof(IntegerTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.Logical,
+            [(Operation.Or, typeof(IntegerTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.Logical,
+
+            [(Operation.And, typeof(FloatTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.Logical,
+            [(Operation.Or, typeof(FloatTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.Logical,
+
+            [(Operation.And, typeof(IntegerTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.Logical,
+            [(Operation.Or, typeof(IntegerTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.Logical,
+
+            [(Operation.And, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.Logical,
+            [(Operation.Or, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.Logical,
+
+            [(Operation.And, typeof(PointerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.Logical,
+            [(Operation.Or, typeof(PointerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.Logical,
+
+            [(Operation.And, typeof(IntegerTypeSymbol), typeof(PointerTypeSymbol))] = BinaryRule.Logical,
+            [(Operation.Or, typeof(IntegerTypeSymbol), typeof(PointerTypeSymbol))] = BinaryRule.Logical,
+
+            [(Operation.And, typeof(PointerTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.Logical,
+            [(Operation.Or, typeof(PointerTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.Logical,
+
+            [(Operation.And, typeof(FloatTypeSymbol), typeof(PointerTypeSymbol))] = BinaryRule.Logical,
+            [(Operation.Or, typeof(FloatTypeSymbol), typeof(PointerTypeSymbol))] = BinaryRule.Logical,
+
+            [(Operation.And, typeof(PointerTypeSymbol), typeof(PointerTypeSymbol))] = BinaryRule.Logical,
+            [(Operation.Or, typeof(PointerTypeSymbol), typeof(PointerTypeSymbol))] = BinaryRule.Logical,
+            //
+
+            // ArithmeticComparison
+            [(Operation.EqualsEquals, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            [(Operation.EqualsEquals, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            [(Operation.LessThan, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            [(Operation.LessThanOrEqual, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            [(Operation.GreaterThan, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            [(Operation.GreaterThanOrEqual, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.ArithmeticComparison,
+
+            [(Operation.EqualsEquals, typeof(IntegerTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            [(Operation.NotEquals, typeof(IntegerTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            [(Operation.LessThan, typeof(IntegerTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            [(Operation.LessThanOrEqual, typeof(IntegerTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            [(Operation.GreaterThan, typeof(IntegerTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            [(Operation.GreaterThanOrEqual, typeof(IntegerTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.ArithmeticComparison,
+
+            [(Operation.EqualsEquals, typeof(FloatTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            [(Operation.NotEquals, typeof(FloatTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            [(Operation.LessThan, typeof(FloatTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            [(Operation.LessThanOrEqual, typeof(FloatTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            [(Operation.GreaterThan, typeof(FloatTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            [(Operation.GreaterThanOrEqual, typeof(FloatTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.ArithmeticComparison,
+
+            [(Operation.EqualsEquals, typeof(FloatTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            [(Operation.NotEquals, typeof(FloatTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            [(Operation.LessThan, typeof(FloatTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            [(Operation.LessThanOrEqual, typeof(FloatTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            [(Operation.GreaterThan, typeof(FloatTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            [(Operation.GreaterThanOrEqual, typeof(FloatTypeSymbol), typeof(FloatTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            //
+
+            // IntegerArithmetic
+            [(Operation.DivisionRem, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.IntegerArithmetic,
+            [(Operation.BitAnd, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.IntegerArithmetic,
+            [(Operation.BitOr, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.IntegerArithmetic,
+            [(Operation.BitXor, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.IntegerArithmetic,
+            // 
+
+            // Shift
+            [(Operation.LeftShift, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.Shift,
+            [(Operation.RightShift, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.Shift,
+            //
+
+            //  PointerArithmetic
+            [(Operation.Plus, typeof(PointerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.PointerArithmetic,
+            [(Operation.Plus, typeof(IntegerTypeSymbol), typeof(PointerTypeSymbol))] = BinaryRule.PointerArithmetic,
+            [(Operation.Minus, typeof(PointerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.PointerArithmetic,
+            //
+
+            // PointerComparison
+            [(Operation.EqualsEquals, typeof(PointerTypeSymbol), typeof(PointerTypeSymbol))] = BinaryRule.PointerComparison,
+            [(Operation.NotEquals, typeof(PointerTypeSymbol), typeof(PointerTypeSymbol))] = BinaryRule.PointerComparison,
+            [(Operation.LessThan, typeof(PointerTypeSymbol), typeof(PointerTypeSymbol))] = BinaryRule.PointerComparison,
+            [(Operation.LessThanOrEqual, typeof(PointerTypeSymbol), typeof(PointerTypeSymbol))] = BinaryRule.PointerComparison,
+            [(Operation.GreaterThan, typeof(PointerTypeSymbol), typeof(PointerTypeSymbol))] = BinaryRule.PointerComparison,
+            [(Operation.GreaterThanOrEqual, typeof(PointerTypeSymbol), typeof(PointerTypeSymbol))] = BinaryRule.PointerComparison,
+
+            [(Operation.EqualsEquals, typeof(IntegerTypeSymbol), typeof(PointerTypeSymbol))] = BinaryRule.PointerComparison,
+            [(Operation.NotEquals, typeof(IntegerTypeSymbol), typeof(PointerTypeSymbol))] = BinaryRule.PointerComparison,
+
+            [(Operation.EqualsEquals, typeof(PointerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.PointerComparison,
+            [(Operation.NotEquals, typeof(PointerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.PointerComparison,
+            //
+        };
+
+        private Dictionary<(Operation op, System.Type), UnaryRule> _unaryRules = new()
+        {
+            [(Operation.PlusPlusLeft, typeof(IntegerTypeSymbol))] = UnaryRule.Arithmetic,
+            [(Operation.PlusPlusRight, typeof(IntegerTypeSymbol))] = UnaryRule.Arithmetic,
+            [(Operation.MinusMinusLeft, typeof(IntegerTypeSymbol))] = UnaryRule.Arithmetic,
+            [(Operation.MinusMinusRight, typeof(IntegerTypeSymbol))] = UnaryRule.Arithmetic,
+
+            [(Operation.PlusPlusLeft, typeof(FloatTypeSymbol))] = UnaryRule.Arithmetic,
+            [(Operation.PlusPlusRight, typeof(FloatTypeSymbol))] = UnaryRule.Arithmetic,
+            [(Operation.MinusMinusLeft, typeof(FloatTypeSymbol))] = UnaryRule.Arithmetic,
+            [(Operation.MinusMinusRight, typeof(FloatTypeSymbol))] = UnaryRule.Arithmetic,
+
+            [(Operation.PlusPlusLeft, typeof(PointerTypeSymbol))] = UnaryRule.Arithmetic,
+            [(Operation.PlusPlusRight, typeof(PointerTypeSymbol))] = UnaryRule.Arithmetic,
+            [(Operation.MinusMinusLeft, typeof(PointerTypeSymbol))] = UnaryRule.Arithmetic,
+            [(Operation.MinusMinusRight, typeof(PointerTypeSymbol))] = UnaryRule.Arithmetic,
+
+            [(Operation.Plus, typeof(IntegerTypeSymbol))] = UnaryRule.PlusOrMinus,
+            [(Operation.Minus, typeof(IntegerTypeSymbol))] = UnaryRule.PlusOrMinus,
+            [(Operation.Plus, typeof(FloatTypeSymbol))] = UnaryRule.PlusOrMinus,
+            [(Operation.Minus, typeof(FloatTypeSymbol))] = UnaryRule.PlusOrMinus,
+
+            [(Operation.BitNot, typeof(IntegerTypeSymbol))] = UnaryRule.Arithmetic,
+
+            [(Operation.Not, typeof(FloatTypeSymbol))] = UnaryRule.Logical,
+            [(Operation.Not, typeof(PointerTypeSymbol))] = UnaryRule.Logical,
+            [(Operation.Not, typeof(IntegerTypeSymbol))] = UnaryRule.Logical,
+
+            [(Operation.ReferenceOf, typeof(IntegerTypeSymbol))] = UnaryRule.ReferenceOf,
+            [(Operation.ReferenceOf, typeof(PointerTypeSymbol))] = UnaryRule.ReferenceOf,
+            [(Operation.ReferenceOf, typeof(FloatTypeSymbol))] = UnaryRule.ReferenceOf,
+
+            [(Operation.Dereference, typeof(PointerTypeSymbol))] = UnaryRule.Dereference,
+        };
+
         private BoundBinaryExpression BindBinaryExpression(BinaryExpression binary)
         {
             var left = BindExpression(binary.Left);
             var right = BindExpression(binary.Right);
 
-            bool leftInteger = left.Type is IntegerTypeSymbol or BoolTypeSymbol;
-            bool rightInteger = right.Type is IntegerTypeSymbol or BoolTypeSymbol;
+            var key = (binary.Op, left.Type.GetType(), right.Type.GetType());
 
-            bool leftArithmetic = leftInteger || left.Type is FloatTypeSymbol;
-            bool rightArithmetic = rightInteger || right.Type is FloatTypeSymbol;
+            if (!_binaryRules.TryGetValue(key, out var val)) throw new ArgumentException($"Operator: {binary.Op} cannot be applied to types {left.Type} and {right.Type}");
 
-            if (binary.Op is Operations.And or Operations.Or)
-            {
-                if ((!leftArithmetic && left.Type is not PointerTypeSymbol) || (!rightArithmetic && right.Type is not PointerTypeSymbol))
-                    throw new ArgumentException("Expected scalar");
-
-                return new BoundBinaryExpression(_typeTable.Int32, binary.Op, left, right);
-            }
-
-            if (!leftArithmetic || !rightArithmetic) throw new ArgumentException("Expected integer or floating point");
-
-            bool integerOnly = binary.Op is Operations.DivisionRem or Operations.BitOr or Operations.BitXor or Operations.BitAnd or Operations.LeftShift or Operations.RightShift;
-
-            if (integerOnly && (leftInteger || rightInteger)) throw new ArgumentException("Expected integer");
-
-            if (left.Type is BoolTypeSymbol || left.Type is IntegerTypeSymbol leftInt && (int)leftInt.Size < 4)
-            {
-                right = BindConversion(right, _typeTable.Int32);
-            }
-
-            if (binary.Op is Operations.LeftShift or Operations.RightShift) return new BoundBinaryExpression(left.Type, binary.Op, left, right);
-
-            TypeSymbol operandType = GetCommonArithmeticType(left.Type, right.Type);
-
-            left = BindConversion(left, operandType);
-            right = BindConversion(right, operandType);
-
-            TypeSymbol resType = binary.Op switch
-            {
-                Operations.GreaterThan or Operations.GreaterThanOrEqual
-                or Operations.LessThan or Operations.LessThanOrEqual
-                or Operations.EqualsEquals or Operations.NotEquals => _typeTable.Int32,
-
-                Operations.Plus or Operations.Minus
-                or Operations.Multiply or Operations.Divide or Operations.DivisionRem
-                or Operations.BitAnd or Operations.BitXor or Operations.BitOr => operandType,
-
-                _ => throw new NotSupportedException("Unknown operation")
-            };
-
-            return new BoundBinaryExpression(resType, binary.Op, left, right);
+            return BindByRule(val, binary.Op, left, right);
         }
+
+        private BoundBinaryExpression BindByRule(BinaryRule rule, Operation op, BoundExpression left, BoundExpression right)
+        {
+            switch (rule)
+            {
+                case BinaryRule.IntegerArithmetic:
+                case BinaryRule.Arithmetic:
+                    var type = GetCommonArithmeticType(left.Type, right.Type);
+
+                    if (type != left.Type) left = BindConversion(left, type);
+                    if (type != right.Type) right = BindConversion(right, type);
+
+                    return new BoundBinaryExpression(type, op, left, right);
+                
+                case BinaryRule.Logical:
+                    return new BoundBinaryExpression(_typeTable.Bool, op, BindConversion(left, _typeTable.Bool), BindConversion(right, _typeTable.Bool));
+                
+                case BinaryRule.Shift:
+                    if ((left.Type is IntegerTypeSymbol integer3 && (int)integer3.Size < 4) || left.Type is BoolTypeSymbol) 
+                        left = BindConversion(left, _typeTable.Int32);
+                    
+                    if ((right.Type is IntegerTypeSymbol integer4 && (int)integer4.Size < 4) || right.Type is IntegerTypeSymbol) 
+                        right = BindConversion(right, _typeTable.Int32);
+
+                    return new BoundBinaryExpression(left.Type, op, left, right);
+
+                case BinaryRule.PointerComparison:
+                    return new BoundBinaryExpression(_typeTable.Int32, op, left, right);
+
+                case BinaryRule.PointerArithmetic:
+                    if (left.Type is PointerTypeSymbol && right.Type is PointerTypeSymbol) goto case default;
+
+                    if (left.Type is PointerTypeSymbol)
+                        return new BoundBinaryExpression(left.Type, op, left, right);
+                    else if (right.Type is PointerTypeSymbol)
+                        return new BoundBinaryExpression(right.Type, op, left, right);
+
+                    goto default;
+
+                default: throw new NotImplementedException();
+            }
+        }
+
+        private BoundUnaryExpression BindByRule(UnaryRule rule, Operation op, BoundExpression right)
+        {
+            switch (rule)
+            {
+                case UnaryRule.PlusOrMinus:
+                    return new BoundUnaryExpression(right.Type, op, right);
+
+                case UnaryRule.Arithmetic:
+                    if (right.Type is BoolTypeSymbol || right.Type is IntegerTypeSymbol integer && (int)integer.Size < 4)
+                        right = BindConversion(right, _typeTable.Int32);
+
+                    return new BoundUnaryExpression(right.Type, op, right);
+
+                case UnaryRule.Logical:
+                    return new BoundUnaryExpression(_typeTable.Int32, op, right);
+
+                case UnaryRule.ReferenceOf:
+                    {
+                        bool canAddress = CanTakeAddress(right);
+
+                        if (!canAddress) throw new ArgumentException("Invalid operator for &");
+
+                        return new BoundUnaryExpression(_typeTable.GetPointer(right.Type), op, right);
+                    }
+                case UnaryRule.Dereference:
+                    {
+                        var tmp = (PointerTypeSymbol)right.Type;
+                        return new BoundUnaryExpression(tmp.ElementType, op, right);
+                    }
+
+                default: throw new NotImplementedException();
+            }
+        }
+
         private BoundUnaryExpression BindUnaryExpression(UnaryExpression unary)
         {
             var right = BindExpression(unary.Right);
+            var key = (unary.Op, right.Type.GetType());
 
-            bool isInteger = right.Type is IntegerTypeSymbol or BoolTypeSymbol;
-            bool isArithmetic = isInteger || right.Type is FloatTypeSymbol;
+            if (!_unaryRules.TryGetValue(key, out var val)) throw new ArgumentException($"Operator: {unary.Op} cannot be applied to type {right.Type}");
 
-            switch (unary.Op)
-            {
-                case Operations.Not:
-                    if (!isArithmetic && right.Type is not PointerTypeSymbol) throw new ArgumentException("invalid operation for !");
-                    return new BoundUnaryExpression(_typeTable.Int32, unary.Op, right);
-
-                case Operations.Plus:
-                case Operations.Minus:
-                case Operations.BitNot:
-                    {
-                        if (unary.Op is Operations.BitNot ? !isInteger : !isArithmetic) throw new ArgumentException($"invalid operation for {unary.Op}");
-
-                        if (right.Type is BoolTypeSymbol || right.Type is IntegerTypeSymbol integer && (int)integer.Size < 4)
-                            right = BindConversion(right, _typeTable.Int32);
-
-                        return new BoundUnaryExpression(right.Type, unary.Op, right);
-                    }
-
-                case Operations.PlusPlusLeft:
-                case Operations.PlusPlusRight:
-                case Operations.MinusMinusLeft:
-                case Operations.MinusMinusRight:
-                    {
-                        if (right is not BoundVariableExpression) throw new ArgumentException("Expected a variable");
-
-                        if (!isArithmetic) throw new ArgumentException("Invalid operand");
-
-                        return new BoundUnaryExpression(right.Type, unary.Op, right);
-                    }
-                default: throw new NotSupportedException($"Unsupported unary: {unary.Op}");
-            }
+            return BindByRule(val, unary.Op, right);
         }
 
         private BoundExpression BindConversion(BoundExpression expression, TypeSymbol targetType)
@@ -116,9 +273,6 @@ namespace Best_language.src.middle
             if (left is BoolTypeSymbol || left is IntegerTypeSymbol left_ && (int)left_.Size < 4) left = _typeTable.Int32;
 
             if (right is BoolTypeSymbol || right is IntegerTypeSymbol right_ && (int)right_.Size < 4) right = _typeTable.Int32;
-
-            bool leftArithmetic = left is IntegerTypeSymbol or FloatTypeSymbol;
-            bool rightArithmetic = right is IntegerTypeSymbol or FloatTypeSymbol;
 
             if (left == right) return left;
 
@@ -162,22 +316,30 @@ namespace Best_language.src.middle
             if (!scopes.TryGetVariable(name, out variable)) throw new ArgumentException($"Variable {name} not exist");
         }
 
-        private Operations GetOperationFromCompoundOperation(Operations op) => op switch
+        private Operation GetOperationFromCompoundOperation(Operation op) => op switch
         {
-            Operations.MinusEquals => Operations.Minus,
-            Operations.PlusEquals => Operations.Plus,
-            Operations.DivideEquals => Operations.Divide,
-            Operations.DivisionRemEquals => Operations.DivisionRem,
-            Operations.MultiplyEquals => Operations.Multiply,
+            Operation.MinusEquals => Operation.Minus,
+            Operation.PlusEquals => Operation.Plus,
+            Operation.DivideEquals => Operation.Divide,
+            Operation.DivisionRemEquals => Operation.DivisionRem,
+            Operation.MultiplyEquals => Operation.Multiply,
 
-            Operations.BitAndEquals => Operations.BitAnd,
-            Operations.BitOrEquals => Operations.BitOr,
-            Operations.BitXorEquals => Operations.BitXor,
+            Operation.BitAndEquals => Operation.BitAnd,
+            Operation.BitOrEquals => Operation.BitOr,
+            Operation.BitXorEquals => Operation.BitXor,
 
-            Operations.LeftShiftEquals => Operations.LeftShift,
-            Operations.RightShiftEquals => Operations.RightShift,
+            Operation.LeftShiftEquals => Operation.LeftShift,
+            Operation.RightShiftEquals => Operation.RightShift,
 
             _ => throw new ArgumentException("Unknown compound operation")
+        };
+
+        private bool CanTakeAddress(BoundExpression ex) => ex switch
+        {
+            BoundVariableExpression => true,
+            BoundUnaryExpression unary when unary.Op is Operation.Dereference => true,
+
+            _ => false,
         };
     }
 }

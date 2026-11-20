@@ -1,6 +1,4 @@
 using Best_language.src.front;
-using System.Numerics;
-using System.Xml.Linq;
 
 namespace Best_language.src.middle
 {
@@ -52,9 +50,9 @@ namespace Best_language.src.middle
 
         public override string ToString() => $"{nameof(IrJump)}: {Target}";
     }
-    public class IrBinary(Operations op, IrValue left, IrValue right, IrValue result) : IrInstruction
+    public class IrBinary(Operation op, IrValue left, IrValue right, IrValue result) : IrInstruction
     {
-        public Operations Op { get; } = op;
+        public Operation Op { get; } = op;
         public IrValue Left { get; } = left;
         public IrValue Right { get; } = right;
 
@@ -69,9 +67,9 @@ namespace Best_language.src.middle
 
         public override string ToString() => $"{nameof(IrConversion)}: {Left}, {Right}";
     }
-    public class IrUnary(Operations op, IrValue right, IrValue result) : IrInstruction
+    public class IrUnary(Operation op, IrValue right, IrValue result) : IrInstruction
     {
-        public Operations Op { get; } = op;
+        public Operation Op { get; } = op;
         public IrValue Right { get; } = right;
 
         public IrValue Result { get; } = result;

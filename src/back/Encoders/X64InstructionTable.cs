@@ -1442,6 +1442,29 @@ namespace Best_language.src.back.Encoders
                 ]
             });
 
+            // lea r 64, m
+            Add(new X64Form
+            {
+                Kind = X64Opcode.lea,
+                Opcode = 0x8D,
+                SizeMode = X64OperandSizeMode.Fixed64,
+
+                Operands = [
+                    new()
+                    {
+                        Kind = X64OperandKind.Register,
+                        Role = X64OperandRole.ModRmReg,
+                        Size = X64Size.qword
+                    },
+                    new()
+                    {
+                        Kind = X64OperandKind.Memory,
+                        Role = X64OperandRole.ModRmRm,
+                        Size = X64Size.qword
+                    }
+                ]
+            });
+
             // test r/m 8, r 8
             Add(new X64Form
             {

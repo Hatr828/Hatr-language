@@ -64,6 +64,13 @@ namespace Best_language.src.back.Printers
                     return operand.Value.ToString();
 
                 case X64ValueKind.Memory:
+                    if(operand.Offset == 0)
+                    {
+                        if (operand.Size != X64Size.@byte)
+                            return $"{operand.Size} [{operand.Register}-{operand.Offset}]";
+                        else
+                            return $"byte [{operand.Register}-{operand.Offset}]";
+                    }
                     if (operand.Size != X64Size.@byte)
                         return $"{operand.Size} [{operand.Register}{operand.Offset}]";
                     else

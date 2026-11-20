@@ -14,42 +14,68 @@ namespace Best_language.src
         static void Main(string[] args)
         {
             string code = @"
-                double a = !0.0;
-                a = 10.0;
-                while(a < 10.0) 
-                {
-                    -++a;
-                    int a;
-                    a = 1;
-                    a = 2;
-                }
-                if(true) {}
-                else if(0.0) {}
+                int a = 42 + 1.0;
+                int* p = &a;
+                p++;
+                ++p;
+                int result = *p; 
                 ";
+            var sw = Stopwatch.StartNew();
+
             Lexer lexer = new(code);
             var tokens = lexer.GetTokens();
+
+            sw.Stop();
+            Console.WriteLine($"Lexer done in: {sw.ElapsedTicks} ticks");
+            Console.WriteLine("\n ---- \n");
+
             Console.WriteLine(string.Join(",", tokens));
             Console.WriteLine("\n ---- \n");
 
+            sw.Restart();
+
             Parser parser = new(tokens);
+            sw.Stop();
+            Console.WriteLine($"Parser done in: {sw.ElapsedTicks} ticks");
+            Console.WriteLine("\n ---- \n");
+
             ProgramNode node = parser.GetAstNodes();
             AstPrinter.Print(node);
             Console.WriteLine("\n ---- \n");
 
+            sw.Restart();
+
             BoundTree boundTree = new();
-            BoundProgram boundProgram = boundTree.BindProgram(node, parser._typeTable);
+            BoundProgram boundProgram = boundTree.BindProgram(node, Parser._typeTable);
+
+            sw.Stop();
+            Console.WriteLine($"BoundTree done in: {sw.ElapsedTicks} ticks");
+            Console.WriteLine("\n ---- \n");
+
             BoundTreePrinter.Print(boundProgram);
             Console.WriteLine("\n ---- \n");
 
+            sw.Restart();
+
             IrLowering ir = new();
             IrProgram irProgram = ir.Lower(boundProgram);
+
+            sw.Stop();
+            Console.WriteLine($"IrLowering done in: {sw.ElapsedTicks} ticks");
+            Console.WriteLine("\n ---- \n");
 
             // irProgram = Optimizations.ConstantFolding.Start(irProgram);
             IrPrinter.Print(irProgram);
             Console.WriteLine("\n ---- \n");
 
+            sw.Restart();
+
             X64CodeGenerator codeGen = new(irProgram);
             List<X64Instruction> instructions = codeGen.GenerateInstructions();
+
+            sw.Stop();
+            Console.WriteLine($"X64CodeGenerator done in: {sw.ElapsedTicks} ticks");
+            Console.WriteLine("\n ---- \n");
 
             string assembly = X64Printer.GenerateAsm(instructions);
             Console.WriteLine(assembly);
@@ -57,8 +83,14 @@ namespace Best_language.src
             BuildAndRun(assembly);
             Console.WriteLine("\n ---- \n");
 
+            sw.Restart();
+
             var encoder = new X64Encoder();
             var tmp = encoder.Encode(instructions);
+
+            sw.Stop();
+            Console.WriteLine($"X64Encoder done in: {sw.ElapsedTicks} ticks");
+            Console.WriteLine("\n ---- \n");
 
             var exe = PeWriter.Build(tmp.bytes, tmp.importFixups);
             File.WriteAllBytes("program_.exe", exe);

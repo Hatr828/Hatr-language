@@ -1,9 +1,28 @@
 using Best_language.src.front;
-using System.Numerics;
-using System.Runtime.CompilerServices;
 
 namespace Best_language.src.middle
 {
+    public enum BinaryRule : byte
+    {
+        Arithmetic,
+        IntegerArithmetic,
+        Shift,
+        Logical,
+        ArithmeticComparison,
+
+        PointerComparison,
+        PointerArithmetic,
+    }
+
+    public enum UnaryRule : byte
+    {
+        Logical,
+        PlusOrMinus,
+        Arithmetic,
+        ReferenceOf,
+        Dereference,
+    }
+
     public abstract class BoundNode
     {
         public abstract string DName { get; }
@@ -235,10 +254,10 @@ namespace Best_language.src.middle
         public override string DName => $"{nameof(BoundBoolExpression)}: {Value}";
         public override IEnumerable<BoundNode> Children => [];
     }
-    public class BoundBinaryExpression(TypeSymbol type, Operations op, BoundExpression left, BoundExpression right) : BoundExpression(type)
+    public class BoundBinaryExpression(TypeSymbol type, Operation op, BoundExpression left, BoundExpression right) : BoundExpression(type)
     {
         public BoundExpression Left { get; } = left;
-        public Operations Op { get; } = op;
+        public Operation Op { get; } = op;
         public BoundExpression Right { get; } = right;
         public override string DName => $"{nameof(BoundBinaryExpression)}: {Op} ({Type})";
         public override IEnumerable<BoundNode> Children
@@ -250,9 +269,9 @@ namespace Best_language.src.middle
             }
         }
     }
-    public class BoundUnaryExpression(TypeSymbol type, Operations op, BoundExpression right) : BoundExpression(type)
+    public class BoundUnaryExpression(TypeSymbol type, Operation op, BoundExpression right) : BoundExpression(type)
     {
-        public Operations Op { get; } = op;
+        public Operation Op { get; } = op;
         public BoundExpression Right { get; } = right;
         public override string DName => $"{nameof(BoundUnaryExpression)}: {Op} ({Type})";
         public override IEnumerable<BoundNode> Children

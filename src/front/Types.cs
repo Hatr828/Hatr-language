@@ -39,7 +39,7 @@ namespace Best_language.src.front
     public class PointerTypeSymbol(TypeSymbol elementType) : TypeSymbol($"{elementType}*")
     {
         public TypeSymbol ElementType { get; } = elementType;
-        public override string ToString() => $"{nameof(PointerTypeSymbol)} ({Name}: {ElementType})";
+        public override string ToString() => $"{nameof(PointerTypeSymbol)} ({Name})";
     }
 
     public class EnumTypeSymbol(string name, IntegerTypeSymbol enumType) : TypeSymbol(name)

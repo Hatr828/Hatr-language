@@ -3,7 +3,7 @@ namespace Best_language.src.front
     public partial class Parser
     {
         private List<Token> _tokens = new List<Token>();
-        public TypeTable _typeTable = new();
+        public static TypeTable _typeTable = new();
         private int _idx;
 
         public Parser(List<Token> tokens)
@@ -14,6 +14,7 @@ namespace Best_language.src.front
         public ProgramNode GetAstNodes()
         {
             List<AstNode> res = new List<AstNode>();
+            _typeTable = new();
 
             while (_idx < _tokens.Count)
             {
@@ -192,12 +193,14 @@ namespace Best_language.src.front
             {
                 case TokenKind.Plus:
                 case TokenKind.Minus:
+                case TokenKind.Multiply:
                 case TokenKind.Not:
                 case TokenKind.BitNot:
+                case TokenKind.BitAnd:
                 case TokenKind.PlusPlus:
                 case TokenKind.MinusMinus:
                     {
-                        left = new UnaryExpression(GetOperatorAndPriority().Item1, GetExpression(100));
+                        left = new UnaryExpression(GetOperatorAndPriorityUnary().Item1, GetExpression(100));
                         break;
                     }
                 case TokenKind.RightParen:
@@ -245,8 +248,8 @@ namespace Best_language.src.front
                 {
                     var op2 = _tokens[_idx++].kind switch
                     {
-                        TokenKind.PlusPlus => Operations.PlusPlusRight,
-                        TokenKind.MinusMinus => Operations.MinusMinusRight,
+                        TokenKind.PlusPlus => Operation.PlusPlusRight,
+                        TokenKind.MinusMinus => Operation.MinusMinusRight,
                         _ => throw new Exception()
                     };
 
@@ -303,8 +306,25 @@ namespace Best_language.src.front
         {
             var type = ParseType();
 
+            if (_tokens[_idx].kind is TokenKind.Multiply) // pointer
+            {
+                _idx++;
+                Requires(TokenKind.Indent);
+
+                if (_tokens[_idx].kind is TokenKind.Equals) // pointer with initialization
+                {
+                    _idx++;
+                    var temp = new VariableDeclaration(_tokens[_idx - 2].val!, _typeTable.GetPointer(type), GetExpression());
+
+                    Requires(TokenKind.SemiColon);
+                    return temp;
+                }
+                
+                return new VariableDeclaration(_tokens[_idx - 2].val!, _typeTable.GetPointer(type));
+            }
+
             Requires(TokenKind.Indent);
-            if (_tokens[_idx].kind is TokenKind.Equals)
+            if (_tokens[_idx].kind is TokenKind.Equals) // variable
             {
                 _idx++;
                 var temp = new VariableDeclaration(_tokens[_idx - 2].val!, type, GetExpression());
@@ -313,12 +333,12 @@ namespace Best_language.src.front
 
                 return temp;
             }
-            else if (_tokens[_idx].kind is TokenKind.SemiColon)
+            else if (_tokens[_idx].kind is TokenKind.SemiColon) // variable without initialization 
             {
                 _idx++;
                 return new VariableDeclaration(_tokens[_idx - 2].val!, type);
             }
-            else if (_tokens[_idx].kind is TokenKind.RightParen)
+            else if (_tokens[_idx].kind is TokenKind.RightParen) // function
             {
                 _idx++;
                 string name = _tokens[_idx - 2].val!;

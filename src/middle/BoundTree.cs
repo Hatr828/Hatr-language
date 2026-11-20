@@ -1,6 +1,4 @@
 using Best_language.src.front;
-using System.ComponentModel;
-using System.Xml.Linq;
 
 namespace Best_language.src.middle
 {
@@ -84,9 +82,8 @@ namespace Best_language.src.middle
                         return temp;
                     }
                 case IfDeclaration @if:
-                    {
                         return BindIf(@if);
-                    }
+
                 case ElseIfDeclaration elseIf:
                     {
                         var If = new BoundElseIfDeclaration(new 
@@ -163,7 +160,7 @@ namespace Best_language.src.middle
 
                         BoundExpression ex;
 
-                        if (assignment.Op is Operations op)
+                        if (assignment.Op is Operation op)
                         {
                             ex = BindExpression(new BinaryExpression(new VariableExpression(assignment.Name), 
                                 GetOperationFromCompoundOperation(op), assignment.Right));

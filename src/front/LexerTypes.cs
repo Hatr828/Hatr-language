@@ -25,8 +25,9 @@ namespace Best_language.src.front
 
     }
 
-    public enum TokenKind
+    public enum TokenKind : byte
     {
+        // Do not move
         Int,
         Void,
         Long,
@@ -38,6 +39,7 @@ namespace Best_language.src.front
 
         Signed, 
         UnSigned,
+        //
 
         U, L, LU, UL, LL, ULL, LLU, F,
 
@@ -216,5 +218,110 @@ namespace Best_language.src.front
         {
             [("else", "if")] = TokenKind.ElseIf,
         };
+    }
+
+    public static class HatrSyntax
+    {
+        public static Dictionary<string, TokenKind> keywords = new()
+        {
+            ["INT"] = TokenKind.Int,
+            ["void"] = TokenKind.Void,
+            ["single"] = TokenKind.Double,
+            ["afloat"] = TokenKind.Float,
+            ["small"] = TokenKind.Long,
+            ["ranch"] = TokenKind.Char,
+            ["tall"] = TokenKind.Short,
+            ["boom"] = TokenKind.Bool,
+
+            ["unsigned"] = TokenKind.Signed,
+            ["signed"] = TokenKind.UnSigned,
+
+            ["fi"] = TokenKind.If,
+            ["elfi"] = TokenKind.ElseIf,
+            ["elf"] = TokenKind.Else,
+            ["ttrruuee"] = TokenKind.True,
+            ["ffaallssee"] = TokenKind.False,
+
+            ["rent"] = TokenKind.Return,
+
+            ["whale"] = TokenKind.While,
+            ["fire"] = TokenKind.For,
+            ["done"] = TokenKind.Do,
+
+            ["goat"] = TokenKind.Goto,
+
+            ["U"] = TokenKind.U,
+            ["L"] = TokenKind.L,
+            ["UL"] = TokenKind.UL,
+            ["LU"] = TokenKind.LU,
+            ["ULL"] = TokenKind.ULL,
+            ["LLU"] = TokenKind.LLU,
+            ["F"] = TokenKind.F,
+
+            ["u"] = TokenKind.U,
+            ["l"] = TokenKind.L,
+            ["ul"] = TokenKind.UL,
+            ["lu"] = TokenKind.LU,
+            ["ull"] = TokenKind.ULL,
+            ["llu"] = TokenKind.LLU,
+            ["f"] = TokenKind.F,
+        };
+
+        public static Dictionary<char, TokenKind> chars = new()
+        {
+            ['*'] = TokenKind.Multiply,
+            ['+'] = TokenKind.Plus,
+            ['-'] = TokenKind.Minus,
+            ['/'] = TokenKind.Divide,
+            ['%'] = TokenKind.DivisionRem,
+
+            ['('] = TokenKind.LeftParen,
+            [')'] = TokenKind.RightParen,
+            ['{'] = TokenKind.LeftBrace,
+            ['}'] = TokenKind.RightBrace,
+
+            ['='] = TokenKind.Equals,
+            ['?'] = TokenKind.SemiColon,
+            ['>'] = TokenKind.GreaterThan,
+            ['<'] = TokenKind.LessThan,
+            ['!'] = TokenKind.Not,
+
+            [':'] = TokenKind.Colon,
+            [','] = TokenKind.Comma,
+            ['.'] = TokenKind.Dot,
+
+            ['~'] = TokenKind.BitNot,
+            ['|'] = TokenKind.BitOr,
+            ['&'] = TokenKind.BitAnd,
+            ['^'] = TokenKind.BitXor,
+        };
+
+        public static Dictionary<string, TokenKind> doubleChars = new()
+        {
+            [">="] = TokenKind.GreaterThanOrEquals,
+            ["=="] = TokenKind.EqualsEquals,
+            ["!="] = TokenKind.NotEquals,
+            ["<="] = TokenKind.LessThanOrEquals,
+            ["&&"] = TokenKind.And,
+            ["||"] = TokenKind.Or,
+
+            ["++"] = TokenKind.PlusPlus,
+            ["--"] = TokenKind.MinusMinus,
+
+            ["<<"] = TokenKind.LeftShift,
+            [">>"] = TokenKind.RightShift,
+
+            ["+="] = TokenKind.PlusEquals,
+            ["-="] = TokenKind.MinusEquals,
+            ["*="] = TokenKind.MultiplyEquals,
+            ["/="] = TokenKind.DivideEquals,
+            ["%="] = TokenKind.DivisionRemEquals,
+
+            ["^="] = TokenKind.BitXorEquals,
+            ["|="] = TokenKind.BitOrEquals,
+            ["&="] = TokenKind.BitAndEquals,
+        };
+
+        public static Dictionary<(string, string), TokenKind> specialKeywords = new();
     }
 }
