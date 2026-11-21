@@ -1,4 +1,5 @@
 using Best_language.src.front;
+using Microsoft.Extensions.FileProviders;
 using System.Numerics;
 
 namespace Best_language.src.middle
@@ -10,6 +11,9 @@ namespace Best_language.src.middle
         private IrProgram _currentProgram = new();
 
         private Dictionary<VariableSymbol, IrValue> _variables = new();
+        private List<string> _breaks = new();
+        private List<string> _continues = new();
+        private List<string> _defaults = new();
 
         private IrValue NewIrValue(TypeSymbol type) => new(_nextId++, type);
         private string NewLabelName(string name) => $"{name}_{_nextLebelId++}";
@@ -42,20 +46,93 @@ namespace Best_language.src.middle
                         return;
                     }
                 case BoundWhileDeclaration @while:
-                    {
                         LowerWhile(@while);
                         return;
-                    }
+
                 case BoundForDeclaration @for:
-                    {
                         LowerFor(@for);
                         return;
-                    }
+
                 case BoundIfDeclaration @if:
-                    {
                         LowerIf(@if);
                         return;
+
+                case BoundSwitchDeclaration @switch:
+                    string endLabel = NewLabelName("switch_end");
+                    List<string> labels = new();
+                    string? defaultStartLabel = null;
+
+                    _breaks.Add(endLabel);
+
+                    foreach (var @case in @switch.Cases)
+                    {
+                        if (@case.Expression is not null)
+                        {
+                            string caseEndLabel = NewLabelName("case_end");
+                            IrValue condition = LowerExpression(@case.Expression);
+
+                            Emit(new IrJumpIfTrue(condition, caseEndLabel));
+
+                            labels.Add(caseEndLabel);
+                        }
+                        else defaultStartLabel = NewLabelName("default_start");
                     }
+
+                    if (defaultStartLabel is not null) Emit(new IrJump(defaultStartLabel));
+
+                    int idx = 0;
+                    foreach (var @case in @switch.Cases)
+                    {
+                        if (@case.IsDefault)
+                        {
+                            if (defaultStartLabel is null) continue;
+                            Emit(new IrLabel(defaultStartLabel));
+                            foreach (var statement in @case.Statements) LowerNode(statement);
+                        }
+                        else
+                        {
+                            Emit(new IrLabel(labels[idx++]));
+                            foreach (var statement in @case.Statements) LowerNode(statement);
+                        }
+                    }
+
+
+                    _breaks.RemoveAt(_breaks.Count - 1);
+
+                    Emit(new IrLabel(endLabel));
+                    return;
+
+                case BoundCaseDeclaration @case:
+                    if (@case.Expression is not null)
+                    {
+                        string caseEndLabel = NewLabelName("case_end");
+
+                        IrValue condition = LowerExpression(@case.Expression);
+
+                        Emit(new IrJumpIfNotTrue(condition, caseEndLabel));
+
+                        foreach (var statement in @case.Statements)
+                            LowerNode(statement);
+
+                        Emit(new IrLabel(caseEndLabel));
+                    }
+                    else
+                    {
+                        defaultStartLabel = NewLabelName("default_start");
+
+                        Emit(new IrLabel(defaultStartLabel));
+
+                        foreach (var statement in @case.Statements)
+                            LowerNode(statement);
+                    }
+                    return;
+
+                case BoundBreakStatement:
+                    Emit(new IrJump(_breaks[^1]));
+                        return;
+                case BoundContinueStatement:
+                    Emit(new IrJump(_continues[^1]));
+                    return;
                 case BoundGotoDeclaration @goto:
                     Emit(new IrLabel("user_" + @goto.Id)); return;
                 case BoundGotoStatement @goto:
@@ -186,14 +263,20 @@ namespace Best_language.src.middle
             string whileLabel = NewLabelName("while");
             string endLabel = NewLabelName("end");
 
+            _continues.Add(whileLabel);
+            _breaks.Add(endLabel);
+
             Emit(new IrLabel(whileLabel));
 
-            IrValue condition = LowerExpression(@while.Expression); ;
+            IrValue condition = LowerExpression(@while.Expression);
 
             Emit(new IrJumpIfNotTrue(condition, endLabel));
 
             foreach (var statement in @while.Statements)
                 LowerNode(statement);
+
+            _continues.RemoveAt(_continues.Count - 1);
+            _breaks.RemoveAt(_breaks.Count - 1);
 
             Emit(new IrJump(whileLabel));
             Emit(new IrLabel(endLabel));
@@ -205,6 +288,9 @@ namespace Best_language.src.middle
 
             string forLabel = NewLabelName("for");
             string endLabel = NewLabelName("end");
+
+            _continues.Add(forLabel);
+            _breaks.Add(endLabel);
 
             Emit(new IrLabel(forLabel));
             IrValue condition;
@@ -218,6 +304,9 @@ namespace Best_language.src.middle
                 LowerNode(statement);
 
             if (@for.Step is not null) LowerExpression(@for.Step);
+
+            _continues.RemoveAt(_continues.Count - 1);
+            _breaks.RemoveAt(_breaks.Count - 1);
 
             Emit(new IrJump(forLabel));
             Emit(new IrLabel(endLabel));

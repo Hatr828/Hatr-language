@@ -291,7 +291,7 @@ namespace Best_language.src.back.Generators
                     Emit(new(GetOpcodeFromOperationFloat(binary.Op, isFloat), X64Operand.Reg(X64Register.xmm0), X64Operand.Reg(X64Register.xmm1)));
                     break;
 
-                case >= Operation.LessThan and <= Operation.EqualsEquals:
+                case >= Operation.LessThan and <= Operation.NotEquals:
                     CompareFloat(GetOpcodeFromOperationFloat(binary.Op, isFloat), isFloat);
                     break;
 
@@ -301,40 +301,43 @@ namespace Best_language.src.back.Generators
         }
         private void OperationBinaryGen(IrBinary binary)
         {
-            LoadValue(binary.Left, X64Register.rax);
-            LoadValue(binary.Right, X64Register.rcx);
+            X64Register l = GetRegisterSame(binary.Left.Type);
+            X64Register r = GetRegisterSame(binary.Left.Type) + 1;
+
+            LoadValue(binary.Left, l);
+            LoadValue(binary.Right, r);
 
             switch (binary.Op)
             {
                 case >= Operation.PlusEquals and <= Operation.BitOr:
-                    Emit(new(GetOpcodeFromOperationInt(binary.Op), X64Operand.Reg(X64Register.rax), X64Operand.Reg(X64Register.rcx)));
+                    Emit(new(GetOpcodeFromOperationInt(binary.Op), X64Operand.Reg(l), X64Operand.Reg(r)));
                     break;
 
                 case >= Operation.LessThan and <= Operation.NotEquals:
-                    Compare(GetOpcodeFromOperationInt(binary.Op));
+                    Compare(GetOpcodeFromOperationInt(binary.Op), l, r);
                     break;
 
                 case Operation.Divide:
                     Emit(new(X64Opcode.cqo));
-                    Emit(new(X64Opcode.idiv, X64Operand.Reg(X64Register.rcx)));
+                    Emit(new(X64Opcode.idiv, X64Operand.Reg(r)));
                     break;
 
                 case Operation.DivisionRem:
                     Emit(new(X64Opcode.cqo));
-                    Emit(new(X64Opcode.idiv, X64Operand.Reg(X64Register.rcx)));
-                    Emit(new(X64Opcode.mov, X64Operand.Reg(X64Register.rax), X64Operand.Reg(X64Register.rdx)));
+                    Emit(new(X64Opcode.idiv, X64Operand.Reg(r)));
+                    Emit(new(X64Opcode.mov, X64Operand.Reg(l), X64Operand.Reg(X64Register.rdx)));
                     break;
 
                 case Operation.And:
                     Emit(new(X64Opcode.sub,
-                              X64Operand.Reg(X64Register.rax),
-                              X64Operand.Reg(X64Register.rax)));
+                              X64Operand.Reg(l),
+                              X64Operand.Reg(l)));
 
                     Emit(new(X64Opcode.setne, X64Operand.Reg(X64Register.al)));
 
                     Emit(new(X64Opcode.sub,
-                             X64Operand.Reg(X64Register.rcx),
-                             X64Operand.Reg(X64Register.rcx)));
+                             X64Operand.Reg(r),
+                             X64Operand.Reg(r)));
 
                     Emit(new(X64Opcode.setne, X64Operand.Reg(X64Register.cl)));
                     Emit(new(X64Opcode.and,
@@ -342,30 +345,30 @@ namespace Best_language.src.back.Generators
                           X64Operand.Reg(X64Register.cl)));
 
                     Emit(new(X64Opcode.movzx,
-                          X64Operand.Reg(X64Register.rax),
+                          X64Operand.Reg(l),
                           X64Operand.Reg(X64Register.al)));
                     break;
 
                 case Operation.Or:
                     Emit(new(X64Opcode.or,
-                             X64Operand.Reg(X64Register.rax),
-                             X64Operand.Reg(X64Register.rcx)));
+                             X64Operand.Reg(l),
+                             X64Operand.Reg(r)));
 
                     Emit(new(X64Opcode.setne, X64Operand.Reg(X64Register.al)));
 
                     Emit(new(X64Opcode.movzx,
-                        X64Operand.Reg(X64Register.rax),
+                        X64Operand.Reg(l),
                         X64Operand.Reg(X64Register.al)));
                     break;
                 case Operation.LeftShift:
                     Emit(new(X64Opcode.shl,
-                             X64Operand.Reg(X64Register.rax),
+                             X64Operand.Reg(l),
                              X64Operand.Reg(X64Register.cl)));
                     break;
 
                 case Operation.RightShift:
                     Emit(new(X64Opcode.sar,
-                             X64Operand.Reg(X64Register.rax),
+                             X64Operand.Reg(l),
                              X64Operand.Reg(X64Register.cl)));
                     break;
 

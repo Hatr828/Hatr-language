@@ -14,11 +14,19 @@ namespace Best_language.src
         static void Main(string[] args)
         {
             string code = @"
-                int a = 42 + 1.0;
-                int* p = &a;
-                p++;
-                ++p;
-                int result = *p; 
+                int x = 2;
+    
+                switch (x) {
+                    case 1 + 2: {
+                        int a = 0;
+                        break;
+                    }
+                    default: 
+                        break;
+                    case 2:
+                        int a = 0;
+                        break;
+                }
                 ";
             var sw = Stopwatch.StartNew();
 

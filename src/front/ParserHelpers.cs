@@ -24,7 +24,7 @@ namespace Best_language.src.front
             _idx++;
         }
 
-        private (Operation, int) GetOperatorAndPriority() => _tokens[_idx++].kind switch
+        private (Operation, int) GetOperatorAndPriority() => _tokens[_idx].kind switch
         {
             TokenKind.Multiply => (Operation.Multiply, 70),
             TokenKind.Divide => (Operation.Divide, 70),

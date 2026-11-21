@@ -43,6 +43,52 @@ namespace Best_language.src.front
                         {
                             return ParseVariableOrFunction();
                         }
+                    case TokenKind.Switch:
+                        {
+                            _idx++;
+                            Requires(TokenKind.RightParen);
+
+                            Expression ex = GetExpression();
+                            List<CaseDeclaration> cases = new();
+
+                            Requires(TokenKind.LeftParen, TokenKind.RightBrace);
+
+                            while (_tokens.Count > _idx && _tokens[_idx].kind != TokenKind.LeftBrace)
+                            {
+                                List<AstNode> block = new();
+                                Expression? caseEx = null;
+
+                                if (_tokens.Count > _idx && _tokens[_idx].kind != TokenKind.Default)
+                                {
+                                    Requires(TokenKind.Case);
+                                    caseEx = GetExpression();
+                                }
+                                else Requires(TokenKind.Default);
+
+                                Requires(TokenKind.Colon);
+
+                                bool wasBrace = false;
+
+                                if (_tokens.Count > _idx && _tokens[_idx].kind is TokenKind.RightBrace)
+                                {
+                                    wasBrace = true; _idx++;
+                                }
+
+                                while (_tokens.Count > _idx && _tokens[_idx].kind is not TokenKind.Case and not TokenKind.Default and not TokenKind.LeftBrace)
+                                {
+                                    block.Add(GetAstNode());
+                                }
+
+                                if (_tokens.Count > _idx && wasBrace && _tokens[_idx].kind is TokenKind.LeftBrace) _idx++;
+
+                                if (caseEx is null) cases.Add(new(caseEx, block, true));
+                                else  cases.Add(new(caseEx, block));
+                            }
+
+                            Requires(TokenKind.LeftBrace);
+
+                            return new SwitchDeclaration(ex, cases);
+                        }
                     case TokenKind.Do:
                         {
                             _idx++;
@@ -172,6 +218,20 @@ namespace Best_language.src.front
 
                             return new ReturnStatement(ex);
                         }
+                    case TokenKind.Break:
+                        {
+                            _idx++;
+                            Requires(TokenKind.SemiColon);
+                            
+                            return new BreakStatement();
+                        }
+                    case TokenKind.Continue:
+                        {
+                            _idx++;
+                            Requires(TokenKind.SemiColon);
+
+                            return new ContinueStatement();
+                        }
                     case var kind when IsExpression(kind):
                         var tmp = GetExpression();
                         Requires(TokenKind.SemiColon);
@@ -242,7 +302,7 @@ namespace Best_language.src.front
                     throw new Exception("Error in Parser, unknown token: " + _tokens[_idx].kind);
             }
 
-            while (_idx < _tokens.Count && _tokens[_idx].kind is not TokenKind.SemiColon and not TokenKind.LeftParen)
+            while (_idx < _tokens.Count && _tokens[_idx].kind is not TokenKind.SemiColon and not TokenKind.LeftParen and not TokenKind.Colon)
             {
                 if (_tokens[_idx].kind is TokenKind.PlusPlus or TokenKind.MinusMinus)
                 {

@@ -54,6 +54,9 @@ namespace Best_language.src.front
         For,
         Do,
         While,
+        Switch,
+        Case,
+        Default,
 
         Return,
         Break,
@@ -135,7 +138,12 @@ namespace Best_language.src.front
             ["false"] = TokenKind.False,
 
             ["return"] = TokenKind.Return,
+            ["break"] = TokenKind.Break,
+            ["continue"] = TokenKind.Continue,
 
+            ["switch"] = TokenKind.Switch,
+            ["case"] = TokenKind.Case,
+            ["default"] = TokenKind.Default,
             ["while"] = TokenKind.While,
             ["for"] = TokenKind.For,
             ["do"] = TokenKind.Do,
@@ -243,6 +251,8 @@ namespace Best_language.src.front
             ["ffaallssee"] = TokenKind.False,
 
             ["rent"] = TokenKind.Return,
+            ["work"] = TokenKind.Break,
+            ["continuity"] = TokenKind.Continue,
 
             ["whale"] = TokenKind.While,
             ["fire"] = TokenKind.For,

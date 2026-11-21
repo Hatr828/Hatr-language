@@ -135,6 +135,33 @@ namespace Best_language.src.middle
             }
         }
     }
+    public class BoundSwitchDeclaration : BoundStatement
+    {
+        public List<BoundCaseDeclaration> Cases { get; } = new();
+        public override string DName => $"{nameof(SwitchDeclaration)}";
+        public override IEnumerable<BoundNode> Children
+        {
+            get
+            {
+                foreach (BoundCaseDeclaration node in Cases) yield return node;
+            }
+        }
+    }
+    public class BoundCaseDeclaration(BoundExpression? expression, bool isDefault) : BoundStatement
+    {
+        public bool IsDefault { get; set; } = isDefault;
+        public BoundExpression? Expression { get; } = expression;
+        public List<BoundStatement> Statements { get; } = new();
+        public override string DName => $"{nameof(CaseDeclaration)}";
+        public override IEnumerable<BoundNode> Children
+        {
+            get
+            {
+                if (Expression is not null) yield return Expression;
+                foreach (BoundNode node in Statements) yield return node;
+            }
+        }
+    }
     public class BoundElseIfDeclaration(BoundExpression expression) : BoundStatement
     {
         public BoundExpression Expression { get; } = expression;
@@ -206,6 +233,17 @@ namespace Best_language.src.middle
             }
         }
     }
+    public class BoundBreakStatement : BoundStatement
+    {
+        public override string DName => $"{nameof(BoundBreakStatement)}";
+        public override IEnumerable<BoundNode> Children => [];
+    }
+    public class BoundContinueStatement : BoundStatement
+    {
+        public override string DName => $"{nameof(BoundContinueStatement)}";
+        public override IEnumerable<BoundNode> Children => [];
+    }
+
     public class BoundGotoDeclaration(int id) : BoundStatement
     {
         public int Id { get; } = id;

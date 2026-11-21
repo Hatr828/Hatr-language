@@ -81,6 +81,36 @@ namespace Best_language.src.middle
 
                         return temp;
                     }
+                case SwitchDeclaration @switch:
+                    {
+                        var res = new BoundSwitchDeclaration();
+
+                        var switchEx = BindExpression(@switch.Expression);
+                        if (switchEx.Type is not IntegerTypeSymbol and not BoolTypeSymbol) throw new ArgumentException("Expected integer");
+
+                        foreach (var @case in @switch.Cases)
+                        {
+                            BoundExpression? caseEx = null;
+
+                            if (@case.Expression is not null)
+                                caseEx = BindExpression(@case.Expression, true);
+
+                            if (caseEx is not null && caseEx.Type is not IntegerTypeSymbol and not BoolTypeSymbol) throw new ArgumentException("Expected integer");
+
+                            if (caseEx is not null)
+                            {
+                                var ex = new BoundBinaryExpression(_typeTable.Bool, Operation.EqualsEquals, switchEx, caseEx);
+                                res.Cases.Add(new(ex, false));
+                            }
+                            else res.Cases.Add(new(null, true));
+
+                            scopes.AddScope();
+                            foreach (var statement in @case.Statements) res.Cases[^1].Statements.Add(BindStatement(statement));
+                            scopes.RemoveScope();
+                        }
+                        return res;
+                    }
+
                 case IfDeclaration @if:
                         return BindIf(@if);
 
@@ -154,6 +184,14 @@ namespace Best_language.src.middle
                     {
                         return new BoundReturnStatement(BindExpression(st.Expression!));
                     }
+                case BreakStatement:
+                    {
+                        return new BoundBreakStatement();
+                    }
+                case ContinueStatement:
+                    {
+                        return new BoundContinueStatement();
+                    }
                 case AssignmentStatement assignment:
                     {
                         IsVariableExist(assignment.Name, out TypeSymbol type);
@@ -187,7 +225,7 @@ namespace Best_language.src.middle
             throw new ArgumentException("Failed to bind a statement");
         }
 
-        private BoundExpression BindExpression(Expression expression)
+        private BoundExpression BindExpression(Expression expression, bool constantOnly = false)
         {
             switch (expression)
             {
@@ -197,6 +235,7 @@ namespace Best_language.src.middle
                     return new BoundDoubleExpression(@double.Type, @double.Value);
                 case VariableExpression variable:
                     {
+                        if (constantOnly) throw new ArgumentException("Expected constants only");
                         GetVariable(variable.Name, out var variableSymbol);
                         return new BoundVariableExpression(variableSymbol);
                     }

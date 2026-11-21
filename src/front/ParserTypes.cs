@@ -139,6 +139,18 @@ namespace Best_language.src.front
             }
         }
     }
+
+    public class BreakStatement() : Statement
+    {
+        public override string DName => $"{nameof(BreakStatement)}";
+        public override IEnumerable<AstNode> Children => [];
+    }
+    public class ContinueStatement() : Statement
+    {
+        public override string DName => $"{nameof(ContinueStatement)}";
+        public override IEnumerable<AstNode> Children => [];
+    }
+
     public class GotoDeclaration(string name) : Statement
     {
         public string Name { get; } = name;
@@ -166,6 +178,37 @@ namespace Best_language.src.front
         }
 
     }
+    public class SwitchDeclaration(Expression expression, List<CaseDeclaration> cases) : Statement
+    {
+        public Expression Expression { get; } = expression;
+        public List<CaseDeclaration> Cases { get; } = cases;
+        public override string DName => $"{nameof(SwitchDeclaration)}:";
+        public override IEnumerable<AstNode> Children
+        {
+            get
+            {
+                yield return Expression;
+                foreach (AstNode node in Cases) yield return node;
+            }
+        }
+
+    }
+    public class CaseDeclaration(Expression? expression, List<AstNode> codeBlock, bool isDefault = false) : Statement
+    {
+        public bool IsDefault { get; set; } = isDefault;
+        public Expression? Expression { get; } = expression;
+        public List<AstNode> Statements { get; } = codeBlock;
+        public override string DName => $"{nameof(CaseDeclaration)}:";
+        public override IEnumerable<AstNode> Children
+        {
+            get
+            {
+                if (Expression is not null) yield return Expression;
+                foreach (AstNode node in Statements) yield return node;
+            }
+        }
+    }
+
     public class ParamDeclaration(string name, TypeSymbol type, Expression? initializer) : Statement
     {
         public string Name { get; } = name;
@@ -282,9 +325,11 @@ namespace Best_language.src.front
     public enum Operation
     {
         // do not move
+
         PlusEquals,
         MinusEquals,
         MultiplyEquals,
+
         BitAndEquals,
         BitOrEquals,
         BitXorEquals,
@@ -313,8 +358,8 @@ namespace Best_language.src.front
         LessThanOrEqual,
         GreaterThan,
         GreaterThanOrEqual,
-        NotEquals,
         EqualsEquals,
+        NotEquals,
         //
 
         BitNot,

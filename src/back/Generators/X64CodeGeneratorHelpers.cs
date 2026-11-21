@@ -189,6 +189,7 @@ namespace Best_language.src.back.Generators
             Operation.LessThan => X64Opcode.setl,
             Operation.LessThanOrEqual => X64Opcode.setle,
             Operation.NotEquals => X64Opcode.setne,
+            Operation.EqualsEquals => X64Opcode.sete,
 
             _ => throw new NotImplementedException()
         };
@@ -315,16 +316,16 @@ namespace Best_language.src.back.Generators
             _constantsFP.Remove(conversion.Left);
         }
 
-        private void Compare(X64Opcode op)
+        private void Compare(X64Opcode op, X64Register l, X64Register r)
         {
             Emit(new(X64Opcode.cmp,
-                X64Operand.Reg(X64Register.rax),
-                X64Operand.Reg(X64Register.rcx)));
+                X64Operand.Reg(l),
+                X64Operand.Reg(r)));
 
             Emit(new(op, X64Operand.Reg(X64Register.al)));
 
             Emit(new(X64Opcode.movzx,
-                X64Operand.Reg(X64Register.rax),
+                X64Operand.Reg(l),
                 X64Operand.Reg(X64Register.al)));
         }
         private void CompareFloat(X64Opcode op, bool isFloat)
@@ -452,6 +453,14 @@ namespace Best_language.src.back.Generators
             2 => X64Register.ax,
             4 => X64Register.eax,
             8 => X64Register.rax,
+            _ => throw new ArgumentException()
+        };
+        private X64Register GetRegisterSame(TypeSymbol type) => type switch
+        {
+            BoolTypeSymbol => X64Register.al,
+            IntegerTypeSymbol tmp => GetRegisterSame((int)tmp.Size),
+            FloatTypeSymbol tmp => GetRegisterSame((int)tmp.Size),
+            PointerTypeSymbol => X64Register.rax,
             _ => throw new ArgumentException()
         };
         private X64Register GetRegisterSame(IrValue value) => value.Type switch
