@@ -2,28 +2,34 @@ namespace Best_language.src.front
 {
     public partial class Parser
     {
-        private List<Token> _tokens = new List<Token>();
+        private List<Token> _tokens = new();
         public static TypeTable _typeTable = new();
+        private ParserScopes _scopes = new();
         private int _idx;
 
-        public Parser(List<Token> tokens)
+        public ProgramNode GetAstNodes(List<Token> tokens)
         {
             _tokens = tokens;
-        }
-
-        public ProgramNode GetAstNodes()
-        {
-            List<AstNode> res = new List<AstNode>();
             _typeTable = new();
+            _scopes = new();
+            _idx = 0;
 
+            List<AstNode> res = new List<AstNode>();
+
+            _scopes.AddScope();
             while (_idx < _tokens.Count)
             {
-                res.Add(GetAstNode());
+                var tmp = GetAstNode();
+                if (tmp is not null) res.Add(tmp);
             }
+            _scopes.RemoveScope();
+#if DEBUG
+            if (!_scopes.IsEmpty()) throw new ArgumentException();
+#endif
 
             return new(res);
         }
-        private AstNode GetAstNode()
+        private AstNode? GetAstNode()
         {
 
             while (_idx < _tokens.Count)
@@ -41,10 +47,46 @@ namespace Best_language.src.front
                     case TokenKind.Double:
                     case TokenKind.Float:
                         {
-                            return ParseVariableOrFunction();
+                            var type = ParseType();
+                            return ParseVariableOrFunction(type);
+                        }
+                    case TokenKind.TypeDef:
+                        {
+                            _idx++;
+                            TypeSymbol type;
+                            string typName = _tokens[_idx].val!;
+
+                            if (typName is not null)
+                            {
+                                type = _typeTable.GetTypedef(typName);
+                                _idx++;
+                            }
+                            else type = ParseType();
+
+                            Requires(TokenKind.Indent);
+
+                            string name = _tokens[_idx - 1].val!;
+
+                            Requires(TokenKind.SemiColon);
+
+                            if (!_scopes.TryAddVariable(name, NameKind.TypeDef)) throw new ArgumentException($"Cannot define {name} because variable with the same name in the same scope already exist");
+
+                            if (type is TypedefTypeSymbol tmp2)
+                                _typeTable.AddTypedef(name, tmp2.ElementType);
+                            else
+                                _typeTable.AddTypedef(name, type);
+                            return null;
+                        }
+                    case TokenKind.Indent when _scopes.TryGetVariable(_tokens[_idx].val!, out var kind):
+                        {
+                            _idx++;
+                            var type = _typeTable.GetTypedef(_tokens[_idx - 1].val!);
+                            return ParseVariableOrFunction(type.ElementType);
                         }
                     case TokenKind.Switch:
                         {
+                            _scopes.AddScope();
+
                             _idx++;
                             Requires(TokenKind.RightParen);
 
@@ -71,6 +113,7 @@ namespace Best_language.src.front
 
                                 if (_tokens.Count > _idx && _tokens[_idx].kind is TokenKind.RightBrace)
                                 {
+                                    _scopes.AddScope();
                                     wasBrace = true; _idx++;
                                 }
 
@@ -79,13 +122,19 @@ namespace Best_language.src.front
                                     block.Add(GetAstNode());
                                 }
 
-                                if (_tokens.Count > _idx && wasBrace && _tokens[_idx].kind is TokenKind.LeftBrace) _idx++;
+                                if (_tokens.Count > _idx && wasBrace && _tokens[_idx].kind is TokenKind.LeftBrace)
+                                {
+                                    _scopes.RemoveScope();
+                                    _idx++;
+                                }
 
                                 if (caseEx is null) cases.Add(new(caseEx, block, true));
                                 else  cases.Add(new(caseEx, block));
                             }
 
                             Requires(TokenKind.LeftBrace);
+
+                            _scopes.RemoveScope();
 
                             return new SwitchDeclaration(ex, cases);
                         }
@@ -94,7 +143,9 @@ namespace Best_language.src.front
                             _idx++;
                             List<AstNode> block = new();
 
+                            _scopes.AddScope();
                             GetBlockCode(block);
+                            _scopes.RemoveScope();
 
                             Requires(TokenKind.While, TokenKind.RightParen);
 
@@ -114,12 +165,15 @@ namespace Best_language.src.front
 
                             Requires(TokenKind.LeftParen);
 
+                            _scopes.AddScope();
                             GetBlockCode(block);
+                            _scopes.RemoveScope();
 
                             return new WhileDeclaration(ex, block);
                         }
                     case TokenKind.For:
                         {
+
                             _idx++;
                             Requires(TokenKind.RightParen);
 
@@ -141,7 +195,9 @@ namespace Best_language.src.front
 
                             Requires(TokenKind.LeftParen);
 
+                            _scopes.AddScope();
                             GetBlockCode(block);
+                            _scopes.RemoveScope();
 
                             return new ForDeclaration(initializer, ex, step, block);
                         }
@@ -155,7 +211,9 @@ namespace Best_language.src.front
 
                             Requires(TokenKind.LeftParen);
 
+                            _scopes.AddScope();
                             GetBlockCode(block);
+                            _scopes.RemoveScope();
 
                             return new ElseIfDeclaration(ex, block);
                         }
@@ -302,7 +360,7 @@ namespace Best_language.src.front
                     throw new Exception("Error in Parser, unknown token: " + _tokens[_idx].kind);
             }
 
-            while (_idx < _tokens.Count && _tokens[_idx].kind is not TokenKind.SemiColon and not TokenKind.LeftParen and not TokenKind.Colon)
+            while (_idx < _tokens.Count && _tokens[_idx].kind is not TokenKind.SemiColon and not TokenKind.LeftParen and not TokenKind.Colon and not TokenKind.Comma)
             {
                 if (_tokens[_idx].kind is TokenKind.PlusPlus or TokenKind.MinusMinus)
                 {
@@ -362,56 +420,98 @@ namespace Best_language.src.front
             return res;
         }
 
-        private Statement ParseVariableOrFunction()
+        private Statement ParseVariableOrFunction(TypeSymbol type)
         {
-            var type = ParseType();
+            if (CheckKind(TokenKind.Indent, TokenKind.RightParen)) ParseFunction(type);
 
-            if (_tokens[_idx].kind is TokenKind.Multiply) // pointer
+            VariableDeclarations variables = new();
+
+            while (!CheckKind(TokenKind.SemiColon))
             {
-                _idx++;
-                Requires(TokenKind.Indent);
-
-                if (_tokens[_idx].kind is TokenKind.Equals) // pointer with initialization
+                if (CheckKind(TokenKind.Multiply)) // pointer
                 {
                     _idx++;
-                    var temp = new VariableDeclaration(_tokens[_idx - 2].val!, _typeTable.GetPointer(type), GetExpression());
+                    Requires(TokenKind.Indent);
 
-                    Requires(TokenKind.SemiColon);
-                    return temp;
+                    if (CheckKind(TokenKind.Equals)) // pointer with initialization
+                    {
+                        _idx++;
+                        _scopes.TryAddVariable(_tokens[_idx - 2].val!, NameKind.Variable);
+                        variables.variables.Add(new VariableDeclaration(_tokens[_idx - 2].val!, _typeTable.GetPointer(type), GetExpression()));
+                    }
+                    else
+                    {
+                        _scopes.TryAddVariable(_tokens[_idx - 1].val!, NameKind.Variable);
+                        variables.variables.Add(new VariableDeclaration(_tokens[_idx - 1].val!, _typeTable.GetPointer(type)));
+                    }
+
+                    if (CheckKind(TokenKind.SemiColon))
+                    {
+                        _idx++;
+                        return variables;
+                    }
+                    else if (CheckKind(TokenKind.Comma))
+                    {
+                        _idx++;
+                        continue;
+                    }
+                    else throw new ArgumentException("requires semiColon or comma");
                 }
-                
-                return new VariableDeclaration(_tokens[_idx - 2].val!, _typeTable.GetPointer(type));
+
+                Requires(TokenKind.Indent);
+                if (CheckKind(TokenKind.Equals)) // variable
+                {
+                    _idx++;
+                    _scopes.TryAddVariable(_tokens[_idx - 2].val!, NameKind.Variable);
+                    variables.variables.Add(new VariableDeclaration(_tokens[_idx - 2].val!, type, GetExpression()));
+
+                    if (CheckKind(TokenKind.SemiColon))
+                    {
+                        _idx++;
+                        return variables;
+                    }
+                    else if (CheckKind(TokenKind.Comma))
+                    {
+                        _idx++;
+                        continue;
+                    }
+                    else throw new ArgumentException("requires semiColon or comma");
+                }
+                else if (CheckKind(TokenKind.SemiColon)) // variable without initialization 
+                {
+                    _idx++;
+                    _scopes.TryAddVariable(_tokens[_idx - 2].val!, NameKind.Variable);
+                    variables.variables.Add(new VariableDeclaration(_tokens[_idx - 2].val!, type));
+                    return variables;
+                }
+                else
+                {
+                    Requires(TokenKind.Comma);
+                    _scopes.TryAddVariable(_tokens[_idx - 2].val!, NameKind.Variable);
+                    variables.variables.Add(new VariableDeclaration(_tokens[_idx - 2].val!, type));
+                }
+
             }
 
-            Requires(TokenKind.Indent);
-            if (_tokens[_idx].kind is TokenKind.Equals) // variable
-            {
-                _idx++;
-                var temp = new VariableDeclaration(_tokens[_idx - 2].val!, type, GetExpression());
+            throw new ArgumentException("Unknown syntax for variable or function.");
+        }
 
-                Requires(TokenKind.SemiColon);
-
-                return temp;
-            }
-            else if (_tokens[_idx].kind is TokenKind.SemiColon) // variable without initialization 
+        private Statement ParseFunction(TypeSymbol type)
+        {
+            if (CheckKind(TokenKind.Indent, TokenKind.RightParen)) // function
             {
-                _idx++;
-                return new VariableDeclaration(_tokens[_idx - 2].val!, type);
-            }
-            else if (_tokens[_idx].kind is TokenKind.RightParen) // function
-            {
-                _idx++;
+                _idx += 2;
                 string name = _tokens[_idx - 2].val!;
 
                 List<ParamDeclaration> @params = new();
 
-                while (_tokens[_idx].kind != TokenKind.LeftParen)
+                while (!CheckKind(TokenKind.LeftParen))
                 {
                     var typeParam = ParseType();
                     var NameParam = _tokens[_idx++].val!;
                     Expression? initializer = null;
 
-                    if (_tokens[_idx].kind is TokenKind.Equals)
+                    if (CheckKind(TokenKind.Equals))
                     {
                         _idx++;
 
@@ -426,16 +526,20 @@ namespace Best_language.src.front
 
                 _idx++; // LeftParen
                 List<AstNode> block = new();
+
+                _scopes.AddScope();
                 GetBlockCode(block);
+                _scopes.RemoveScope();
 
                 return new FuncDeclaration(type, name, @params, block);
             }
 
-            throw new ArgumentException("Unknown syntax for variable or function.");
+            throw new ArgumentException("Not function, expected function");
         }
 
         private IfDeclaration ParseIf()
         {
+
             _idx++;
             Requires(TokenKind.RightParen);
 
@@ -444,7 +548,9 @@ namespace Best_language.src.front
 
             Requires(TokenKind.LeftParen);
 
+            _scopes.AddScope();
             GetBlockCode(block);
+            _scopes.RemoveScope();
 
             if (_idx >= _tokens.Count) return new IfDeclaration(ex, block);
 
@@ -460,7 +566,9 @@ namespace Best_language.src.front
             @if.Else = new();
             _idx++;
 
+            _scopes.AddScope();
             GetBlockCode(@if.Else.CodeBlock);
+            _scopes.RemoveScope();
 
             return @if;
         }

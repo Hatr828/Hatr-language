@@ -11,9 +11,8 @@ namespace Best_language.src.middle
         private IrProgram _currentProgram = new();
 
         private Dictionary<VariableSymbol, IrValue> _variables = new();
-        private List<string> _breaks = new();
-        private List<string> _continues = new();
-        private List<string> _defaults = new();
+        private Stack<string> _breaks = new();
+        private Stack<string> _continues = new();
 
         private IrValue NewIrValue(TypeSymbol type) => new(_nextId++, type);
         private string NewLabelName(string name) => $"{name}_{_nextLebelId++}";
@@ -32,6 +31,9 @@ namespace Best_language.src.middle
         {
             switch (node)
             {
+                case BoundVariablesDeclaration variables:
+                    foreach (var variable in variables.variables) LowerNode(variable);
+                    return;
                 case BoundVariableDeclaration variable:
                     {
                         if (variable.Initializer is null)
@@ -62,7 +64,7 @@ namespace Best_language.src.middle
                     List<string> labels = new();
                     string? defaultStartLabel = null;
 
-                    _breaks.Add(endLabel);
+                    _breaks.Push(endLabel);
 
                     foreach (var @case in @switch.Cases)
                     {
@@ -97,7 +99,7 @@ namespace Best_language.src.middle
                     }
 
 
-                    _breaks.RemoveAt(_breaks.Count - 1);
+                    _breaks.Pop();
 
                     Emit(new IrLabel(endLabel));
                     return;
@@ -128,10 +130,10 @@ namespace Best_language.src.middle
                     return;
 
                 case BoundBreakStatement:
-                    Emit(new IrJump(_breaks[^1]));
+                    Emit(new IrJump(_breaks.Peek()));
                         return;
                 case BoundContinueStatement:
-                    Emit(new IrJump(_continues[^1]));
+                    Emit(new IrJump(_continues.Peek()));
                     return;
                 case BoundGotoDeclaration @goto:
                     Emit(new IrLabel("user_" + @goto.Id)); return;
@@ -263,8 +265,8 @@ namespace Best_language.src.middle
             string whileLabel = NewLabelName("while");
             string endLabel = NewLabelName("end");
 
-            _continues.Add(whileLabel);
-            _breaks.Add(endLabel);
+            _continues.Push(whileLabel);
+            _breaks.Push(endLabel);
 
             Emit(new IrLabel(whileLabel));
 
@@ -275,8 +277,8 @@ namespace Best_language.src.middle
             foreach (var statement in @while.Statements)
                 LowerNode(statement);
 
-            _continues.RemoveAt(_continues.Count - 1);
-            _breaks.RemoveAt(_breaks.Count - 1);
+            _continues.Pop();
+            _breaks.Pop();
 
             Emit(new IrJump(whileLabel));
             Emit(new IrLabel(endLabel));
@@ -289,8 +291,8 @@ namespace Best_language.src.middle
             string forLabel = NewLabelName("for");
             string endLabel = NewLabelName("end");
 
-            _continues.Add(forLabel);
-            _breaks.Add(endLabel);
+            _continues.Push(forLabel);
+            _breaks.Push(endLabel);
 
             Emit(new IrLabel(forLabel));
             IrValue condition;
@@ -305,8 +307,8 @@ namespace Best_language.src.middle
 
             if (@for.Step is not null) LowerExpression(@for.Step);
 
-            _continues.RemoveAt(_continues.Count - 1);
-            _breaks.RemoveAt(_breaks.Count - 1);
+            _continues.Pop();
+            _breaks.Pop();
 
             Emit(new IrJump(forLabel));
             Emit(new IrLabel(endLabel));

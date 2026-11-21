@@ -13,6 +13,16 @@ namespace Best_language.src.front
             foreach(var kind in kinds) if (_tokens[_idx++].kind != kind) throw new ArgumentException($"Requires {kind}");
         }
 
+        public bool CheckKind(params TokenKind[] kinds)
+        {
+            for (int i = 0; i < kinds.Length; i++)
+            {
+                if (_tokens[_idx + i].kind != kinds[i]) return false;
+            }
+
+            return true;
+        }
+
         private void GetBlockCode<T>(List<T> list) where T : AstNode
         {
             Requires(TokenKind.RightBrace);
@@ -51,7 +61,7 @@ namespace Best_language.src.front
             TokenKind.And => (Operation.And, 10),
             TokenKind.Or => (Operation.Or, 5),
 
-            _ => throw new ArgumentException($"Unknown Operation: {_tokens[_idx - 1].kind}")
+            _ => throw new ArgumentException($"Unknown Operation: {_tokens[_idx].kind}")
         };
 
         private (Operation, int) GetOperatorAndPriorityUnary() => _tokens[_idx++].kind switch

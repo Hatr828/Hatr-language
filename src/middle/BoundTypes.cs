@@ -91,6 +91,18 @@ namespace Best_language.src.middle
             }
         }
     }
+    public class BoundVariablesDeclaration : BoundStatement
+    {
+        public List<BoundVariableDeclaration> variables { get; } = new();
+        public override string DName => $"{nameof(BoundVariableDeclaration)})";
+        public override IEnumerable<BoundNode> Children
+        {
+            get                                                          
+            {
+                foreach(var variable in variables) yield return variable;
+            }
+        }
+    }
     public class BoundVariableDeclaration(VariableSymbol variable, BoundExpression? initializer) : BoundStatement
     {
         public VariableSymbol Variable { get; } = variable;

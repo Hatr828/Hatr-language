@@ -265,7 +265,7 @@ namespace Best_language.src.middle
 
             if (sourceNumeric && targetNumeric) return new BoundConversionExpression(expression, targetType);
 
-            throw new ArgumentException($"Cannot convert {expression.Type.Name} to {targetType.Name}");
+            throw new ArgumentException($"Cannot convert {expression.Type.Name} to {targetType}");
         }
 
         private TypeSymbol GetCommonArithmeticType(TypeSymbol left, TypeSymbol right)

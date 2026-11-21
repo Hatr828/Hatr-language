@@ -1,5 +1,7 @@
+using Best_language.src.middle;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Xml.Linq;
 
 namespace Best_language.src.front
 {
@@ -79,6 +81,18 @@ namespace Best_language.src.front
     }
 
     public abstract class Statement : AstNode;
+    public class VariableDeclarations : Statement
+    {
+        public List<VariableDeclaration> variables { get; set; } = new();
+        public override string DName => $"{nameof(VariableDeclarations)}";
+        public override IEnumerable<AstNode> Children
+        {
+            get
+            {
+                 foreach(var variable in variables) yield return variable;
+            }
+        }
+    }
     public class VariableDeclaration(string name, TypeSymbol type, Expression? initializer = null) : Statement
     {
         public string Name { get; } = name;
@@ -139,7 +153,6 @@ namespace Best_language.src.front
             }
         }
     }
-
     public class BreakStatement() : Statement
     {
         public override string DName => $"{nameof(BreakStatement)}";
@@ -294,6 +307,44 @@ namespace Best_language.src.front
                 foreach (AstNode node in CodeBlock ?? []) yield return node;
             }
         }
+    }
+
+    public class ParserScopes
+    {
+        private readonly List<Dictionary<string, NameKind>> _nameKinds = new();
+
+        public bool TryAddVariable(string name, NameKind kind)
+        {
+            return _nameKinds[^1].TryAdd(name, kind);
+        }
+        public bool TryGetVariable(string name, out NameKind type)
+        {
+            for (int i = 1; i <= _nameKinds.Count; i++)
+            {
+                if (_nameKinds[^i].TryGetValue(name, out var type_))
+                {
+                    type = type_;
+                    return true;
+                }
+            }
+            type = (NameKind)(-1);
+            return false;
+        }
+        public void AddScope()
+        {
+            _nameKinds.Add(new());
+        }
+        public void RemoveScope()
+        {
+            _nameKinds.RemoveAt(_nameKinds.Count - 1);
+        }
+        public bool IsEmpty() => _nameKinds.Count == 0;
+    }
+
+    public enum NameKind
+    {
+        TypeDef,
+        Variable,
     }
 
     public static class AstPrinter

@@ -27,8 +27,12 @@ namespace Best_language.src.front
 
     public enum TokenKind : byte
     {
+        TypeDef,
+        SizeOf,
+
         // Do not move
         Int,
+        Enum,
         Void,
         Long,
         Char,
@@ -120,6 +124,9 @@ namespace Best_language.src.front
     {
         public static Dictionary<string, TokenKind> keywords = new()
         {
+            ["typedef"] = TokenKind.TypeDef,
+
+            ["enum"] = TokenKind.Enum,
             ["int"] = TokenKind.Int,
             ["void"] = TokenKind.Void,
             ["double"] = TokenKind.Double,

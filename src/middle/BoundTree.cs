@@ -16,12 +16,14 @@ namespace Best_language.src.middle
             PreProcessAst(mainNode.Nodes);
 
             List<BoundStatement> statements = new();
-            scopes.AddScope();
 
+            scopes.AddScope();
             foreach (AstNode node in mainNode.Nodes)
             {
                 statements.Add(BindStatement(node));
             }
+            scopes.RemoveScope();
+
             return new BoundProgram(statements);
         }
         private void PreProcessAst(List<AstNode> nodes)
@@ -64,6 +66,13 @@ namespace Best_language.src.middle
         {
             switch (node)
             {
+                case VariableDeclarations variables:
+                    {
+                        BoundVariablesDeclaration variables2 = new();
+                        foreach (var variable in variables.variables) variables2.variables.Add((BoundVariableDeclaration)BindStatement(variable));
+
+                        return variables2;
+                    }
                 case VariableDeclaration variable:
                     {
                         BoundVariableDeclaration temp;

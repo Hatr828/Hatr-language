@@ -14,7 +14,12 @@ namespace Best_language.src
         static void Main(string[] args)
         {
             string code = @"
-                int x = 2;
+                int x = 2, y = 1, *o, *z;
+
+                typedef double A;
+                typedef A B;
+                typedef B C;
+                C a = 5;
     
                 switch (x) {
                     case 1 + 2: {
@@ -42,12 +47,11 @@ namespace Best_language.src
 
             sw.Restart();
 
-            Parser parser = new(tokens);
+            Parser parser = new();
+            var node = parser.GetAstNodes(tokens);
             sw.Stop();
             Console.WriteLine($"Parser done in: {sw.ElapsedTicks} ticks");
             Console.WriteLine("\n ---- \n");
-
-            ProgramNode node = parser.GetAstNodes();
             AstPrinter.Print(node);
             Console.WriteLine("\n ---- \n");
 

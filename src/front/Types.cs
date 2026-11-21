@@ -42,6 +42,13 @@ namespace Best_language.src.front
         public override string ToString() => $"{nameof(PointerTypeSymbol)} ({Name})";
     }
 
+    public class TypedefTypeSymbol(TypeSymbol elementType) : TypeSymbol($"{elementType}*")
+    {
+        public TypeSymbol ElementType { get; } = elementType;
+        public override string ToString() => $"{nameof(TypedefTypeSymbol)} ({Name})";
+    }
+
+
     public class EnumTypeSymbol(string name, IntegerTypeSymbol enumType) : TypeSymbol(name)
     {
         public TypeSymbol EnumType { get; } = enumType;
@@ -82,6 +89,7 @@ namespace Best_language.src.front
         public IntegerTypeSymbol Char { get; } = new("char", TypeSize.@byte, true);
 
         private Dictionary<TypeSymbol, PointerTypeSymbol> _pointers = new();
+        private Dictionary<string, TypedefTypeSymbol> _typedefs = new();
 
         public PointerTypeSymbol GetPointer(TypeSymbol elementType)
         {
@@ -92,6 +100,25 @@ namespace Best_language.src.front
             }
 
             return pointerType;
+        }
+
+        public TypedefTypeSymbol AddTypedef(string name, TypeSymbol type)
+        {
+            if (!_typedefs.TryGetValue(name, out var typedefTypeSymbol))
+            {
+                typedefTypeSymbol = new(type);
+                _typedefs.Add(name, typedefTypeSymbol);
+            }
+
+            return typedefTypeSymbol;
+        }
+
+        public TypedefTypeSymbol GetTypedef(string name)
+        {
+            if (!_typedefs.TryGetValue(name, out var typedefTypeSymbol))
+                throw new ArgumentException($"Typedef with name {name} does not exist");
+
+            return typedefTypeSymbol;
         }
     }
 }
