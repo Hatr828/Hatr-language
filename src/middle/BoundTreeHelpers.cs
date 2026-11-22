@@ -184,7 +184,7 @@ namespace Best_language.src.middle
                     return new BoundBinaryExpression(type, op, left, right);
                 
                 case BinaryRule.Logical:
-                    return new BoundBinaryExpression(_typeTable.Bool, op, BindConversion(left, _typeTable.Bool), BindConversion(right, _typeTable.Bool));
+                    return new BoundBinaryExpression(_typeTable.Int32, op, BindConversion(left, _typeTable.Int32), BindConversion(right, _typeTable.Int32));
                 
                 case BinaryRule.Shift:
                     if ((left.Type is IntegerTypeSymbol integer3 && (int)integer3.Size < 4) || left.Type is BoolTypeSymbol) 
@@ -196,6 +196,7 @@ namespace Best_language.src.middle
                     return new BoundBinaryExpression(left.Type, op, left, right);
 
                 case BinaryRule.PointerComparison:
+                case BinaryRule.ArithmeticComparison:
                     return new BoundBinaryExpression(_typeTable.Int32, op, left, right);
 
                 case BinaryRule.PointerArithmetic:
@@ -303,17 +304,12 @@ namespace Best_language.src.middle
         
         private void AddVariableToScope(VariableSymbol var)
         {
-            if (!scopes.TryAddVariable(var)) throw new ArgumentException($"Variable {var.Name} already exist");
-        }
-
-        private void IsVariableExist(string name, out TypeSymbol type)
-        {
-            if (!scopes.Lookup(name, out type)) throw new ArgumentException($"Variable {name} not exist");
+            if (!_scopes.TryAddVariable(var)) throw new ArgumentException($"Variable {var.Name} already exist");
         }
 
         private void GetVariable(string name, out VariableSymbol variable)
         {
-            if (!scopes.TryGetVariable(name, out variable)) throw new ArgumentException($"Variable {name} not exist");
+            if (!_scopes.TryGetVariable(name, out variable)) throw new ArgumentException($"Variable {name} not exist");
         }
 
         private Operation GetOperationFromCompoundOperation(Operation op) => op switch
@@ -341,5 +337,19 @@ namespace Best_language.src.middle
 
             _ => false,
         };
+
+        private TypeSymbol ResolveEnumType(TypeSymbol type)
+        {
+            if (type is PointerTypeSymbol pointer)
+                return _typeTable.GetPointer(ResolveEnumType(pointer.ElementType));
+
+            if (type is EnumTypeSymbol @enum)
+            {
+                if (_scopes.TryGetEnum(@enum.Name, out var enumType)) return enumType.EnumType;
+                else throw new ArgumentException($"Unknown enum name: {@enum.Name}");
+            }
+
+            return type;
+        }
     }
 }

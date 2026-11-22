@@ -152,6 +152,8 @@ namespace Best_language.src.middle
                         LowerExpression(ex.Expression);
                         return;
                     }
+                case BoundEmptyStatement:
+                    return;
             }
             throw new Exception("Cannot lower: " + node.GetType());
         }

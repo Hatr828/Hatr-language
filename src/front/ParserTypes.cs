@@ -10,6 +10,11 @@ namespace Best_language.src.front
         public abstract string DName { get; }
         public abstract IEnumerable<AstNode> Children { get; }
     }
+    public class EmptyNode : AstNode
+    {
+        public override string DName => $"{nameof(EmptyNode)}";
+        public override IEnumerable<AstNode> Children => [];
+    }
     public class ProgramNode(List<AstNode> nodes) : AstNode
     {
         public List<AstNode> Nodes { get; } = nodes;
@@ -81,15 +86,28 @@ namespace Best_language.src.front
     }
 
     public abstract class Statement : AstNode;
+    public class EnumDeclaration(EnumTypeSymbol type, List<VariableDeclaration> variables) : Statement
+    {
+        public EnumTypeSymbol Type { get; } = type;
+        public List<VariableDeclaration> Variables { get; } = variables;
+        public override string DName => $"{nameof(EnumDeclaration)} ({Type})";
+        public override IEnumerable<AstNode> Children
+        {
+            get
+            {
+                foreach (var variable in Variables) yield return variable;
+            }
+        }
+    }
     public class VariableDeclarations : Statement
     {
-        public List<VariableDeclaration> variables { get; set; } = new();
+        public List<VariableDeclaration> Variables { get; set; } = new();
         public override string DName => $"{nameof(VariableDeclarations)}";
         public override IEnumerable<AstNode> Children
         {
             get
             {
-                 foreach(var variable in variables) yield return variable;
+                 foreach(var variable in Variables) yield return variable;
             }
         }
     }
@@ -312,10 +330,19 @@ namespace Best_language.src.front
     public class ParserScopes
     {
         private readonly List<Dictionary<string, NameKind>> _nameKinds = new();
-
+        private List<Dictionary<string, TypeSymbol>> _typedefs = new();
+        private List<Dictionary<string, EnumTypeSymbol>> _enums = new();
         public bool TryAddVariable(string name, NameKind kind)
         {
             return _nameKinds[^1].TryAdd(name, kind);
+        }
+        public bool TryAddTypedef(string name, TypeSymbol kind)
+        {
+            return _typedefs[^1].TryAdd(name, kind);
+        }
+        public bool TryAddEnum(string name, EnumTypeSymbol type)
+        {
+            return _enums[^1].TryAdd(name, type);
         }
         public bool TryGetVariable(string name, out NameKind type)
         {
@@ -330,13 +357,44 @@ namespace Best_language.src.front
             type = (NameKind)(-1);
             return false;
         }
+        public bool TryGetTypedef(string name, out TypeSymbol type)
+        {
+            for (int i = 1; i <= _typedefs.Count; i++)
+            {
+                if (_typedefs[^i].TryGetValue(name, out var type_))
+                {
+                    type = type_;
+                    return true;
+                }
+            }
+            type = null!;
+            return false;
+        }
+        public bool TryGetEnum(string name, out EnumTypeSymbol type)
+        {
+            for (int i = 1; i <= _enums.Count; i++)
+            {
+                if (_enums[^i].TryGetValue(name, out var type_))
+                {
+                    type = type_;
+                    return true;
+                }
+            }
+            type = null!;
+            return false;
+        }
+
         public void AddScope()
         {
             _nameKinds.Add(new());
+            _typedefs.Add(new());
+            _enums.Add(new());
         }
         public void RemoveScope()
         {
             _nameKinds.RemoveAt(_nameKinds.Count - 1);
+            _typedefs.RemoveAt(_typedefs.Count - 1);
+            _enums.RemoveAt(_enums.Count - 1);
         }
         public bool IsEmpty() => _nameKinds.Count == 0;
     }

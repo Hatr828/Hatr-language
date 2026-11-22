@@ -10,7 +10,7 @@ namespace Best_language.src.front
 {
     public abstract class TypeSymbol(string name)
     {
-        public string Name { get; } = name;
+        public string Name { get; set; } = name;
     }
 
     public class IntegerTypeSymbol(string name, TypeSize size, bool isSigned) : TypeSymbol(name)
@@ -38,7 +38,7 @@ namespace Best_language.src.front
 
     public class PointerTypeSymbol(TypeSymbol elementType) : TypeSymbol($"{elementType}*")
     {
-        public TypeSymbol ElementType { get; } = elementType;
+        public TypeSymbol ElementType { get; set; } = elementType;
         public override string ToString() => $"{nameof(PointerTypeSymbol)} ({Name})";
     }
 
@@ -49,11 +49,12 @@ namespace Best_language.src.front
     }
 
 
-    public class EnumTypeSymbol(string name, IntegerTypeSymbol enumType) : TypeSymbol(name)
+    public class EnumTypeSymbol(string? name, IntegerTypeSymbol enumType) : TypeSymbol(name!)
     {
-        public TypeSymbol EnumType { get; } = enumType;
+        public IntegerTypeSymbol EnumType { get; } = enumType;
 
         public Dictionary<string, ulong> Members { get; } = new();
+        public override string ToString() => $"{nameof(EnumTypeSymbol)} ({Name ?? "No name"})";
     }
     public class FunctionTypeSymbol(TypeSymbol returnType, List<TypeSymbol>? paramsTypes = null) : TypeSymbol("function")
     {
@@ -87,9 +88,9 @@ namespace Best_language.src.front
         public FloatTypeSymbol Double { get; } = new("double", TypeSize.qword);
 
         public IntegerTypeSymbol Char { get; } = new("char", TypeSize.@byte, true);
+        public IntegerTypeSymbol Enum { get; } = new("i32", TypeSize.dword, true);
 
         private Dictionary<TypeSymbol, PointerTypeSymbol> _pointers = new();
-        private Dictionary<string, TypedefTypeSymbol> _typedefs = new();
 
         public PointerTypeSymbol GetPointer(TypeSymbol elementType)
         {
@@ -100,25 +101,6 @@ namespace Best_language.src.front
             }
 
             return pointerType;
-        }
-
-        public TypedefTypeSymbol AddTypedef(string name, TypeSymbol type)
-        {
-            if (!_typedefs.TryGetValue(name, out var typedefTypeSymbol))
-            {
-                typedefTypeSymbol = new(type);
-                _typedefs.Add(name, typedefTypeSymbol);
-            }
-
-            return typedefTypeSymbol;
-        }
-
-        public TypedefTypeSymbol GetTypedef(string name)
-        {
-            if (!_typedefs.TryGetValue(name, out var typedefTypeSymbol))
-                throw new ArgumentException($"Typedef with name {name} does not exist");
-
-            return typedefTypeSymbol;
         }
     }
 }

@@ -14,24 +14,11 @@ namespace Best_language.src
         static void Main(string[] args)
         {
             string code = @"
-                int x = 2, y = 1, *o, *z;
-
-                typedef double A;
-                typedef A B;
-                typedef B C;
-                C a = 5;
-    
-                switch (x) {
-                    case 1 + 2: {
-                        int a = 0;
-                        break;
-                    }
-                    default: 
-                        break;
-                    case 2:
-                        int a = 0;
-                        break;
-                }
+                typedef enum AA {
+                    A = 0,
+                    B = 1,
+                    C = 1 + 1
+                } AB, AM;
                 ";
             var sw = Stopwatch.StartNew();
 

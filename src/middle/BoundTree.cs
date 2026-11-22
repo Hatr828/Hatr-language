@@ -1,10 +1,11 @@
 using Best_language.src.front;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Best_language.src.middle
 {
     public partial class BoundTree
     {
-        private BoundScopes scopes = new();
+        private BoundScopes _scopes = new();
         private Dictionary<string, int> _gotoLabels = new();
         private TypeTable _typeTable = new TypeTable();
         private int _labelId;
@@ -17,12 +18,12 @@ namespace Best_language.src.middle
 
             List<BoundStatement> statements = new();
 
-            scopes.AddScope();
+            _scopes.AddScope();
             foreach (AstNode node in mainNode.Nodes)
             {
                 statements.Add(BindStatement(node));
             }
-            scopes.RemoveScope();
+            _scopes.RemoveScope();
 
             return new BoundProgram(statements);
         }
@@ -48,6 +49,12 @@ namespace Best_language.src.middle
 
                             continue;
                         }
+                    case SwitchDeclaration @switch:
+                        {
+                            foreach (var @case in @switch.Cases ?? [])
+                                PreProcessAst(@case.Statements);
+                            continue;
+                        }
                     case ForDeclaration forDeclaration:
                         {
                             PreProcessAst(forDeclaration.CodeBlock);
@@ -69,7 +76,7 @@ namespace Best_language.src.middle
                 case VariableDeclarations variables:
                     {
                         BoundVariablesDeclaration variables2 = new();
-                        foreach (var variable in variables.variables) variables2.variables.Add((BoundVariableDeclaration)BindStatement(variable));
+                        foreach (var variable in variables.Variables) variables2.variables.Add((BoundVariableDeclaration)BindStatement(variable));
 
                         return variables2;
                     }
@@ -77,18 +84,34 @@ namespace Best_language.src.middle
                     {
                         BoundVariableDeclaration temp;
 
-                        var tmp = new VariableSymbol(variable.Name, variable.Type);
+                        var type = ResolveEnumType(variable.Type);
+
+                        var tmp = new VariableSymbol(variable.Name, type);
                         AddVariableToScope(tmp);
 
                         if (variable.Initializer is not null)
                         {
                             var initializer = BindExpression(variable.Initializer);
-                            temp = new BoundVariableDeclaration(tmp, BindConversion(initializer, variable.Type));
+                            temp = new BoundVariableDeclaration(tmp, BindConversion(initializer, type));
                         }
                         else
                             temp = new BoundVariableDeclaration(tmp, null);
 
                         return temp;
+                    }
+                case EnumDeclaration @enum:
+                    {
+                        foreach (var dict in @enum.Type.Members)
+                            if (!_scopes.TryAddEnum(dict.Key, dict.Value, @enum.Type.EnumType)) throw new ArgumentException($"Variable/Function/etc exist with same name as {dict.Key}"); 
+
+                        if (@enum.Type.Name is not null && !_scopes.TryAddEnum(@enum.Type))
+                                throw new ArgumentException($"Enum with same name already exist {@enum.Type.Name}");
+
+                        BoundVariablesDeclaration variables = new();
+
+                        foreach (var variable in @enum.Variables) variables.variables.Add((BoundVariableDeclaration)BindStatement(variable));
+
+                        return variables;
                     }
                 case SwitchDeclaration @switch:
                     {
@@ -113,9 +136,9 @@ namespace Best_language.src.middle
                             }
                             else res.Cases.Add(new(null, true));
 
-                            scopes.AddScope();
+                            _scopes.AddScope();
                             foreach (var statement in @case.Statements) res.Cases[^1].Statements.Add(BindStatement(statement));
-                            scopes.RemoveScope();
+                            _scopes.RemoveScope();
                         }
                         return res;
                     }
@@ -127,25 +150,25 @@ namespace Best_language.src.middle
                     {
                         var If = new BoundElseIfDeclaration(new 
                             BoundConversionExpression(BindExpression(elseIf.Expression), _typeTable.Bool));
-                        scopes.AddScope();
+                        _scopes.AddScope();
                         foreach (var statement in elseIf.CodeBlock) If.Statements.Add(BindStatement(statement));
-                        scopes.RemoveScope();
+                        _scopes.RemoveScope();
                         return If;
                     }
                 case WhileDeclaration @while:
                     {
                         var res = new BoundWhileDeclaration(new 
                             BoundConversionExpression(BindExpression(@while.Expression), _typeTable.Bool));
-                        scopes.AddScope();
+                        _scopes.AddScope();
                         foreach (var statement in @while.CodeBlock) res.Statements.Add(BindStatement(statement));
-                        scopes.RemoveScope();
+                        _scopes.RemoveScope();
                         return res;
                     }
                 case FuncDeclaration func:
                     {
                         List<BoundStatement> codeBlock = new();
                         List<BoundParamsDeclaration> @params = new();
-                        scopes.AddScope();
+                        _scopes.AddScope();
                         foreach (var param in func.Params)
                         {
                             if(param.Initializer is not null)
@@ -156,12 +179,12 @@ namespace Best_language.src.middle
                             AddVariableToScope(new VariableSymbol(param.Name, param.Type));
                         }
                         foreach (var statement in func.CodeBlock) codeBlock.Add(BindStatement(statement));
-                        scopes.RemoveScope();
+                        _scopes.RemoveScope();
                         return new BoundFunction(func.ReturnType, func.Name, @params, codeBlock);
                     }                             
                 case ForDeclaration @for:
                     {
-                        scopes.AddScope();
+                        _scopes.AddScope();
                         BoundStatement? initializer = null;
                         BoundExpression? step = null, ex = null;
 
@@ -174,7 +197,7 @@ namespace Best_language.src.middle
 
                         foreach (var statement in @for.CodeBlock) res.Statements.Add(BindStatement(statement));
 
-                        scopes.RemoveScope();
+                        _scopes.RemoveScope();
                         return res;
                     }
                 case GotoDeclaration @goto:
@@ -203,8 +226,6 @@ namespace Best_language.src.middle
                     }
                 case AssignmentStatement assignment:
                     {
-                        IsVariableExist(assignment.Name, out TypeSymbol type);
-
                         BoundExpression ex;
 
                         if (assignment.Op is Operation op)
@@ -230,6 +251,8 @@ namespace Best_language.src.middle
                     {
                         return new BoundExpressionStatement(BindExpression(ex.Right));
                     }
+                case EmptyNode:
+                    return new BoundEmptyStatement();
             }
             throw new ArgumentException("Failed to bind a statement");
         }
@@ -244,7 +267,9 @@ namespace Best_language.src.middle
                     return new BoundDoubleExpression(@double.Type, @double.Value);
                 case VariableExpression variable:
                     {
+                        if (_scopes.TryGetEnumValue(variable.Name, out var val)) return new BoundNumberExpression(val.Item2, val.Item1);
                         if (constantOnly) throw new ArgumentException("Expected constants only");
+
                         GetVariable(variable.Name, out var variableSymbol);
                         return new BoundVariableExpression(variableSymbol);
                     }
@@ -268,11 +293,11 @@ namespace Best_language.src.middle
         {
             var If = new BoundIfDeclaration(new BoundConversionExpression(BindExpression(@if.Expression), _typeTable.Bool));
 
-            scopes.AddScope();
+            _scopes.AddScope();
 
             foreach (var statement in @if.CodeBlock) If.Statements.Add(BindStatement(statement));
 
-            scopes.RemoveScope();
+            _scopes.RemoveScope();
 
             if (@if.ElseIfs is not null)
             {
@@ -281,10 +306,10 @@ namespace Best_language.src.middle
             }
             if (@if.Else is not null)
             {
-                scopes.AddScope();
+                _scopes.AddScope();
                 If.Else ??= new();
                 foreach (var statement in @if.Else.CodeBlock) If.Else.Statements.Add(BindStatement(statement));
-                scopes.RemoveScope();
+                _scopes.RemoveScope();
             }
 
             return If;

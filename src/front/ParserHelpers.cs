@@ -34,6 +34,33 @@ namespace Best_language.src.front
             _idx++;
         }
 
+        private TypeSymbol GetCommonArithmeticType(TypeSymbol left, TypeSymbol right)
+        {
+            if (left is BoolTypeSymbol || left is IntegerTypeSymbol left_ && (int)left_.Size < 4) left = _typeTable.Int32;
+
+            if (right is BoolTypeSymbol || right is IntegerTypeSymbol right_ && (int)right_.Size < 4) right = _typeTable.Int32;
+
+            if (left == right) return left;
+
+            if (left is FloatTypeSymbol leftFloat && right is FloatTypeSymbol rightFloat)
+                return (int)leftFloat.Size > (int)rightFloat.Size ? left : right;
+
+            if (left is FloatTypeSymbol) return left;
+            if (right is FloatTypeSymbol) return right;
+
+            var leftInteger = (IntegerTypeSymbol)left;
+            var rightInteger = (IntegerTypeSymbol)right;
+
+            if (leftInteger.IsSigned == rightInteger.IsSigned) return (int)leftInteger.Size > (int)rightInteger.Size ? left : right;
+
+            IntegerTypeSymbol signed = leftInteger.IsSigned ? leftInteger : rightInteger;
+            IntegerTypeSymbol unsigned = rightInteger.IsSigned ? rightInteger : leftInteger;
+
+            if ((int)unsigned.Size >= (int)signed.Size) return unsigned;
+
+            return signed;
+        }
+
         private (Operation, int) GetOperatorAndPriority() => _tokens[_idx].kind switch
         {
             TokenKind.Multiply => (Operation.Multiply, 70),
@@ -111,6 +138,97 @@ namespace Best_language.src.front
             _ => throw new ArgumentException("Unknown Operation")
         };
 
+        private NumberExpression CombineUnary(Operation op, NumberExpression num) => op switch
+        {
+            Operation.Plus => new(num.Value, num.Type),
+            Operation.Minus => new(~num.Value + 1, num.Type),
+            Operation.Not => new(num.Value == 0 ? 1UL : 0UL, num.Type),
+            Operation.BitNot => new(~num.Value, num.Type),
+            _ => throw new ArgumentException($"Unexpected unary operation: {op}")
+        };
+        private DoubleExpression CombineUnary(Operation op, DoubleExpression num) => op switch
+        {
+            Operation.Plus => new(num.Value, num.Type),
+            Operation.Minus => new(-num.Value, num.Type),
+            Operation.Not => new(num.Value == 0.0 ? 1 : 0, num.Type),
+            _ => throw new ArgumentException($"Unexpected unary operation: {op}")
+        };
+        private NumberExpression CombineBinary(Operation op, NumberExpression left, NumberExpression right) => op switch
+        {
+            Operation.Plus => new(left.Value + right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+            Operation.Minus => new(left.Value - right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+            Operation.Multiply => new(left.Value * right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+            Operation.Divide => new(left.Value / right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+            Operation.DivisionRem => new(left.Value % right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+
+            Operation.LeftShift => new(left.Value << (int)right.Value, left.Type),
+            Operation.RightShift => new(left.Value >> (int)right.Value, left.Type),
+
+            Operation.BitAnd => new(left.Value & right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+            Operation.BitOr => new(left.Value | right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+            Operation.BitXor => new(left.Value ^ right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+
+            Operation.EqualsEquals => new(left.Value == right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.NotEquals => new(left.Value != right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.LessThan => new(left.Value < right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.LessThanOrEqual => new(left.Value <= right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.GreaterThan => new(left.Value > right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.GreaterThanOrEqual => new(left.Value >= right.Value ? 1UL : 0UL, _typeTable.Int32),
+
+            _ => throw new ArgumentException($"Unexpected unary operation: {op}")
+        };
+        private Expression CombineBinary(Operation op, DoubleExpression left, NumberExpression right) => op switch
+        {
+            Operation.Plus => new DoubleExpression(left.Value + right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+            Operation.Minus => new DoubleExpression(left.Value - right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+            Operation.Multiply => new DoubleExpression(left.Value * right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+            Operation.Divide => new DoubleExpression(left.Value / right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+            Operation.DivisionRem => new DoubleExpression(left.Value % right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+
+            Operation.EqualsEquals => new NumberExpression(left.Value == right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.NotEquals => new NumberExpression(left.Value != right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.LessThan => new NumberExpression(left.Value < right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.LessThanOrEqual => new NumberExpression(left.Value <= right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.GreaterThan => new NumberExpression(left.Value > right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.GreaterThanOrEqual => new NumberExpression(left.Value >= right.Value ? 1UL : 0UL, _typeTable.Int32),
+
+            _ => throw new ArgumentException($"Unexpected unary operation: {op}")
+        };
+        private Expression CombineBinary(Operation op, DoubleExpression left, DoubleExpression right) => op switch
+        {
+            Operation.Plus => new DoubleExpression(left.Value + right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+            Operation.Minus => new DoubleExpression(left.Value - right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+            Operation.Multiply => new DoubleExpression(left.Value * right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+            Operation.Divide => new DoubleExpression(left.Value / right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+            Operation.DivisionRem => new DoubleExpression(left.Value % right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+
+            Operation.EqualsEquals => new NumberExpression(left.Value == right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.NotEquals => new NumberExpression(left.Value != right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.LessThan => new NumberExpression(left.Value < right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.LessThanOrEqual => new NumberExpression(left.Value <= right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.GreaterThan => new NumberExpression(left.Value > right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.GreaterThanOrEqual => new NumberExpression(left.Value >= right.Value ? 1UL : 0UL, _typeTable.Int32),
+
+            _ => throw new ArgumentException($"Unexpected unary operation: {op}")
+        };
+        private Expression CombineBinary(Operation op, NumberExpression left, DoubleExpression right) => op switch
+        {
+            Operation.Plus => new DoubleExpression(left.Value + right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+            Operation.Minus => new DoubleExpression(left.Value - right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+            Operation.Multiply => new DoubleExpression(left.Value * right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+            Operation.Divide => new DoubleExpression(left.Value / right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+            Operation.DivisionRem => new DoubleExpression(left.Value % right.Value, GetCommonArithmeticType(left.Type, right.Type)),
+
+            Operation.EqualsEquals => new NumberExpression(left.Value == right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.NotEquals => new NumberExpression(left.Value != right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.LessThan => new NumberExpression(left.Value < right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.LessThanOrEqual => new NumberExpression(left.Value <= right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.GreaterThan => new NumberExpression(left.Value > right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.GreaterThanOrEqual => new NumberExpression(left.Value >= right.Value ? 1UL : 0UL, _typeTable.Int32),
+
+            _ => throw new ArgumentException($"Unexpected unary operation: {op}")
+        };
+
         private bool IsExpression(TokenKind kind) => kind switch
         {
             TokenKind.Plus or TokenKind.Minus or TokenKind.Not or TokenKind.BitNot or TokenKind.PlusPlus or TokenKind.MinusMinus => true,
@@ -119,9 +237,10 @@ namespace Best_language.src.front
 
             _ => false,
         };
-        private Dictionary<TokenKind[], TypeSymbol> _types = new(new TokenKindSpanComparer())
+        private readonly Dictionary<TokenKind[], TypeSymbol> _types = new(new TokenKindSpanComparer())
         {
             [[TokenKind.Bool]] = _typeTable.Bool,
+            [[TokenKind.Enum]] = _typeTable.Enum,
 
             [[TokenKind.Char]] = _typeTable.Char,
             [[TokenKind.Signed, TokenKind.Char]] = _typeTable.Int8,

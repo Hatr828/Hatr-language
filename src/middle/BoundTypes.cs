@@ -37,6 +37,11 @@ namespace Best_language.src.middle
     {
         public VariableSymbol Variable { get; } = variable;
     }
+    public class BoundEmptyStatement() : BoundStatement
+    {
+        public override string DName => $"{nameof(BoundEmptyStatement)}";
+        public override IEnumerable<BoundNode> Children => [];
+    }
     public class BoundExpressionStatement(BoundExpression expression) : BoundStatement
     {
         public BoundExpression Expression { get; } = expression;
@@ -94,7 +99,7 @@ namespace Best_language.src.middle
     public class BoundVariablesDeclaration : BoundStatement
     {
         public List<BoundVariableDeclaration> variables { get; } = new();
-        public override string DName => $"{nameof(BoundVariableDeclaration)})";
+        public override string DName => $"{nameof(BoundVariablesDeclaration)}";
         public override IEnumerable<BoundNode> Children
         {
             get                                                          
@@ -342,32 +347,22 @@ namespace Best_language.src.middle
     public class BoundScopes
     {
         private readonly List<Dictionary<string, VariableSymbol>> _variables = new();
+        private readonly List<Dictionary<string, (ulong, IntegerTypeSymbol)>> _enums = new();
+        private readonly List<Dictionary<string, EnumTypeSymbol>> _userEnums = new();
 
         public bool TryAddVariable(VariableSymbol variable)
         {
             return _variables[^1].TryAdd(variable.Name, variable);
         }
-        public bool DoesExistInSameScope(string name)
+        public bool TryAddEnum(string name, ulong val, IntegerTypeSymbol type)
         {
-            if (_variables[^1].TryGetValue(name, out var variable))
-            {
-                return true;
-            }
-            return false;
+            return _enums[^1].TryAdd(name, (val, type));
         }
-        public bool Lookup(string name, out TypeSymbol type)
+        public bool TryAddEnum(EnumTypeSymbol type)
         {
-            for (int i = 1; i <= _variables.Count; i++)
-            {
-                if (_variables[^i].TryGetValue(name, out var variable))
-                {
-                    type = variable.Type;
-                    return true;
-                }
-            }
-            type = new VoidTypeSymbol();
-            return false;
+            return _userEnums[^1].TryAdd(type.Name, type);
         }
+
         public bool TryGetVariable(string name, out VariableSymbol variable)
         {
             for (int i = 1; i <= _variables.Count; i++)
@@ -380,13 +375,42 @@ namespace Best_language.src.middle
             variable = null!;
             return false;
         }
+        public bool TryGetEnumValue(string name, out (ulong, IntegerTypeSymbol) val)
+        {
+            for (int i = 1; i <= _enums.Count; i++)
+            {
+                if (_enums[^i].TryGetValue(name, out val!))
+                {
+                    return true;
+                }
+            }
+            val = (ulong.MaxValue, null!);
+            return false;
+        }
+        public bool TryGetEnum(string name, out EnumTypeSymbol val)
+        {
+            for (int i = 1; i <= _userEnums.Count; i++)
+            {
+                if (_userEnums[^i].TryGetValue(name, out val!))
+                {
+                    return true;
+                }
+            }
+            val = null!;
+            return false;
+        }
+
         public void AddScope()
         {
             _variables.Add(new());
+            _enums.Add(new());
+            _userEnums.Add(new());
         }
         public void RemoveScope()
         {
             _variables.RemoveAt(_variables.Count - 1);
+            _enums.RemoveAt(_enums.Count - 1);
+            _userEnums.RemoveAt(_userEnums.Count - 1);
         }
     }
     public static class BoundTreePrinter
