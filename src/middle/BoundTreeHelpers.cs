@@ -154,6 +154,8 @@ namespace Best_language.src.middle
             [(Operation.ReferenceOf, typeof(IntegerTypeSymbol))] = UnaryRule.ReferenceOf,
             [(Operation.ReferenceOf, typeof(PointerTypeSymbol))] = UnaryRule.ReferenceOf,
             [(Operation.ReferenceOf, typeof(FloatTypeSymbol))] = UnaryRule.ReferenceOf,
+            [(Operation.ReferenceOf, typeof(EnumTypeSymbol))] = UnaryRule.ReferenceOf,
+            [(Operation.ReferenceOf, typeof(StructTypeSymbol))] = UnaryRule.ReferenceOf,
 
             [(Operation.Dereference, typeof(PointerTypeSymbol))] = UnaryRule.Dereference,
         };
@@ -347,6 +349,20 @@ namespace Best_language.src.middle
             {
                 if (_scopes.TryGetEnum(@enum.Name, out var enumType)) return enumType.EnumType;
                 else throw new ArgumentException($"Unknown enum name: {@enum.Name}");
+            }
+
+            return type;
+        }
+
+        private TypeSymbol ResolveStructType(TypeSymbol type)
+        {
+            if (type is PointerTypeSymbol pointer)
+                return _typeTable.GetPointer(ResolveStructType(pointer.ElementType));
+
+            if (type is StructTypeSymbol @struct)
+            {
+                if (_scopes.TryGetStruct(@struct.Name, out var structType)) return structType;
+                else throw new ArgumentException($"Unknown enum name: {@struct.Name}");
             }
 
             return type;

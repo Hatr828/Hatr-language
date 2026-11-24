@@ -33,6 +33,7 @@ namespace Best_language.src.front
         // Do not move
         Int,
         Enum,
+        Struct,
         Void,
         Long,
         Char,
@@ -126,6 +127,7 @@ namespace Best_language.src.front
         {
             ["typedef"] = TokenKind.Typedef,
 
+            ["struct"] = TokenKind.Struct,
             ["enum"] = TokenKind.Enum,
             ["int"] = TokenKind.Int,
             ["void"] = TokenKind.Void,

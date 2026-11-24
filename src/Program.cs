@@ -14,11 +14,12 @@ namespace Best_language.src
         static void Main(string[] args)
         {
             string code = @"
-                typedef enum AA {
-                    A = 0,
-                    B = 1,
-                    C = 1 + 1
-                } AB, AM;
+                struct Pair {
+                    int x, y;
+                };
+
+                struct Pair pair = { 10, 20 };
+                struct Pair *pair_ptr = &pair;
                 ";
             var sw = Stopwatch.StartNew();
 

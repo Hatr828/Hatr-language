@@ -285,6 +285,19 @@ namespace Best_language.src.middle
         public override string DName => $"{nameof(BoundDoubleExpression)}: {Value}";
         public override IEnumerable<BoundNode> Children => [];
     }
+    public class BoundStructExpression(List<BoundExpression> right) : BoundExpression(new StructTypeSymbol(null, null!))
+    {
+        public List<BoundExpression> Right { get; } = right;
+
+        public override string DName => $"{nameof(BoundStructExpression)}";
+        public override IEnumerable<BoundNode> Children
+        {
+            get
+            {
+                foreach (var ex in Right) yield return ex;
+            }
+        }
+    }
     public class BoundConversionExpression(BoundExpression expression, TypeSymbol targetype) : BoundExpression(targetype)
     {
         public BoundExpression Expression { get; } = expression;
@@ -346,13 +359,14 @@ namespace Best_language.src.middle
 
     public class BoundScopes
     {
-        private readonly List<Dictionary<string, VariableSymbol>> _variables = new();
+        private readonly List<Dictionary<string, VariableSymbol>> _userVariables = new();
         private readonly List<Dictionary<string, (ulong, IntegerTypeSymbol)>> _enums = new();
         private readonly List<Dictionary<string, EnumTypeSymbol>> _userEnums = new();
+        private readonly List<Dictionary<string, StructTypeSymbol>> _userStructs = new();
 
         public bool TryAddVariable(VariableSymbol variable)
         {
-            return _variables[^1].TryAdd(variable.Name, variable);
+            return _userVariables[^1].TryAdd(variable.Name, variable);
         }
         public bool TryAddEnum(string name, ulong val, IntegerTypeSymbol type)
         {
@@ -362,12 +376,16 @@ namespace Best_language.src.middle
         {
             return _userEnums[^1].TryAdd(type.Name, type);
         }
+        public bool TryAddStruct(StructTypeSymbol type)
+        {
+            return _userStructs[^1].TryAdd(type.Name, type);
+        }
 
         public bool TryGetVariable(string name, out VariableSymbol variable)
         {
-            for (int i = 1; i <= _variables.Count; i++)
+            for (int i = 1; i <= _userVariables.Count; i++)
             {
-                if (_variables[^i].TryGetValue(name, out variable!))
+                if (_userVariables[^i].TryGetValue(name, out variable!))
                 {
                     return true;
                 }
@@ -399,18 +417,32 @@ namespace Best_language.src.middle
             val = null!;
             return false;
         }
+        public bool TryGetStruct(string name, out StructTypeSymbol val)
+        {
+            for (int i = 1; i <= _userStructs.Count; i++)
+            {
+                if (_userStructs[^i].TryGetValue(name, out val!))
+                {
+                    return true;
+                }
+            }
+            val = null!;
+            return false;
+        }
 
         public void AddScope()
         {
-            _variables.Add(new());
+            _userVariables.Add(new());
             _enums.Add(new());
             _userEnums.Add(new());
+            _userStructs.Add(new());
         }
         public void RemoveScope()
         {
-            _variables.RemoveAt(_variables.Count - 1);
+            _userVariables.RemoveAt(_userVariables.Count - 1);
             _enums.RemoveAt(_enums.Count - 1);
             _userEnums.RemoveAt(_userEnums.Count - 1);
+            _userStructs.RemoveAt(_userStructs.Count - 1);
         }
     }
     public static class BoundTreePrinter

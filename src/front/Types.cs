@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Numerics;
+using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -12,6 +13,8 @@ namespace Best_language.src.front
     {
         public string Name { get; set; } = name;
     }
+
+    public class UndefineTypeSymbol(string name) : TypeSymbol(name);
 
     public class IntegerTypeSymbol(string name, TypeSize size, bool isSigned) : TypeSymbol(name)
     {
@@ -56,6 +59,11 @@ namespace Best_language.src.front
         public Dictionary<string, ulong> Members { get; } = new();
         public override string ToString() => $"{nameof(EnumTypeSymbol)} ({Name ?? "No name"})";
     }
+    public class StructTypeSymbol(string? name, List<TypeSymbol> types) : TypeSymbol(name!)
+    {
+        public List<TypeSymbol> Types { get; } = types;
+        public override string ToString() => $"{nameof(StructTypeSymbol)} ({Name ?? "No name"})";
+    }
     public class FunctionTypeSymbol(TypeSymbol returnType, List<TypeSymbol>? paramsTypes = null) : TypeSymbol("function")
     {
         public TypeSymbol ReturnType { get; } = returnType;
@@ -88,7 +96,8 @@ namespace Best_language.src.front
         public FloatTypeSymbol Double { get; } = new("double", TypeSize.qword);
 
         public IntegerTypeSymbol Char { get; } = new("char", TypeSize.@byte, true);
-        public IntegerTypeSymbol Enum { get; } = new("i32", TypeSize.dword, true);
+        public UndefineTypeSymbol Enum { get; } = new UndefineTypeSymbol("enum");
+        public UndefineTypeSymbol Struct { get; } = new UndefineTypeSymbol("struct");
 
         private Dictionary<TypeSymbol, PointerTypeSymbol> _pointers = new();
 

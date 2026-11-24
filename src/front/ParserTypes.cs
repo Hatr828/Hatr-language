@@ -99,6 +99,20 @@ namespace Best_language.src.front
             }
         }
     }
+    public class StructDeclaration(StructTypeSymbol type, List<string> names) : Statement
+    {
+        public StructTypeSymbol Type { get; } = type;
+        public List<string> Names { get; } = names;
+        public List<VariableDeclaration>? Variables { get; set; }
+        public override string DName => $"{nameof(EnumDeclaration)} ({Type})";
+        public override IEnumerable<AstNode> Children
+        {
+            get
+            {
+                foreach (var variable in Variables) yield return variable;
+            }
+        }
+    }
     public class VariableDeclarations : Statement
     {
         public List<VariableDeclaration> Variables { get; set; } = new();
@@ -138,6 +152,20 @@ namespace Best_language.src.front
             get
             {
                 if (Right is not null) yield return Right;
+            }
+        }
+    }
+
+    public class StructExpression(List<Expression> right) : Expression
+    {
+        public List<Expression> Right { get; } = right;
+
+        public override string DName => $"{nameof(StructExpression)}";
+        public override IEnumerable<AstNode> Children
+        {
+            get
+            {
+                foreach (var ex in Right) yield return ex;
             }
         }
     }
@@ -332,6 +360,7 @@ namespace Best_language.src.front
         private readonly List<Dictionary<string, NameKind>> _nameKinds = new();
         private List<Dictionary<string, TypeSymbol>> _typedefs = new();
         private List<Dictionary<string, EnumTypeSymbol>> _enums = new();
+        private List<Dictionary<string, (ulong, TypeSymbol)>> _enumNames = new();
         public bool TryAddVariable(string name, NameKind kind)
         {
             return _nameKinds[^1].TryAdd(name, kind);
@@ -344,13 +373,17 @@ namespace Best_language.src.front
         {
             return _enums[^1].TryAdd(name, type);
         }
+        public bool TryAddEnumMember(string name, (ulong, TypeSymbol) val)
+        {
+            return _enumNames[^1].TryAdd(name, val);
+        }
+
         public bool TryGetVariable(string name, out NameKind type)
         {
             for (int i = 1; i <= _nameKinds.Count; i++)
             {
-                if (_nameKinds[^i].TryGetValue(name, out var type_))
+                if (_nameKinds[^i].TryGetValue(name, out type))
                 {
-                    type = type_;
                     return true;
                 }
             }
@@ -361,9 +394,8 @@ namespace Best_language.src.front
         {
             for (int i = 1; i <= _typedefs.Count; i++)
             {
-                if (_typedefs[^i].TryGetValue(name, out var type_))
+                if (_typedefs[^i].TryGetValue(name, out type!))
                 {
-                    type = type_;
                     return true;
                 }
             }
@@ -374,13 +406,24 @@ namespace Best_language.src.front
         {
             for (int i = 1; i <= _enums.Count; i++)
             {
-                if (_enums[^i].TryGetValue(name, out var type_))
+                if (_enums[^i].TryGetValue(name, out type!))
                 {
-                    type = type_;
                     return true;
                 }
             }
             type = null!;
+            return false;
+        }
+        public bool TryGetEnumMember(string name, out (ulong, TypeSymbol) val)
+        {
+            for (int i = 1; i <= _enumNames.Count; i++)
+            {
+                if (_enumNames[^i].TryGetValue(name, out val))
+                {
+                    return true;
+                }
+            }
+            val = (ulong.MaxValue, null!);
             return false;
         }
 
@@ -389,12 +432,14 @@ namespace Best_language.src.front
             _nameKinds.Add(new());
             _typedefs.Add(new());
             _enums.Add(new());
+            _enumNames.Add(new());
         }
         public void RemoveScope()
         {
             _nameKinds.RemoveAt(_nameKinds.Count - 1);
             _typedefs.RemoveAt(_typedefs.Count - 1);
             _enums.RemoveAt(_enums.Count - 1);
+            _enumNames.RemoveAt(_enumNames.Count - 1);
         }
         public bool IsEmpty() => _nameKinds.Count == 0;
     }
@@ -403,6 +448,7 @@ namespace Best_language.src.front
     {
         TypeDef,
         Variable,
+        Enum,
     }
 
     public static class AstPrinter

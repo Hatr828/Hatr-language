@@ -241,6 +241,7 @@ namespace Best_language.src.front
         {
             [[TokenKind.Bool]] = _typeTable.Bool,
             [[TokenKind.Enum]] = _typeTable.Enum,
+            [[TokenKind.Struct]] = _typeTable.Struct,
 
             [[TokenKind.Char]] = _typeTable.Char,
             [[TokenKind.Signed, TokenKind.Char]] = _typeTable.Int8,

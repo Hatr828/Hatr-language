@@ -1,3 +1,4 @@
+using Best_language.src.middle;
 using System.Diagnostics;
 using System.Xml.Linq;
 
@@ -37,6 +38,7 @@ namespace Best_language.src.front
             {
                 switch (_tokens[_idx].kind)
                 {
+                    case TokenKind.Struct:
                     case TokenKind.Enum:
                     case TokenKind.Signed:
                     case TokenKind.UnSigned:
@@ -50,17 +52,16 @@ namespace Best_language.src.front
                     case TokenKind.Float:
                         {
                             var type = ParseType();
-                            return ParseVariableOrFunctionOrEnum(type);
+                            return ParseSymbol(type);
                         }
                     case TokenKind.Typedef:
                         {
                             return ParseTypedef();          
                         }
-                    case TokenKind.Indent when _scopes.TryGetVariable(_tokens[_idx].val!, out var kind):
+                    case TokenKind.Indent when _scopes.TryGetVariable(_tokens[_idx].val!, out var kind) && kind is NameKind.TypeDef:
                         {
-                            _idx++;
-                            _scopes.TryGetTypedef(_tokens[_idx - 1].val!, out var type);
-                            return ParseVariableOrFunctionOrEnum(type);
+                            _scopes.TryGetTypedef(_tokens[_idx++].val!, out var type);
+                            return ParseSymbol(type);
                         }
                     case TokenKind.Switch:
                         {
@@ -162,11 +163,12 @@ namespace Best_language.src.front
                         }
                     case TokenKind.Indent:
                         {
-                            string name = _tokens[_idx].val!;
+                            string name = _tokens[_idx++].val!;
 
-                            if (_tokens[_idx + 1].kind is TokenKind.Equals)
+                            if (CheckKind(TokenKind.Equals))
                             {
-                                _idx += 2;
+                                _idx++;
+
                                 var temp = new AssignmentStatement(name, null, GetExpression());
 
                                 Requires(TokenKind.SemiColon);
@@ -281,7 +283,14 @@ namespace Best_language.src.front
                     }
                 case TokenKind.Indent:
                     {
-                        left = new VariableExpression(_tokens[_idx++].val!);
+                        string name = _tokens[_idx++].val!;
+
+                        if (_scopes.TryGetEnumMember(name, out var val))
+                        {
+                            left = new NumberExpression(val.Item1, val.Item2);
+                            break;
+                        }
+                        left = new VariableExpression(name);
                         break;
                     }
                 case TokenKind.True:
@@ -363,34 +372,43 @@ namespace Best_language.src.front
             return res;
         }
 
-        private Statement ParseVariableOrFunctionOrEnum(TypeSymbol type)
+        private Statement ParseSymbol(TypeSymbol type)
         {
             EnumTypeSymbol? enumType = null;
+            StructDeclaration? @struct = null;
 
             if (CheckKind(TokenKind.Indent, TokenKind.RightParen)) return ParseFunction(type);
-            if (CheckKind(TokenKind.Indent, TokenKind.RightBrace) || CheckKind(TokenKind.RightBrace))
+            else if (type == _typeTable.Enum && (CheckKind(TokenKind.Indent, TokenKind.RightBrace) || CheckKind(TokenKind.RightBrace)))
             {
-                
                 enumType = ParseEnum();
                 type = enumType.EnumType;
             }
-            if (CheckKind(TokenKind.Indent) && type == _typeTable.Enum)
+            else if (type == _typeTable.Struct && (CheckKind(TokenKind.Indent, TokenKind.RightBrace) || CheckKind(TokenKind.RightBrace)))
             {
-                type = new EnumTypeSymbol(_tokens[_idx].val!, null!);
-                _idx++;
+                @struct = ParseStruct();
+            }
+            else if (CheckKind(TokenKind.Indent) && type == _typeTable.Enum)
+            {
+                type = new EnumTypeSymbol(_tokens[_idx++].val!, null!);
+            }
+            else if (CheckKind(TokenKind.Indent) && type == _typeTable.Struct)
+            {
+                type = new StructTypeSymbol(_tokens[_idx++].val!, null!);
             }
 
             var variables = ParseVariables(type);
 
-            if (enumType is not null)
+            if (enumType is not null) return new EnumDeclaration(enumType, variables.Variables);
+            else if (@struct is not null)
             {
-                return new EnumDeclaration(enumType, variables.Variables);
-            }
+                @struct.Variables = variables.Variables;
+                return @struct;
+            } 
 
             return variables;
         }
 
-        private VariableDeclarations ParseVariables(TypeSymbol type)
+        private VariableDeclarations ParseVariables(TypeSymbol type) // needs refactoring
         {
             VariableDeclarations variables = new();
 
@@ -404,8 +422,13 @@ namespace Best_language.src.front
                     if (CheckKind(TokenKind.Equals)) // pointer with initialization
                     {
                         _idx++;
+
+                        bool isStructEx = false;
+
+                        if (CheckKind(TokenKind.RightBrace)) isStructEx = true;
+
                         _scopes.TryAddVariable(_tokens[_idx - 2].val!, NameKind.Variable);
-                        variables.Variables.Add(new VariableDeclaration(_tokens[_idx - 2].val!, _typeTable.GetPointer(type), GetExpression()));
+                        variables.Variables.Add(new VariableDeclaration(_tokens[_idx - 2].val!, _typeTable.GetPointer(type), isStructEx ? ParseStructExpression() : GetExpression()));
                     }
                     else
                     {
@@ -430,8 +453,12 @@ namespace Best_language.src.front
                 if (CheckKind(TokenKind.Equals)) // variable
                 {
                     _idx++;
+                    bool isStructEx = false;
+
+                    if (CheckKind(TokenKind.RightBrace)) isStructEx = true;
+
                     _scopes.TryAddVariable(_tokens[_idx - 2].val!, NameKind.Variable);
-                    variables.Variables.Add(new VariableDeclaration(_tokens[_idx - 2].val!, type, GetExpression()));
+                    variables.Variables.Add(new VariableDeclaration(_tokens[_idx - 2].val!, type, isStructEx ? ParseStructExpression() : GetExpression()));
 
                     if (CheckKind(TokenKind.SemiColon))
                     {
@@ -466,15 +493,13 @@ namespace Best_language.src.front
             return variables;
         }
 
-        private EnumTypeSymbol ParseEnum()
+        private EnumTypeSymbol ParseEnum() // needs refactoring
         {
             EnumTypeSymbol @enum;
 
             if (CheckKind(TokenKind.Indent))
             {
-                _idx++;
-
-                string enumName = _tokens[_idx - 1].val!;
+                string enumName = _tokens[_idx++].val!;
                 @enum = new(enumName, _typeTable.Int32);
 
                 _scopes.TryAddEnum(enumName, @enum);
@@ -486,14 +511,17 @@ namespace Best_language.src.front
             ulong prevIndex = 0;
             while(!CheckKind(TokenKind.LeftBrace))
             {
-                if (!CheckKind(TokenKind.Indent)) throw new ArgumentException("Expected indent");
-                string name = _tokens[_idx++].val!;
+                Requires(TokenKind.Indent);
+                string name = _tokens[_idx - 1].val!;
                 if (!CheckKind(TokenKind.Equals))
                 {
                     if (!CheckKind(TokenKind.LeftBrace))
                         Requires(TokenKind.Comma);
-                    @enum.Members.Add(name, prevIndex++);
+                    @enum.Members.Add(name, prevIndex);
 
+                    if (!_scopes.TryAddEnumMember(name, (prevIndex++, _typeTable.Int32))) throw new ArgumentException($"EnumMember {name} already exist");
+
+                    if (!_scopes.TryAddVariable(name, NameKind.Enum)) throw new ArgumentException($"EnumMember {name} cannot be declared");
                 }
                 else
                 {
@@ -504,6 +532,10 @@ namespace Best_language.src.front
 
                     prevIndex = ex.Value;
 
+                    if (!_scopes.TryAddEnumMember(name, (ex.Value, _typeTable.Int32))) throw new ArgumentException($"EnumMember {name} already exist");
+
+                    if (!_scopes.TryAddVariable(name, NameKind.Enum)) throw new ArgumentException($"EnumMember {name} cannot be declared");
+
                     if (!CheckKind(TokenKind.LeftBrace))
                         Requires(TokenKind.Comma);
                 }
@@ -513,7 +545,76 @@ namespace Best_language.src.front
             return @enum;
         }
 
-        private Statement ParseFunction(TypeSymbol type)
+        private StructDeclaration ParseStruct() // needs refactoring
+        {
+            string? structName = null;
+
+            if (CheckKind(TokenKind.Indent))
+            {
+                structName = _tokens[_idx++].val!;
+            }
+
+            Requires(TokenKind.RightBrace);
+
+            List<TypeSymbol> types = new();
+            List<string> names = new();
+
+            TypeSymbol type = ParseType();
+
+            while (!CheckKind(TokenKind.LeftBrace))
+            {
+
+                if (CheckKind(TokenKind.Multiply)) // pointer
+                {
+                    _idx++;
+                    Requires(TokenKind.Indent);
+                    names.Add(_tokens[_idx - 1].val!);
+
+                    type = _typeTable.GetPointer(type);
+                    types.Add(type);
+
+                    if (CheckKind(TokenKind.Comma))
+                    {
+                        _idx++;
+                        continue;
+                    }
+                    else if (CheckKind(TokenKind.SemiColon))
+                    {
+                        _idx++;
+                        if(!CheckKind(TokenKind.LeftBrace)) type = ParseType();
+
+                        continue;
+                    }
+                    else throw new ArgumentException("requires semiColon or comma");
+                }
+
+                Requires(TokenKind.Indent);
+                if (CheckKind(TokenKind.SemiColon))
+                {
+                    _idx++;
+                    names.Add(_tokens[_idx - 2].val!);
+                    types.Add(type);
+
+                    if (!CheckKind(TokenKind.LeftBrace)) type = ParseType();
+
+                    continue;
+                }
+                else if (CheckKind(TokenKind.Comma))
+                {
+                    _idx++;
+                    names.Add(_tokens[_idx - 2].val!);
+                    types.Add(type);
+                    continue;
+                }
+
+                throw new ArgumentException("Unknown syntax for struct");
+            }
+            _idx++;
+
+            return new StructDeclaration(new(structName, types), names);
+        }                                     
+
+        private Statement ParseFunction(TypeSymbol type) // needs refactoring
         {
             if (CheckKind(TokenKind.Indent, TokenKind.RightParen)) // function
             {
@@ -590,7 +691,7 @@ namespace Best_language.src.front
             return @if;
         }
 
-        private SwitchDeclaration ParseSwitch()
+        private SwitchDeclaration ParseSwitch() // needs refactoring
         {
             _scopes.AddScope();
 
@@ -699,10 +800,29 @@ namespace Best_language.src.front
 
             if (declareEnum)
             {
-                type.Name = enumName!;
+                if (type.Name is null)
+                    type.Name = enumName!;
                 return new EnumDeclaration((EnumTypeSymbol)type, new());
             }
             else return new EmptyNode();
+        }
+
+        private StructExpression ParseStructExpression()
+        {
+            Requires(TokenKind.RightBrace);
+
+            List<Expression> expressions = new();
+
+            while (!CheckKind(TokenKind.LeftBrace))
+            {
+                expressions.Add(GetExpression());
+
+                if (CheckKind(TokenKind.Comma)) _idx++;
+                else if (!CheckKind(TokenKind.LeftBrace)) throw new ArgumentException("Expected left brace or comma");
+            }
+            _idx++;
+
+            return new StructExpression(expressions);
         }
     }
 }

@@ -139,6 +139,14 @@ namespace Best_language.src.middle
                     Emit(new IrLabel("user_" + @goto.Id)); return;
                 case BoundGotoStatement @goto:
                     Emit(new IrJump("user_" + @goto.ToId)); return;
+                case BoundAssignmentStatement assignment when assignment.Right is BoundStructExpression:
+                    {
+                        var res = ResolveVariable(assignment.Variable);
+                        var source = LowerExpression(assignment.Right);
+
+                        Emit(new IrVariable(res, source));
+                        return;
+                    }
                 case BoundAssignmentStatement assignment:
                     {
                         var res = ResolveVariable(assignment.Variable);

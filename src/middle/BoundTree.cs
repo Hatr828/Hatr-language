@@ -85,14 +85,28 @@ namespace Best_language.src.middle
                         BoundVariableDeclaration temp;
 
                         var type = ResolveEnumType(variable.Type);
+                        type = ResolveStructType(variable.Type);
 
                         var tmp = new VariableSymbol(variable.Name, type);
                         AddVariableToScope(tmp);
 
                         if (variable.Initializer is not null)
                         {
-                            var initializer = BindExpression(variable.Initializer);
-                            temp = new BoundVariableDeclaration(tmp, BindConversion(initializer, type));
+                            if (variable.Initializer is StructExpression st && type is StructTypeSymbol tmpType)
+                            {
+                                List<BoundExpression> expressions = new();
+
+                                for(int i = 0; i < st.Right.Count; i++)
+                                {
+                                    expressions.Add(BindConversion(BindExpression(st.Right[i]), tmpType.Types[i]));
+                                }
+                                temp = new BoundVariableDeclaration(tmp, new BoundStructExpression(expressions));
+                            }
+                            else
+                            {
+                                var initializer = BindExpression(variable.Initializer);
+                                temp = new BoundVariableDeclaration(tmp, BindConversion(initializer, type));
+                            }
                         }
                         else
                             temp = new BoundVariableDeclaration(tmp, null);
@@ -110,6 +124,17 @@ namespace Best_language.src.middle
                         BoundVariablesDeclaration variables = new();
 
                         foreach (var variable in @enum.Variables) variables.variables.Add((BoundVariableDeclaration)BindStatement(variable));
+
+                        return variables;
+                    }
+                case StructDeclaration @struct:
+                    {
+                        if (@struct.Type.Name is not null && !_scopes.TryAddStruct(@struct.Type))
+                            throw new ArgumentException($"Enum with same name already exist {@struct.Type.Name}");
+
+                        BoundVariablesDeclaration variables = new();
+
+                        foreach (var variable in @struct.Variables ?? []) variables.variables.Add((BoundVariableDeclaration)BindStatement(variable));
 
                         return variables;
                     }
