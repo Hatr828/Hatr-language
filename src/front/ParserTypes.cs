@@ -1,6 +1,7 @@
 using Best_language.src.middle;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Security.AccessControl;
 using System.Xml.Linq;
 
 namespace Best_language.src.front
@@ -48,6 +49,24 @@ namespace Best_language.src.front
         public string Name { get; } = name;
         public override string DName => $"{nameof(VariableExpression)}: {Name}";
         public override IEnumerable<AstNode> Children => [];
+    }
+    public class MemberAccessExpression(Expression target, string memberName) : Expression
+    {
+        public Expression Target { get; } = target;
+        public string Name { get; } = memberName;
+
+        public override string DName => $"{nameof(MemberAccessExpression)}: target.{Name}";
+        public override IEnumerable<AstNode> Children => [Target];
+    }
+    public class MemberAssignment(Expression target, string memberName, Operation? op, Expression initializer) : Expression
+    {
+        public Expression Target { get; } = target;
+        public string Name { get; } = memberName;
+        public Operation? Op { get; } = op;
+        public Expression Initializer { get; } = initializer;
+
+        public override string DName => $"{nameof(MemberAssignment)}: target.{Name} {Op}";
+        public override IEnumerable<AstNode> Children => [Target, Initializer];
     }
     public class BoolExpression(bool value, TypeSymbol type) : Expression
     {
@@ -104,12 +123,13 @@ namespace Best_language.src.front
         public StructTypeSymbol Type { get; } = type;
         public List<string> Names { get; } = names;
         public List<VariableDeclaration>? Variables { get; set; }
-        public override string DName => $"{nameof(EnumDeclaration)} ({Type})";
+        public override string DName => $"{nameof(StructDeclaration)} ({Type})";
         public override IEnumerable<AstNode> Children
         {
             get
             {
-                foreach (var variable in Variables) yield return variable;
+                if (Variables is not null)
+                    foreach (var variable in Variables) yield return variable;
             }
         }
     }

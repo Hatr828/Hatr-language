@@ -71,10 +71,16 @@ namespace Best_language.src.back.Printers
                         else
                             return $"byte [{operand.Register}-{operand.Offset}]";
                     }
-                    if (operand.Size != X64Size.@byte)
-                        return $"{operand.Size} [{operand.Register}{operand.Offset}]";
+                    else if (operand.Offset > 0)
+                        if (operand.Size != X64Size.@byte)
+                            return $"{operand.Size} [{operand.Register}+{operand.Offset}]";
+                        else
+                            return $"byte [{operand.Register}+{operand.Offset}]";
                     else
-                        return $"byte [{operand.Register}{operand.Offset}]";
+                        if (operand.Size != X64Size.@byte)
+                            return $"{operand.Size} [{operand.Register}{operand.Offset}]";
+                        else
+                            return $"byte [{operand.Register}{operand.Offset}]";
                 case X64ValueKind.Label:
                     return $"{operand.Name}";
 

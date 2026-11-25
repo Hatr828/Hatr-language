@@ -1,4 +1,5 @@
 using Best_language.src.front;
+using System.Diagnostics.Metrics;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Best_language.src.middle
@@ -7,7 +8,7 @@ namespace Best_language.src.middle
     {
         private BoundScopes _scopes = new();
         private Dictionary<string, int> _gotoLabels = new();
-        private TypeTable _typeTable = new TypeTable();
+        private TypeTable _typeTable = null!;
         private int _labelId;
 
         public BoundProgram BindProgram(ProgramNode mainNode, TypeTable typeTable)
@@ -96,11 +97,14 @@ namespace Best_language.src.middle
                             {
                                 List<BoundExpression> expressions = new();
 
-                                for(int i = 0; i < st.Right.Count; i++)
+                                for(int i = tmpType.Types.Count - 1; i > -1; i--)
                                 {
-                                    expressions.Add(BindConversion(BindExpression(st.Right[i]), tmpType.Types[i]));
+                                    if (st.Right.Count > i)
+                                        expressions.Add(BindConversion(BindExpression(st.Right[i]), tmpType.Types[i]));
+                                    else
+                                        expressions.Add(BindConversion(BindExpression(new NumberExpression(0, tmpType.Types[i])), tmpType.Types[i]));
                                 }
-                                temp = new BoundVariableDeclaration(tmp, new BoundStructExpression(expressions));
+                                temp = new BoundVariableDeclaration(tmp, new BoundStructExpression(expressions, type));
                             }
                             else
                             {
@@ -129,7 +133,7 @@ namespace Best_language.src.middle
                     }
                 case StructDeclaration @struct:
                     {
-                        if (@struct.Type.Name is not null && !_scopes.TryAddStruct(@struct.Type))
+                        if (@struct.Type.Name is not null && !_scopes.TryAddStruct(@struct.Type, @struct.Names))
                             throw new ArgumentException($"Enum with same name already exist {@struct.Type.Name}");
 
                         BoundVariablesDeclaration variables = new();
@@ -249,6 +253,25 @@ namespace Best_language.src.middle
                     {
                         return new BoundContinueStatement();
                     }
+                case MemberAssignment assignment:
+                    {
+                        BoundExpression ex;
+
+                        if (assignment.Op is Operation op)
+                        {
+                            ex = BindExpression(new BinaryExpression(new VariableExpression(assignment.Name),
+                                GetOperationFromCompoundOperation(op), assignment.Initializer));
+                        }
+                        else ex = BindExpression(assignment.Initializer);
+
+                        var target = BindExpression(assignment.Target);
+
+                        if (target.Type is not StructTypeSymbol structType) throw new ArgumentException("Expected struct"); 
+
+                        if (!TryGetOffsetAndType(structType.Name, assignment.Name, out var offset, out var type)) throw new ArgumentException("Unknown member or struct");
+
+                        return new BoundAssignmentMemberStatement(target, new(assignment.Name, type, offset), ex);
+                    }
                 case AssignmentStatement assignment:
                     {
                         BoundExpression ex;
@@ -257,16 +280,12 @@ namespace Best_language.src.middle
                         {
                             ex = BindExpression(new BinaryExpression(new VariableExpression(assignment.Name), 
                                 GetOperationFromCompoundOperation(op), assignment.Right));
-
-                            GetVariable(assignment.Name, out var variable);
-
-                            return new BoundAssignmentStatement(variable, ex);
                         }
+                        else ex = BindExpression(assignment.Right);
 
-                        ex = BindExpression(assignment.Right);
-                        GetVariable(assignment.Name, out var variable2);
+                        GetVariable(assignment.Name, out var variable);
 
-                        return new BoundAssignmentStatement(variable2, ex);
+                        return new BoundAssignmentStatement(variable, ex);
                     }
                 case UnaryExpression unary:
                     {
@@ -290,6 +309,18 @@ namespace Best_language.src.middle
                     return new BoundNumberExpression(number.Type, number.Value);
                 case DoubleExpression @double:
                     return new BoundDoubleExpression(@double.Type, @double.Value);
+                case MemberAccessExpression member:
+                    {
+                        if (constantOnly) throw new ArgumentException("Expected constants only");
+
+                        var target = BindExpression(member.Target);
+
+                        if (target.Type is not StructTypeSymbol structType) throw new ArgumentException("Expected struct");
+
+                        if (!TryGetOffsetAndType(structType.Name, member.Name, out var offset, out var type)) throw new ArgumentException("Unknown member or struct");
+
+                        return new BoundMemberAccessExpression(target, new(member.Name, type, offset));
+                    }
                 case VariableExpression variable:
                     {
                         if (_scopes.TryGetEnumValue(variable.Name, out var val)) return new BoundNumberExpression(val.Item2, val.Item1);

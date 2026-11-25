@@ -36,9 +36,9 @@ namespace Best_language.src.front
 
         private TypeSymbol GetCommonArithmeticType(TypeSymbol left, TypeSymbol right)
         {
-            if (left is BoolTypeSymbol || left is IntegerTypeSymbol left_ && (int)left_.Size < 4) left = _typeTable.Int32;
+            if (left is BoolTypeSymbol || left is IntegerTypeSymbol left_ && (int)left_.Size < 4) left = typeTable.Int32;
 
-            if (right is BoolTypeSymbol || right is IntegerTypeSymbol right_ && (int)right_.Size < 4) right = _typeTable.Int32;
+            if (right is BoolTypeSymbol || right is IntegerTypeSymbol right_ && (int)right_.Size < 4) right = typeTable.Int32;
 
             if (left == right) return left;
 
@@ -168,12 +168,12 @@ namespace Best_language.src.front
             Operation.BitOr => new(left.Value | right.Value, GetCommonArithmeticType(left.Type, right.Type)),
             Operation.BitXor => new(left.Value ^ right.Value, GetCommonArithmeticType(left.Type, right.Type)),
 
-            Operation.EqualsEquals => new(left.Value == right.Value ? 1UL : 0UL, _typeTable.Int32),
-            Operation.NotEquals => new(left.Value != right.Value ? 1UL : 0UL, _typeTable.Int32),
-            Operation.LessThan => new(left.Value < right.Value ? 1UL : 0UL, _typeTable.Int32),
-            Operation.LessThanOrEqual => new(left.Value <= right.Value ? 1UL : 0UL, _typeTable.Int32),
-            Operation.GreaterThan => new(left.Value > right.Value ? 1UL : 0UL, _typeTable.Int32),
-            Operation.GreaterThanOrEqual => new(left.Value >= right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.EqualsEquals => new(left.Value == right.Value ? 1UL : 0UL, typeTable.Int32),
+            Operation.NotEquals => new(left.Value != right.Value ? 1UL : 0UL, typeTable.Int32),
+            Operation.LessThan => new(left.Value < right.Value ? 1UL : 0UL, typeTable.Int32),
+            Operation.LessThanOrEqual => new(left.Value <= right.Value ? 1UL : 0UL, typeTable.Int32),
+            Operation.GreaterThan => new(left.Value > right.Value ? 1UL : 0UL, typeTable.Int32),
+            Operation.GreaterThanOrEqual => new(left.Value >= right.Value ? 1UL : 0UL, typeTable.Int32),
 
             _ => throw new ArgumentException($"Unexpected unary operation: {op}")
         };
@@ -185,12 +185,12 @@ namespace Best_language.src.front
             Operation.Divide => new DoubleExpression(left.Value / right.Value, GetCommonArithmeticType(left.Type, right.Type)),
             Operation.DivisionRem => new DoubleExpression(left.Value % right.Value, GetCommonArithmeticType(left.Type, right.Type)),
 
-            Operation.EqualsEquals => new NumberExpression(left.Value == right.Value ? 1UL : 0UL, _typeTable.Int32),
-            Operation.NotEquals => new NumberExpression(left.Value != right.Value ? 1UL : 0UL, _typeTable.Int32),
-            Operation.LessThan => new NumberExpression(left.Value < right.Value ? 1UL : 0UL, _typeTable.Int32),
-            Operation.LessThanOrEqual => new NumberExpression(left.Value <= right.Value ? 1UL : 0UL, _typeTable.Int32),
-            Operation.GreaterThan => new NumberExpression(left.Value > right.Value ? 1UL : 0UL, _typeTable.Int32),
-            Operation.GreaterThanOrEqual => new NumberExpression(left.Value >= right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.EqualsEquals => new NumberExpression(left.Value == right.Value ? 1UL : 0UL, typeTable.Int32),
+            Operation.NotEquals => new NumberExpression(left.Value != right.Value ? 1UL : 0UL, typeTable.Int32),
+            Operation.LessThan => new NumberExpression(left.Value < right.Value ? 1UL : 0UL, typeTable.Int32),
+            Operation.LessThanOrEqual => new NumberExpression(left.Value <= right.Value ? 1UL : 0UL, typeTable.Int32),
+            Operation.GreaterThan => new NumberExpression(left.Value > right.Value ? 1UL : 0UL, typeTable.Int32),
+            Operation.GreaterThanOrEqual => new NumberExpression(left.Value >= right.Value ? 1UL : 0UL, typeTable.Int32),
 
             _ => throw new ArgumentException($"Unexpected unary operation: {op}")
         };
@@ -202,12 +202,12 @@ namespace Best_language.src.front
             Operation.Divide => new DoubleExpression(left.Value / right.Value, GetCommonArithmeticType(left.Type, right.Type)),
             Operation.DivisionRem => new DoubleExpression(left.Value % right.Value, GetCommonArithmeticType(left.Type, right.Type)),
 
-            Operation.EqualsEquals => new NumberExpression(left.Value == right.Value ? 1UL : 0UL, _typeTable.Int32),
-            Operation.NotEquals => new NumberExpression(left.Value != right.Value ? 1UL : 0UL, _typeTable.Int32),
-            Operation.LessThan => new NumberExpression(left.Value < right.Value ? 1UL : 0UL, _typeTable.Int32),
-            Operation.LessThanOrEqual => new NumberExpression(left.Value <= right.Value ? 1UL : 0UL, _typeTable.Int32),
-            Operation.GreaterThan => new NumberExpression(left.Value > right.Value ? 1UL : 0UL, _typeTable.Int32),
-            Operation.GreaterThanOrEqual => new NumberExpression(left.Value >= right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.EqualsEquals => new NumberExpression(left.Value == right.Value ? 1UL : 0UL, typeTable.Int32),
+            Operation.NotEquals => new NumberExpression(left.Value != right.Value ? 1UL : 0UL, typeTable.Int32),
+            Operation.LessThan => new NumberExpression(left.Value < right.Value ? 1UL : 0UL, typeTable.Int32),
+            Operation.LessThanOrEqual => new NumberExpression(left.Value <= right.Value ? 1UL : 0UL, typeTable.Int32),
+            Operation.GreaterThan => new NumberExpression(left.Value > right.Value ? 1UL : 0UL, typeTable.Int32),
+            Operation.GreaterThanOrEqual => new NumberExpression(left.Value >= right.Value ? 1UL : 0UL, typeTable.Int32),
 
             _ => throw new ArgumentException($"Unexpected unary operation: {op}")
         };
@@ -219,12 +219,12 @@ namespace Best_language.src.front
             Operation.Divide => new DoubleExpression(left.Value / right.Value, GetCommonArithmeticType(left.Type, right.Type)),
             Operation.DivisionRem => new DoubleExpression(left.Value % right.Value, GetCommonArithmeticType(left.Type, right.Type)),
 
-            Operation.EqualsEquals => new NumberExpression(left.Value == right.Value ? 1UL : 0UL, _typeTable.Int32),
-            Operation.NotEquals => new NumberExpression(left.Value != right.Value ? 1UL : 0UL, _typeTable.Int32),
-            Operation.LessThan => new NumberExpression(left.Value < right.Value ? 1UL : 0UL, _typeTable.Int32),
-            Operation.LessThanOrEqual => new NumberExpression(left.Value <= right.Value ? 1UL : 0UL, _typeTable.Int32),
-            Operation.GreaterThan => new NumberExpression(left.Value > right.Value ? 1UL : 0UL, _typeTable.Int32),
-            Operation.GreaterThanOrEqual => new NumberExpression(left.Value >= right.Value ? 1UL : 0UL, _typeTable.Int32),
+            Operation.EqualsEquals => new NumberExpression(left.Value == right.Value ? 1UL : 0UL, typeTable.Int32),
+            Operation.NotEquals => new NumberExpression(left.Value != right.Value ? 1UL : 0UL, typeTable.Int32),
+            Operation.LessThan => new NumberExpression(left.Value < right.Value ? 1UL : 0UL, typeTable.Int32),
+            Operation.LessThanOrEqual => new NumberExpression(left.Value <= right.Value ? 1UL : 0UL, typeTable.Int32),
+            Operation.GreaterThan => new NumberExpression(left.Value > right.Value ? 1UL : 0UL, typeTable.Int32),
+            Operation.GreaterThanOrEqual => new NumberExpression(left.Value >= right.Value ? 1UL : 0UL, typeTable.Int32),
 
             _ => throw new ArgumentException($"Unexpected unary operation: {op}")
         };
@@ -234,54 +234,65 @@ namespace Best_language.src.front
             TokenKind.Plus or TokenKind.Minus or TokenKind.Not or TokenKind.BitNot or TokenKind.PlusPlus or TokenKind.MinusMinus => true,
             TokenKind.RightParen => true,
             TokenKind.Indent or TokenKind.Number => true,
+            TokenKind.Multiply => true, // Dereference
 
             _ => false,
         };
+
+        private int GetSizeForStruct(List<TypeSymbol> types, out int alignment)
+        {
+            alignment = 0;
+
+            foreach (var type in types) alignment = Math.Max(alignment, typeTable.GetTypeSize(type));
+
+            return alignment * types.Count;
+        }
+
         private readonly Dictionary<TokenKind[], TypeSymbol> _types = new(new TokenKindSpanComparer())
         {
-            [[TokenKind.Bool]] = _typeTable.Bool,
-            [[TokenKind.Enum]] = _typeTable.Enum,
-            [[TokenKind.Struct]] = _typeTable.Struct,
+            [[TokenKind.Bool]] = typeTable.Bool,
+            [[TokenKind.Enum]] = typeTable.Enum,
+            [[TokenKind.Struct]] = typeTable.Struct,
 
-            [[TokenKind.Char]] = _typeTable.Char,
-            [[TokenKind.Signed, TokenKind.Char]] = _typeTable.Int8,
-            [[TokenKind.UnSigned, TokenKind.Char]] = _typeTable.Int8,
+            [[TokenKind.Char]] = typeTable.Char,
+            [[TokenKind.Signed, TokenKind.Char]] = typeTable.Int8,
+            [[TokenKind.UnSigned, TokenKind.Char]] = typeTable.Int8,
 
-            [[TokenKind.Short]] = _typeTable.Int16,
-            [[TokenKind.Short, TokenKind.Int]] = _typeTable.Int16,
-            [[TokenKind.Signed, TokenKind.Short]] = _typeTable.Int16,
-            [[TokenKind.Signed, TokenKind.Short, TokenKind.Int]] = _typeTable.Int16,
+            [[TokenKind.Short]] = typeTable.Int16,
+            [[TokenKind.Short, TokenKind.Int]] = typeTable.Int16,
+            [[TokenKind.Signed, TokenKind.Short]] = typeTable.Int16,
+            [[TokenKind.Signed, TokenKind.Short, TokenKind.Int]] = typeTable.Int16,
 
-            [[TokenKind.UnSigned, TokenKind.Short, TokenKind.Int]] = _typeTable.UInt16,
-            [[TokenKind.UnSigned, TokenKind.Short]] = _typeTable.UInt16,
+            [[TokenKind.UnSigned, TokenKind.Short, TokenKind.Int]] = typeTable.UInt16,
+            [[TokenKind.UnSigned, TokenKind.Short]] = typeTable.UInt16,
 
-            [[TokenKind.Int]] = _typeTable.Int32,
-            [[TokenKind.Signed, TokenKind.Int]] = _typeTable.Int32,
-            [[TokenKind.Signed]] = _typeTable.Int32,
+            [[TokenKind.Int]] = typeTable.Int32,
+            [[TokenKind.Signed, TokenKind.Int]] = typeTable.Int32,
+            [[TokenKind.Signed]] = typeTable.Int32,
 
-            [[TokenKind.UnSigned, TokenKind.Int]] = _typeTable.UInt32,
-            [[TokenKind.UnSigned]] = _typeTable.UInt32,
+            [[TokenKind.UnSigned, TokenKind.Int]] = typeTable.UInt32,
+            [[TokenKind.UnSigned]] = typeTable.UInt32,
 
-            [[TokenKind.Long]] = _typeTable.Int32,
-            [[TokenKind.Long, TokenKind.Int]] = _typeTable.Int32,
-            [[TokenKind.Signed, TokenKind.Long]] = _typeTable.Int32,
-            [[TokenKind.Signed, TokenKind.Long, TokenKind.Int]] = _typeTable.Int32,
+            [[TokenKind.Long]] = typeTable.Int32,
+            [[TokenKind.Long, TokenKind.Int]] = typeTable.Int32,
+            [[TokenKind.Signed, TokenKind.Long]] = typeTable.Int32,
+            [[TokenKind.Signed, TokenKind.Long, TokenKind.Int]] = typeTable.Int32,
 
-            [[TokenKind.UnSigned, TokenKind.Long]] = _typeTable.UInt32,
-            [[TokenKind.UnSigned, TokenKind.Long, TokenKind.Int]] = _typeTable.UInt32,
+            [[TokenKind.UnSigned, TokenKind.Long]] = typeTable.UInt32,
+            [[TokenKind.UnSigned, TokenKind.Long, TokenKind.Int]] = typeTable.UInt32,
 
-            [[TokenKind.Long, TokenKind.Long]] = _typeTable.Int64,
-            [[TokenKind.Long, TokenKind.Long, TokenKind.Int]] = _typeTable.Int64,
-            [[TokenKind.Signed, TokenKind.Long, TokenKind.Long]] = _typeTable.Int64,
-            [[TokenKind.Signed, TokenKind.Long, TokenKind.Long, TokenKind.Int]] = _typeTable.Int64,
+            [[TokenKind.Long, TokenKind.Long]] = typeTable.Int64,
+            [[TokenKind.Long, TokenKind.Long, TokenKind.Int]] = typeTable.Int64,
+            [[TokenKind.Signed, TokenKind.Long, TokenKind.Long]] = typeTable.Int64,
+            [[TokenKind.Signed, TokenKind.Long, TokenKind.Long, TokenKind.Int]] = typeTable.Int64,
 
-            [[TokenKind.UnSigned, TokenKind.Long, TokenKind.Long]] = _typeTable.UInt64,
-            [[TokenKind.UnSigned, TokenKind.Long, TokenKind.Long, TokenKind.Int]] = _typeTable.UInt64,
+            [[TokenKind.UnSigned, TokenKind.Long, TokenKind.Long]] = typeTable.UInt64,
+            [[TokenKind.UnSigned, TokenKind.Long, TokenKind.Long, TokenKind.Int]] = typeTable.UInt64,
 
-            [[TokenKind.Float]] = _typeTable.Float,
+            [[TokenKind.Float]] = typeTable.Float,
 
-            [[TokenKind.Double]] = _typeTable.Double,
-            [[TokenKind.Double, TokenKind.Long]] = _typeTable.Double,
+            [[TokenKind.Double]] = typeTable.Double,
+            [[TokenKind.Double, TokenKind.Long]] = typeTable.Double,
 
         };
         private TypeSymbol ParseType()

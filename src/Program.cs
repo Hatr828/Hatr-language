@@ -17,9 +17,13 @@ namespace Best_language.src
                 struct Pair {
                     int x, y;
                 };
+                struct Pair pair = {10, 20};
+                struct Pair *ptr = &pair;
 
-                struct Pair pair = { 10, 20 };
-                struct Pair *pair_ptr = &pair;
+                ptr->x = 2;
+                ptr->y = 10;
+
+                int* a = &pair.x;
                 ";
             var sw = Stopwatch.StartNew();
 
@@ -46,7 +50,7 @@ namespace Best_language.src
             sw.Restart();
 
             BoundTree boundTree = new();
-            BoundProgram boundProgram = boundTree.BindProgram(node, Parser._typeTable);
+            BoundProgram boundProgram = boundTree.BindProgram(node, Parser.typeTable);
 
             sw.Stop();
             Console.WriteLine($"BoundTree done in: {sw.ElapsedTicks} ticks");
@@ -58,7 +62,7 @@ namespace Best_language.src
             sw.Restart();
 
             IrLowering ir = new();
-            IrProgram irProgram = ir.Lower(boundProgram);
+            IrProgram irProgram = ir.Lower(boundProgram, Parser.typeTable);
 
             sw.Stop();
             Console.WriteLine($"IrLowering done in: {sw.ElapsedTicks} ticks");

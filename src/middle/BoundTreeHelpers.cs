@@ -235,9 +235,12 @@ namespace Best_language.src.middle
                     {
                         bool canAddress = CanTakeAddress(right);
 
-                        if (!canAddress) throw new ArgumentException("Invalid operator for &");
+                        if (!canAddress) throw new ArgumentException("Invalid operand for &");
 
-                        return new BoundUnaryExpression(_typeTable.GetPointer(right.Type), op, right);
+                        if (right is BoundMemberAccessExpression st)
+                            return new BoundUnaryExpression(_typeTable.GetPointer(st.Field.Type), op, right);
+                        else 
+                            return new BoundUnaryExpression(_typeTable.GetPointer(right.Type), op, right);
                     }
                 case UnaryRule.Dereference:
                     {
@@ -261,9 +264,13 @@ namespace Best_language.src.middle
 
         private BoundExpression BindConversion(BoundExpression expression, TypeSymbol targetType)
         {
-            if (expression.Type == targetType) return expression;
+            TypeSymbol type = expression.Type;
 
-            bool sourceNumeric = expression.Type is IntegerTypeSymbol or BoolTypeSymbol or FloatTypeSymbol;
+            if (expression is BoundMemberAccessExpression tmp) type = tmp.Field.Type;
+
+            if (type == targetType) return expression;
+
+            bool sourceNumeric = type is IntegerTypeSymbol or BoolTypeSymbol or FloatTypeSymbol;
             bool targetNumeric = targetType is IntegerTypeSymbol or BoolTypeSymbol or FloatTypeSymbol;
 
             if (sourceNumeric && targetNumeric) return new BoundConversionExpression(expression, targetType);
@@ -335,6 +342,7 @@ namespace Best_language.src.middle
         private bool CanTakeAddress(BoundExpression ex) => ex switch
         {
             BoundVariableExpression => true,
+            BoundMemberAccessExpression => true,
             BoundUnaryExpression unary when unary.Op is Operation.Dereference => true,
 
             _ => false,
@@ -361,11 +369,36 @@ namespace Best_language.src.middle
 
             if (type is StructTypeSymbol @struct)
             {
-                if (_scopes.TryGetStruct(@struct.Name, out var structType)) return structType;
+                if (_scopes.TryGetStruct(@struct.Name, out var structType)) return structType.Item1;
                 else throw new ArgumentException($"Unknown enum name: {@struct.Name}");
             }
 
             return type;
+        }
+
+        private bool TryGetOffsetAndType(string structName, string memberName, out int offset, out TypeSymbol type)
+        {
+            if (!_scopes.TryGetStruct(structName, out var val))
+            {
+                offset = int.MinValue;
+                type = null!;
+                return false;
+            }
+            int i = 0;
+            var names = val.Item2;
+
+            for (; i < names.Count; i++) if (names[i] == memberName) break;
+
+            if (i == names.Count)
+            {
+                offset = int.MinValue;
+                type = null!;
+                return false;
+            }
+
+            type = val.Item1.Types[i];
+            offset = val.Item1.Alignment * i;
+            return true;
         }
     }
 }

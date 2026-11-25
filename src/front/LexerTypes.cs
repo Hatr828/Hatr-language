@@ -29,6 +29,7 @@ namespace Best_language.src.front
     {
         Typedef,
         SizeOf,
+        Arrow,
 
         // Do not move
         Int,
@@ -216,6 +217,8 @@ namespace Best_language.src.front
 
             ["++"] = TokenKind.PlusPlus,
             ["--"] = TokenKind.MinusMinus,
+
+            ["->"] = TokenKind.Arrow,
 
             ["<<"] = TokenKind.LeftShift,
             [">>"] = TokenKind.RightShift,

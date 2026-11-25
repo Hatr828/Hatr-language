@@ -67,6 +67,8 @@
         none,
         @byte = 1,  word = 2, dword = 4, qword = 8, oword = 16,  // Do not change numbers
 
+        custom,
+
         operand,
         immediate
     }

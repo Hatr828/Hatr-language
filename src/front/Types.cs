@@ -59,9 +59,12 @@ namespace Best_language.src.front
         public Dictionary<string, ulong> Members { get; } = new();
         public override string ToString() => $"{nameof(EnumTypeSymbol)} ({Name ?? "No name"})";
     }
-    public class StructTypeSymbol(string? name, List<TypeSymbol> types) : TypeSymbol(name!)
+    public class StructTypeSymbol(string? name, int size, int alignment, List<TypeSymbol> types) : TypeSymbol(name!)
     {
         public List<TypeSymbol> Types { get; } = types;
+        public int Size { get; } = size;
+        public int Alignment { get; } = alignment;
+
         public override string ToString() => $"{nameof(StructTypeSymbol)} ({Name ?? "No name"})";
     }
     public class FunctionTypeSymbol(TypeSymbol returnType, List<TypeSymbol>? paramsTypes = null) : TypeSymbol("function")
@@ -111,5 +114,15 @@ namespace Best_language.src.front
 
             return pointerType;
         }
+
+
+        public int GetTypeSize(TypeSymbol type) => type switch
+        {
+            IntegerTypeSymbol integer => (int)integer.Size,
+            FloatTypeSymbol fp => (int)fp.Size,
+            EnumTypeSymbol @enum => GetTypeSize(@enum.EnumType),
+
+            _ => throw new NotImplementedException()
+        };
     }
 }

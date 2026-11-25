@@ -8,6 +8,7 @@ namespace Best_language.src.middle
     {
         private int _nextId;
         private int _nextLebelId;
+        private TypeTable _typeTable = null!;
         private IrProgram _currentProgram = new();
 
         private Dictionary<VariableSymbol, IrValue> _variables = new();
@@ -17,8 +18,10 @@ namespace Best_language.src.middle
         private IrValue NewIrValue(TypeSymbol type) => new(_nextId++, type);
         private string NewLabelName(string name) => $"{name}_{_nextLebelId++}";
 
-        public IrProgram Lower(BoundProgram mainNode)
+        public IrProgram Lower(BoundProgram mainNode, TypeTable typeTable)
         {
+            _typeTable = typeTable;
+
             foreach (BoundStatement st in mainNode.Statements)
             {
                 LowerNode(st);
@@ -34,6 +37,22 @@ namespace Best_language.src.middle
                 case BoundVariablesDeclaration variables:
                     foreach (var variable in variables.variables) LowerNode(variable);
                     return;
+                case BoundVariableDeclaration variable when variable.Initializer is not null && variable.Initializer is BoundStructExpression st:
+                    {
+                        List<IrValue> Irs = new();
+                        var type = (StructTypeSymbol)st.Type;
+
+                        for (int i = 0; i < st.Right.Count; i++)
+                        {
+                            var value2 = LowerExpression(st.Right[i]);
+                            var res = EmitCopy(value2);
+                            Irs.Add(res);
+                        }
+
+                        var value = EmitConstant(Irs, st.Type);
+                        _variables.Add(variable.Variable, value);
+                        return;
+                    }
                 case BoundVariableDeclaration variable:
                     {
                         if (variable.Initializer is null)
@@ -139,12 +158,19 @@ namespace Best_language.src.middle
                     Emit(new IrLabel("user_" + @goto.Id)); return;
                 case BoundGotoStatement @goto:
                     Emit(new IrJump("user_" + @goto.ToId)); return;
-                case BoundAssignmentStatement assignment when assignment.Right is BoundStructExpression:
+                case BoundAssignmentStatement assignment when assignment.Right is BoundStructExpression st:
                     {
-                        var res = ResolveVariable(assignment.Variable);
-                        var source = LowerExpression(assignment.Right);
+                        List<IrValue> Irs = new();
+                        var type = (StructTypeSymbol)st.Type;
 
-                        Emit(new IrVariable(res, source));
+                        for (int i = 0; i < st.Right.Count; i++)
+                        {
+                            Irs.Add(LowerExpression(st.Right[i]));
+                        }
+
+                        var res = ResolveVariable(assignment.Variable);
+
+                        Emit(new IrArray(res, type.Size, Irs));
                         return;
                     }
                 case BoundAssignmentStatement assignment:
@@ -153,6 +179,14 @@ namespace Best_language.src.middle
                         var source = LowerExpression(assignment.Right);
 
                         Emit(new IrVariable(res, source));
+                        return;
+                    }
+                case BoundAssignmentMemberStatement assignment:
+                    {
+                        var (address, offset) = LowerAddress(assignment.Target);
+                        var right = LowerExpression(assignment.Right);
+
+                        Emit(new IrStore(address, offset + assignment.Field.Offset, right));
                         return;
                     }
                 case BoundExpressionStatement ex:
@@ -188,6 +222,12 @@ namespace Best_language.src.middle
 
                         return result;
                     }
+                case BoundMemberAccessExpression memberAccess:
+                    var (address, offset) = LowerAddress(memberAccess);
+                    var res = NewIrValue(memberAccess.Type);
+
+                    Emit(new IrLoad(res, address, offset));
+                    return res;
                 case BoundUnaryExpression unary:
                     {
                         bool increment = unary.Op is Operation.PlusPlusLeft or Operation.PlusPlusRight or Operation.MinusMinusLeft or Operation.MinusMinusRight;

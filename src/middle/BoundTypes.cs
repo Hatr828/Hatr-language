@@ -126,13 +126,15 @@ namespace Best_language.src.middle
         public VariableSymbol Variable { get; } = variable;
         public BoundExpression Right { get; } = right;
         public override string DName => $"{nameof(BoundAssignmentStatement)}: {Variable.Name}";
-        public override IEnumerable<BoundNode> Children
-        {
-            get
-            {
-                yield return Right;
-            }
-        }
+        public override IEnumerable<BoundNode> Children => [Right];
+    }
+    public class BoundAssignmentMemberStatement(BoundExpression target, FieldSymbol field, BoundExpression right) : BoundStatement
+    {
+        public BoundExpression Target { get; } = target;
+        public FieldSymbol Field { get; } = field;
+        public BoundExpression Right { get; } = right;
+        public override string DName => $"{nameof(BoundAssignmentMemberStatement)}: {Field} ({Target.Type})";
+        public override IEnumerable<BoundNode> Children => [Target, Right];
     }
     public class BoundIfDeclaration(BoundExpression expression) : BoundStatement
     {
@@ -285,7 +287,7 @@ namespace Best_language.src.middle
         public override string DName => $"{nameof(BoundDoubleExpression)}: {Value}";
         public override IEnumerable<BoundNode> Children => [];
     }
-    public class BoundStructExpression(List<BoundExpression> right) : BoundExpression(new StructTypeSymbol(null, null!))
+    public class BoundStructExpression(List<BoundExpression> right, TypeSymbol type) : BoundExpression(type)
     {
         public List<BoundExpression> Right { get; } = right;
 
@@ -315,6 +317,22 @@ namespace Best_language.src.middle
         public VariableSymbol Variable { get; } = variable;
         public override string DName => $"{nameof(BoundVariableExpression)}: {Variable.Name} ({Variable.Type})";
         public override IEnumerable<BoundNode> Children => [];
+    }
+    public class BoundMemberAccessExpression(BoundExpression target, FieldSymbol field) : BoundExpression(field.Type)
+    {
+        public BoundExpression Target { get; } = target;
+        public FieldSymbol Field { get; } = field;
+
+        public override string DName => $"{nameof(BoundMemberAccessExpression)}: {Field} ({Target.Type})";
+        public override IEnumerable<BoundNode> Children => [Target];
+    }
+    public class FieldSymbol(string name, TypeSymbol type, int offset)
+    {
+        public string Name { get; } = name;
+        public TypeSymbol Type { get; } = type;
+        public int Offset { get; } = offset;
+
+        public override string ToString() => $"{Name}, {Offset} ({Type})";
     }
     public class BoundBoolExpression(bool value, TypeSymbol type) : BoundExpression(type)
     {
@@ -362,7 +380,7 @@ namespace Best_language.src.middle
         private readonly List<Dictionary<string, VariableSymbol>> _userVariables = new();
         private readonly List<Dictionary<string, (ulong, IntegerTypeSymbol)>> _enums = new();
         private readonly List<Dictionary<string, EnumTypeSymbol>> _userEnums = new();
-        private readonly List<Dictionary<string, StructTypeSymbol>> _userStructs = new();
+        private readonly List<Dictionary<string, (StructTypeSymbol, List<string>)>> _userStructs = new();
 
         public bool TryAddVariable(VariableSymbol variable)
         {
@@ -376,9 +394,9 @@ namespace Best_language.src.middle
         {
             return _userEnums[^1].TryAdd(type.Name, type);
         }
-        public bool TryAddStruct(StructTypeSymbol type)
+        public bool TryAddStruct(StructTypeSymbol type, List<string> names)
         {
-            return _userStructs[^1].TryAdd(type.Name, type);
+            return _userStructs[^1].TryAdd(type.Name, (type, names));
         }
 
         public bool TryGetVariable(string name, out VariableSymbol variable)
@@ -417,7 +435,7 @@ namespace Best_language.src.middle
             val = null!;
             return false;
         }
-        public bool TryGetStruct(string name, out StructTypeSymbol val)
+        public bool TryGetStruct(string name, out (StructTypeSymbol, List<string>) val)
         {
             for (int i = 1; i <= _userStructs.Count; i++)
             {
@@ -426,7 +444,7 @@ namespace Best_language.src.middle
                     return true;
                 }
             }
-            val = null!;
+            val = (null!, null!);
             return false;
         }
 

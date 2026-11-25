@@ -411,6 +411,13 @@ namespace Best_language.src.back.Generators
             _locals.Add(value, (offset, x64Size));
             return (offset, x64Size);
         }
+        private (int, X64Size) GetSlot(IrValue value)
+        {
+            if (_locals.TryGetValue(value, out (int, X64Size) val))
+                return val;
+
+            throw new ArgumentException($"Unknown slot fot {value}");
+        }
 
         private int GetSlotSize(IrValue value) => value.Type switch
         {
@@ -418,6 +425,7 @@ namespace Best_language.src.back.Generators
             IntegerTypeSymbol type => (int)type.Size,
             FloatTypeSymbol type => (int)type.Size,
             PointerTypeSymbol => 8,
+            StructTypeSymbol st => st.Size,
             _ => throw new ArgumentException()
         };
 
@@ -435,7 +443,7 @@ namespace Best_language.src.back.Generators
             2 => X64Size.word,
             4 => X64Size.dword,
             8 => X64Size.qword,
-            _ => throw new ArgumentException()
+            _ => X64Size.custom,
         };
         private int GetTypeSize(TypeSymbol type) => type switch
         {

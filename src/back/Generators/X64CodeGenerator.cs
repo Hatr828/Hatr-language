@@ -2,6 +2,7 @@ using Best_language.src.back.Instructions;
 using Best_language.src.front;
 using Best_language.src.middle;
 using Microsoft.Win32;
+using System.Drawing;
 using System.Numerics;
 using System.Reflection.Emit;
 using System.Runtime.Serialization;
@@ -95,7 +96,8 @@ namespace Best_language.src.back.Generators
                                 LoadValue(variable.Right, GetRegister(variable.Right.Type));
 
                             (int slot, X64Size size) = GetOrCreateSlot(variable.Left);
-                            _constants.Remove(variable.Left);
+                            _constants.Remove(variable.Right);
+                            _constantsFP.Remove(variable.Right);
 
                             bool isFloat = variable.Right.Type is FloatTypeSymbol;
 
@@ -104,9 +106,55 @@ namespace Best_language.src.back.Generators
                                 X64Operand.Reg(isFloat ? X64Register.xmm0 : GetRegister(size))));
                             break;
                         }
+                    case IrLoad address:
+                        {
+                            (int offset, _) = GetSlot(address.Right);
+
+                            (int slot, X64Size size) = GetOrCreateSlot(address.Left);
+
+                            LoadValue(address.Right, X64Register.rcx);
+
+                            Emit(new(X64Opcode.mov,
+                                X64Operand.Reg(GetRegister(size)),
+                                X64Operand.Mem(X64Register.rcx, address.Offset, size)));
+
+                            Emit(new(X64Opcode.mov,
+                                X64Operand.Mem(X64Register.rbp, -slot, size),
+                                X64Operand.Reg(GetRegister(size))));
+                            break;
+                        }
+                    case IrStore address:
+                        {
+                            if (address.Right.Type is FloatTypeSymbol)
+                                LoadValue(address.Right, X64Register.xmm0);
+                            else
+                                LoadValue(address.Right, GetRegister(address.Right.Type));
+
+                            (int offset, _) = GetSlot(address.Left);
+
+                            (int slot, X64Size size) = GetOrCreateSlot(address.Right);
+                            _constants.Remove(address.Right);
+                            _constantsFP.Remove(address.Right);
+
+                            bool isFloat = address.Right.Type is FloatTypeSymbol;
+
+                            LoadValue(address.Left, X64Register.rcx);
+
+                            Emit(new(X64Opcode.mov,
+                                X64Operand.Mem(X64Register.rcx, address.Offset, size), 
+                                X64Operand.Reg(isFloat ? X64Register.xmm0 : GetRegister(size))));
+                            break;
+                        }
                     case IrConstant constant:
                         {
                             _constants.Add(constant.Left, (constant.Right, constant.TypeRight));
+                            break;
+                        }
+                    case IrArrayConstant constant:
+                        {
+                            if (constant.TypeRight is StructTypeSymbol st)
+                                _locals.Add(constant.Left, (st.Size, X64Size.custom));
+                            else throw new NotImplementedException();
                             break;
                         }
                     case IrFloatConstant constant:
