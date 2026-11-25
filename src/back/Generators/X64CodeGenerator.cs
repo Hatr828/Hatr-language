@@ -5,6 +5,7 @@ using Microsoft.Win32;
 using System.Drawing;
 using System.Numerics;
 using System.Reflection.Emit;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
 namespace Best_language.src.back.Generators
@@ -123,26 +124,46 @@ namespace Best_language.src.back.Generators
                                 X64Operand.Reg(GetRegister(size))));
                             break;
                         }
-                    case IrStore address:
+                    case IrIndexedAddress address:
                         {
-                            if (address.Right.Type is FloatTypeSymbol)
-                                LoadValue(address.Right, X64Register.xmm0);
-                            else
-                                LoadValue(address.Right, GetRegister(address.Right.Type));
-
-                            (int offset, _) = GetSlot(address.Left);
-
-                            (int slot, X64Size size) = GetOrCreateSlot(address.Right);
-                            _constants.Remove(address.Right);
-                            _constantsFP.Remove(address.Right);
-
-                            bool isFloat = address.Right.Type is FloatTypeSymbol;
-
-                            LoadValue(address.Left, X64Register.rcx);
+                            LoadValue(address.BaseAddress, X64Register.rax);
+                            LoadValue(address.Index, X64Register.rcx);
 
                             Emit(new(X64Opcode.mov,
-                                X64Operand.Mem(X64Register.rcx, address.Offset, size), 
-                                X64Operand.Reg(isFloat ? X64Register.xmm0 : GetRegister(size))));
+                                X64Operand.Reg(X64Register.edx),
+                                X64Operand.Imm(X64Size.dword, address.Step)));
+
+                            Emit(new(X64Opcode.imul,
+                                X64Operand.Reg(X64Register.rcx),
+                                X64Operand.Reg(X64Register.rdx)));
+
+                            Emit(new(X64Opcode.add,
+                                X64Operand.Reg(X64Register.rax),
+                                X64Operand.Reg(X64Register.rcx)));
+
+                            (int offset, _) = GetOrCreateSlot(address.Left);
+
+                            Emit(new(X64Opcode.mov,
+                                X64Operand.Mem(X64Register.rbp, -offset, X64Size.qword),
+                                X64Operand.Reg(X64Register.rax)));
+
+                            break;
+                        }
+                    case IrStore store:
+                        {
+                            var type = store.Right.Type;
+                            var size = GetX64Size(type);
+                            bool isFloat = type is FloatTypeSymbol;
+
+                            var reg = isFloat ? X64Register.xmm0 : GetRegister(size);
+                            var opcode = isFloat ? (size == X64Size.dword ? X64Opcode.movss : X64Opcode.movsd) : X64Opcode.mov;
+
+                            LoadValue(store.Right, reg);
+                            LoadValue(store.Left, X64Register.rcx);
+
+                            Emit(new(opcode,
+                                X64Operand.Mem(X64Register.rcx, store.Offset, size), 
+                                X64Operand.Reg(reg)));
                             break;
                         }
                     case IrConstant constant:
@@ -154,6 +175,8 @@ namespace Best_language.src.back.Generators
                         {
                             if (constant.TypeRight is StructTypeSymbol st)
                                 _locals.Add(constant.Left, (st.Size, X64Size.custom));
+                            else if (constant.TypeRight is ArrayTypeSymbol arrType)
+                                _locals.Add(constant.Left, ((int)arrType.Size, X64Size.custom));
                             else throw new NotImplementedException();
                             break;
                         }

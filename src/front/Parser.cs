@@ -1,5 +1,6 @@
 using Best_language.src.middle;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Xml.Linq;
 
 namespace Best_language.src.front
@@ -195,29 +196,24 @@ namespace Best_language.src.front
                         {
                             string name = _tokens[_idx++].val!;
 
-                            if (CheckKind(TokenKind.Equals))
+                            Expression ex;
+                            Expression? idx = null;
+                            Operation? op = null;
+
+                            if (Consume(TokenKind.RightBracket))
                             {
-                                _idx++;
-
-                                var temp = new AssignmentStatement(name, null, GetExpression());
-
-                                Requires(TokenKind.SemiColon);
-
-                                return temp;
-                            }
-                            else if (IsOperatorEquals())
-                            {
-                                var op = GetOperatorEquals();
-                                var temp2 = new AssignmentStatement(name, op, GetExpression());
-
-                                Requires(TokenKind.SemiColon);
-                                return temp2;
+                                idx = GetExpression();
+                                Requires(TokenKind.LeftBracket);
                             }
 
-                            var tmp1 = GetExpression();
+                            if (Consume(TokenKind.Equals)) { }
+                            else if (IsOperatorEquals()) op = GetOperatorEquals();
+
+                            ex = GetExpression();
                             Requires(TokenKind.SemiColon);
 
-                            return new ExpressionStatement(tmp1); 
+                            if (idx is not null) return new ArrayAssignment(name, idx, op, ex);
+                            else return new AssignmentStatement(name, op, ex);
                         }
                     case TokenKind.Return:
                         {
@@ -320,6 +316,18 @@ namespace Best_language.src.front
                                     : new VariableExpression(target), name);
                         break;
                     }
+                case TokenKind.Indent when _tokens[_idx + 1].kind is TokenKind.RightBracket:
+                    {
+                        string name = _tokens[_idx++].val!;
+                        _idx++;
+
+                        Expression idx = GetExpression();
+
+                        Requires(TokenKind.LeftBracket);
+
+                        left = new ArrayAccessExpression(name, idx);
+                        break;
+                    }
                 case TokenKind.Indent:
                     {
                         string name = _tokens[_idx++].val!;
@@ -342,7 +350,7 @@ namespace Best_language.src.front
                     throw new Exception("Error in Parser, unknown token: " + _tokens[_idx].kind);
             }
 
-            while (_idx < _tokens.Count && _tokens[_idx].kind is not TokenKind.SemiColon and not TokenKind.LeftParen and not TokenKind.Colon and not TokenKind.Comma and not TokenKind.LeftBrace)
+            while (_idx < _tokens.Count && _tokens[_idx].kind is not TokenKind.SemiColon and not TokenKind.LeftParen and not TokenKind.Colon and not TokenKind.Comma and not TokenKind.LeftBrace and not TokenKind.LeftBracket)
             {
                 if (_tokens[_idx].kind is TokenKind.PlusPlus or TokenKind.MinusMinus)
                 {
@@ -451,83 +459,73 @@ namespace Best_language.src.front
         {
             VariableDeclarations variables = new();
 
-            while (!CheckKind(TokenKind.SemiColon))
+            while (!Consume(TokenKind.SemiColon))
             {
-                if (CheckKind(TokenKind.Multiply)) // pointer
+                string name;
+                TypeSymbol? subType = null;
+
+                if (Consume(TokenKind.Multiply)) // pointer
                 {
-                    _idx++;
-                    Requires(TokenKind.Indent);
+                    name = Requires(true, TokenKind.Indent);
+                    _scopes.TryAddVariable(name, NameKind.Variable);
 
-                    if (CheckKind(TokenKind.Equals)) // pointer with initialization
+                    if (Consume(TokenKind.RightBracket))
                     {
-                        _idx++;
-
-                        bool isStructEx = false;
-
-                        if (CheckKind(TokenKind.RightBrace)) isStructEx = true;
-
-                        _scopes.TryAddVariable(_tokens[_idx - 2].val!, NameKind.Variable);
-                        variables.Variables.Add(new VariableDeclaration(_tokens[_idx - 2].val!, typeTable.GetPointer(type), isStructEx ? ParseStructExpression() : GetExpression()));
-                    }
-                    else
-                    {
-                        _scopes.TryAddVariable(_tokens[_idx - 1].val!, NameKind.Variable);
-                        variables.Variables.Add(new VariableDeclaration(_tokens[_idx - 1].val!, typeTable.GetPointer(type)));
+                        NumberExpression num = (NumberExpression)GetExpression();
+                        Requires(TokenKind.LeftBracket);
+                        subType = new ArrayTypeSymbol(name, (long)num.Value, type);
                     }
 
-                    if (CheckKind(TokenKind.SemiColon))
+                    if (Consume(TokenKind.Equals)) // pointer with initialization
                     {
-                        _idx++;
-                        return variables;
+                        bool isArrEx = false;
+
+                        if (CheckKind(TokenKind.RightBrace)) isArrEx = true;
+
+                        variables.Variables.Add(new VariableDeclaration(name, typeTable.GetPointer(subType is not null ? subType : type), isArrEx ? ParseArrayExpression() : GetExpression()));
                     }
-                    else if (CheckKind(TokenKind.Comma))
-                    {
-                        _idx++;
-                        continue;
-                    }
+                    else variables.Variables.Add(new VariableDeclaration(name, typeTable.GetPointer(subType is not null ? subType : type)));
+
+                    if (Consume(TokenKind.SemiColon)) return variables;
+                    else if (Consume(TokenKind.Comma)) continue;
                     else throw new ArgumentException("requires semiColon or comma");
                 }
 
-                Requires(TokenKind.Indent);
-                if (CheckKind(TokenKind.Equals)) // variable
+                name = Requires(true, TokenKind.Indent);
+                _scopes.TryAddVariable(name, NameKind.Variable);
+
+                if (Consume(TokenKind.RightBracket))
                 {
-                    _idx++;
-                    bool isStructEx = false;
+                    NumberExpression num = (NumberExpression)GetExpression();
+                    Requires(TokenKind.LeftBracket);
+                    subType = new ArrayTypeSymbol(name, (long)num.Value, type);
+                }
 
-                    if (CheckKind(TokenKind.RightBrace)) isStructEx = true;
+                if (Consume(TokenKind.Equals)) // variable
+                {
+                    bool isArrEx = false;
 
-                    _scopes.TryAddVariable(_tokens[_idx - 2].val!, NameKind.Variable);
-                    variables.Variables.Add(new VariableDeclaration(_tokens[_idx - 2].val!, type, isStructEx ? ParseStructExpression() : GetExpression()));
+                    if (CheckKind(TokenKind.RightBrace)) isArrEx = true;
 
-                    if (CheckKind(TokenKind.SemiColon))
-                    {
-                        _idx++;
-                        return variables;
-                    }
-                    else if (CheckKind(TokenKind.Comma))
-                    {
-                        _idx++;
-                        continue;
-                    }
+                    variables.Variables.Add(new VariableDeclaration(name, subType is not null ? subType : type, isArrEx ? ParseArrayExpression() : GetExpression()));
+
+                    if (Consume(TokenKind.SemiColon)) return variables;
+                    else if (Consume(TokenKind.Comma)) continue;
                     else throw new ArgumentException("requires semiColon or comma");
                 }
-                else if (CheckKind(TokenKind.SemiColon)) // variable without initialization 
+                else if (Consume(TokenKind.SemiColon)) // variable without initialization 
                 {
-                    _idx++;
-                    _scopes.TryAddVariable(_tokens[_idx - 2].val!, NameKind.Variable);
-                    variables.Variables.Add(new VariableDeclaration(_tokens[_idx - 2].val!, type));
+                    variables.Variables.Add(new VariableDeclaration(name, subType is not null ? subType : type));
                     return variables;
                 }
                 else
                 {
                     Requires(TokenKind.Comma);
-                    _scopes.TryAddVariable(_tokens[_idx - 2].val!, NameKind.Variable);
-                    variables.Variables.Add(new VariableDeclaration(_tokens[_idx - 2].val!, type));
+                    _scopes.TryAddVariable(name, NameKind.Variable);
+                    variables.Variables.Add(new VariableDeclaration(name, subType is not null ? subType : type));
                 }
 
             }
-
-            _idx++;
 
             return variables;
         }
@@ -846,7 +844,7 @@ namespace Best_language.src.front
             else return new EmptyNode();
         }
 
-        private StructExpression ParseStructExpression()
+        private ArrayExpression ParseArrayExpression()
         {
             Requires(TokenKind.RightBrace);
 
@@ -861,7 +859,7 @@ namespace Best_language.src.front
             }
             _idx++;
 
-            return new StructExpression(expressions);
+            return new ArrayExpression(expressions);
         }
     }
 }

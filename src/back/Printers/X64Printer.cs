@@ -28,6 +28,7 @@ namespace Best_language.src.back.Printers
 
                     case >= X64Opcode.mov and <= X64Opcode.add:
                     case >= X64Opcode.movss and <= X64Opcode.movq:
+                    case X64Opcode.imul:
                         _sb.AppendLine($"    {instruction.Opcode} " +
                             $"{GetStringFromOperand(instruction.Operands[0])}," +
                             $" {GetStringFromOperand(instruction.Operands[1])}");
@@ -36,13 +37,6 @@ namespace Best_language.src.back.Printers
                     case >= X64Opcode.push and <= X64Opcode.setnp:
                         _sb.AppendLine($"    {instruction.Opcode} " +
                             $"{GetStringFromOperand(instruction.Operands[0])}");
-                        break;
-
-                    case X64Opcode.imul:
-                        _sb.AppendLine($"    {instruction.Opcode} " +
-                            $"{GetStringFromOperand(instruction.Operands[0])}," +
-                            $" {GetStringFromOperand(instruction.Operands[1])}," +
-                            $" {GetStringFromOperand(instruction.Operands[1])}");
                         break;
 
                     default:

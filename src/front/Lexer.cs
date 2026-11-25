@@ -1,4 +1,5 @@
 using System.Collections.Frozen;
+using System.Data;
 
 namespace Best_language.src.front
 {
@@ -44,6 +45,14 @@ namespace Best_language.src.front
                 if (temp is '\n' or ' ' or '\t' or '\r')
                 {
                     _idx++;
+                    continue;
+                }
+                if (temp is '\'')
+                {
+                    _idx++;
+                    char num = GetChar();
+                    _idx++;
+                    res.Add(new Token(TokenKind.Number, ((int)num).ToString()));
                     continue;
                 }
                 if (temp is >= '0' and <= '9')
@@ -151,6 +160,23 @@ namespace Best_language.src.front
             }
 
             return _code.AsSpan(startIdx..idx);
+        }
+
+        public char GetChar()
+        {
+            int startIdx = _idx;
+            if (_code[_idx++] is '\\')
+            {
+                return _code[_idx++] switch
+                {
+                    'n' => '\n',
+                    'r' => '\r',
+                    '\\' => '\\',
+                    '\'' => '\'',
+                    _ => throw new ArgumentException("Unknown sequence")
+                }; 
+            }
+            else return _code[startIdx];
         }
     }
 }

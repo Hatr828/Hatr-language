@@ -14,16 +14,8 @@ namespace Best_language.src
         static void Main(string[] args)
         {
             string code = @"
-                struct Pair {
-                    int x, y;
-                };
-                struct Pair pair = {10, 20};
-                struct Pair *ptr = &pair;
-
-                ptr->x = 2;
-                ptr->y = 10;
-
-                int* a = &pair.x;
+                int a = '\n';
+                int b = 'b';
                 ";
             var sw = Stopwatch.StartNew();
 

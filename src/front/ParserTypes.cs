@@ -58,6 +58,14 @@ namespace Best_language.src.front
         public override string DName => $"{nameof(MemberAccessExpression)}: target.{Name}";
         public override IEnumerable<AstNode> Children => [Target];
     }
+    public class ArrayAccessExpression(string target, Expression idx) : Expression
+    {
+        public string Target { get; } = target;
+        public Expression Idx { get; } = idx;
+
+        public override string DName => $"{nameof(ArrayAccessExpression)}: {Target}";
+        public override IEnumerable<AstNode> Children => [Idx];
+    }
     public class MemberAssignment(Expression target, string memberName, Operation? op, Expression initializer) : Expression
     {
         public Expression Target { get; } = target;
@@ -67,6 +75,17 @@ namespace Best_language.src.front
 
         public override string DName => $"{nameof(MemberAssignment)}: target.{Name} {Op}";
         public override IEnumerable<AstNode> Children => [Target, Initializer];
+    }
+    public class ArrayAssignment(string target, Expression idx, Operation? op, Expression right) : Expression
+    {
+        public string Target { get; } = target;
+        public Expression Idx { get; } = idx;
+
+        public Operation? Op = op;
+        public Expression Right { get; } = right;
+
+        public override string DName => $"{nameof(ArrayAssignment)}: {Target} {Op}";
+        public override IEnumerable<AstNode> Children => [Idx, Right];
     }
     public class BoolExpression(bool value, TypeSymbol type) : Expression
     {
@@ -176,11 +195,11 @@ namespace Best_language.src.front
         }
     }
 
-    public class StructExpression(List<Expression> right) : Expression
+    public class ArrayExpression(List<Expression> right) : Expression
     {
         public List<Expression> Right { get; } = right;
 
-        public override string DName => $"{nameof(StructExpression)}";
+        public override string DName => $"{nameof(ArrayExpression)}";
         public override IEnumerable<AstNode> Children
         {
             get

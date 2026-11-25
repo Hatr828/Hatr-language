@@ -13,6 +13,13 @@ namespace Best_language.src.front
             foreach(var kind in kinds) if (_tokens[_idx++].kind != kind) throw new ArgumentException($"Requires {kind}");
         }
 
+        private string Requires(bool getVal, params TokenKind[] kinds)
+        {
+            foreach (var kind in kinds) if (_tokens[_idx++].kind != kind) throw new ArgumentException($"Requires {kind}");
+            if (getVal) return _tokens[_idx - 1].val!;
+            return null!;
+        }
+
         public bool CheckKind(params TokenKind[] kinds)
         {
             for (int i = 0; i < kinds.Length; i++)
@@ -20,6 +27,16 @@ namespace Best_language.src.front
                 if (_tokens[_idx + i].kind != kinds[i]) return false;
             }
 
+            return true;
+        }
+
+        public bool Consume(params TokenKind[] kinds)
+        {
+            for (int i = 0; i < kinds.Length; i++)
+            {
+                if (_tokens[_idx + i].kind != kinds[i]) return false;
+            }
+            _idx += kinds.Length;
             return true;
         }
 

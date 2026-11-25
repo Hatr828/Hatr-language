@@ -287,11 +287,11 @@ namespace Best_language.src.middle
         public override string DName => $"{nameof(BoundDoubleExpression)}: {Value}";
         public override IEnumerable<BoundNode> Children => [];
     }
-    public class BoundStructExpression(List<BoundExpression> right, TypeSymbol type) : BoundExpression(type)
+    public class BoundArrExpression(List<BoundExpression> right, TypeSymbol type) : BoundExpression(type)
     {
         public List<BoundExpression> Right { get; } = right;
 
-        public override string DName => $"{nameof(BoundStructExpression)}";
+        public override string DName => $"{nameof(BoundArrExpression)}";
         public override IEnumerable<BoundNode> Children
         {
             get
@@ -325,6 +325,24 @@ namespace Best_language.src.middle
 
         public override string DName => $"{nameof(BoundMemberAccessExpression)}: {Field} ({Target.Type})";
         public override IEnumerable<BoundNode> Children => [Target];
+    }
+    public class BoundArrayAccessExpression(VariableSymbol variable, BoundExpression idx, TypeSymbol type) : BoundExpression(type)
+    {
+        public VariableSymbol Variable { get; } = variable;
+        public BoundExpression Idx { get; } = idx;
+
+        public override string DName => $"{nameof(BoundArrayAccessExpression)}: {Variable}";
+        public override IEnumerable<BoundNode> Children => [Idx];
+    }
+    public class BoundArrayAssignment(VariableSymbol variable, BoundExpression idx, BoundExpression right) : BoundStatement
+    {
+        public VariableSymbol Variable { get; } = variable;
+        public BoundExpression Idx { get; } = idx;
+
+        public BoundExpression Right { get; } = right;
+
+        public override string DName => $"{nameof(BoundArrayAssignment)}: {Variable}";
+        public override IEnumerable<BoundNode> Children => [Idx, Right];
     }
     public class FieldSymbol(string name, TypeSymbol type, int offset)
     {

@@ -1,4 +1,5 @@
-﻿using Best_language.src.front;
+﻿using Best_language.src.back.Instructions;
+using Best_language.src.front;
 
 namespace Best_language.src.middle
 {
@@ -42,6 +43,15 @@ namespace Best_language.src.middle
             throw new InvalidOperationException($"Unknown variable: '{variable.Name}'.");
         }
 
+        private int GetTypeSize(TypeSymbol type) => type switch
+        {
+            BoolTypeSymbol => 1,
+            IntegerTypeSymbol tmp => (int)tmp.Size,
+            FloatTypeSymbol tmp => (int)tmp.Size,
+            PointerTypeSymbol => 8,
+            _ => throw new ArgumentException()
+        };
+
         private (IrValue address, int offset) LowerAddress(BoundExpression expression)
         {
             switch (expression)
@@ -54,7 +64,6 @@ namespace Best_language.src.middle
                         Emit(new IrUnary(Operation.ReferenceOf, storage, address));
                         return (address, 0);
                     }
-
                 case BoundUnaryExpression { Op: Operation.Dereference } unary:
                     {
                         return (LowerExpression(unary.Right), 0);
@@ -64,6 +73,32 @@ namespace Best_language.src.middle
                     {
                         var (baseAddress, offset) = LowerAddress(member.Target);
                         return (baseAddress, offset + member.Field.Offset); 
+                    }
+                case BoundArrayAccessExpression arrayAccess:
+                    {
+                        var variable = ResolveVariable(arrayAccess.Variable);
+                        IrValue baseAddress = variable;
+
+                        if (arrayAccess.Variable.Type is ArrayTypeSymbol)
+                        {
+                            baseAddress = NewIrValue(_typeTable.GetPointer(arrayAccess.Variable.Type));
+                            Emit(new IrUnary(Operation.ReferenceOf, variable, baseAddress));
+                        }
+
+                        var idx = LowerExpression(arrayAccess.Idx);
+
+                        if (GetTypeSize(idx.Type) < 8)
+                        {
+                            var idx64 = NewIrValue(_typeTable.Int64);
+                            Emit(new IrConversion(idx64, idx));
+                            idx = idx64;
+                        }
+
+                        var elAddress = NewIrValue(_typeTable.GetPointer(arrayAccess.Variable.Type));
+                        int sizeOf = GetTypeSize(arrayAccess.Type);
+
+                        Emit(new IrIndexedAddress(elAddress, baseAddress, idx, sizeOf));
+                        return (elAddress, 0);
                     }
 
                 default: throw new InvalidOperationException($"Cannot take address of {expression}");

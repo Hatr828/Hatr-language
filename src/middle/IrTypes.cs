@@ -109,6 +109,16 @@ namespace Best_language.src.middle
         public override string ToString() => $"{nameof(IrLoad)}: {Left}, {Right} (offset: {Offset})";
 
     }
+    public class IrIndexedAddress(IrValue left, IrValue baseAddress, IrValue index, int step) : IrInstruction
+    {
+        public IrValue Left { get; } = left;
+        public IrValue BaseAddress { get; } = baseAddress;
+        public IrValue Index { get; } = index;
+        public int Step { get; } = step;
+
+        public override string ToString() => $"{nameof(IrIndexedAddress)}: {Left}, {BaseAddress} + index: {Index} * step: {Step})";
+
+    }
     public class IrStore(IrValue left, int offset, IrValue right) : IrInstruction
     {
         public IrValue Left { get; } = left;

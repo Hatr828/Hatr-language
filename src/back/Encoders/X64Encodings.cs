@@ -355,7 +355,7 @@ namespace Best_language.src.back.Encoders
         };
         private bool FitsImmediate(long value, int size, bool signed) => size switch
         {
-            1 => signed ? value >= sbyte.MinValue && value <= byte.MaxValue : value >= sbyte.MinValue && value <= sbyte.MaxValue,
+            1 => signed ? value >= sbyte.MinValue && value <= sbyte.MaxValue : value >= sbyte.MinValue && value <= byte.MaxValue,
             2 => signed ? value >= short.MinValue && value <= short.MaxValue : value >= short.MinValue && value <= ushort.MaxValue,
             4 => signed ? value >= int.MinValue && value <= int.MaxValue : value >= int.MinValue && value <= uint.MaxValue,
             8 => true,

@@ -93,7 +93,7 @@ namespace Best_language.src.middle
 
                         if (variable.Initializer is not null)
                         {
-                            if (variable.Initializer is StructExpression st && type is StructTypeSymbol tmpType)
+                            if (variable.Initializer is ArrayExpression st && type is StructTypeSymbol tmpType)
                             {
                                 List<BoundExpression> expressions = new();
 
@@ -104,7 +104,20 @@ namespace Best_language.src.middle
                                     else
                                         expressions.Add(BindConversion(BindExpression(new NumberExpression(0, tmpType.Types[i])), tmpType.Types[i]));
                                 }
-                                temp = new BoundVariableDeclaration(tmp, new BoundStructExpression(expressions, type));
+                                temp = new BoundVariableDeclaration(tmp, new BoundArrExpression(expressions, type));
+                            }
+                            else if (variable.Initializer is ArrayExpression arrEx && type is ArrayTypeSymbol tempType)
+                            {
+                                List<BoundExpression> expressions = new();
+
+                                for (int i = (int)tempType.Size - 1; i > -1; i--)
+                                {
+                                    if (arrEx.Right.Count > i)
+                                        expressions.Add(BindConversion(BindExpression(arrEx.Right[i]), tempType.Type));
+                                    else
+                                        expressions.Add(BindConversion(BindExpression(new NumberExpression(0, tempType.Type)), tempType.Type));
+                                }
+                                temp = new BoundVariableDeclaration(tmp, new BoundArrExpression(expressions, type));
                             }
                             else
                             {
@@ -287,6 +300,26 @@ namespace Best_language.src.middle
 
                         return new BoundAssignmentStatement(variable, ex);
                     }
+                case ArrayAssignment assignment:
+                    {
+                        BoundExpression ex;
+
+                        if (assignment.Op is Operation op)
+                        {
+                            ex = BindExpression(new BinaryExpression(new VariableExpression(assignment.Target),
+                                GetOperationFromCompoundOperation(op), assignment.Right));
+                        }
+                        else ex = BindExpression(assignment.Right);
+
+                        GetVariable(assignment.Target, out var variable);
+
+                        BoundExpression idx = BindExpression(assignment.Idx);
+
+                        if (idx.Type is not IntegerTypeSymbol) throw new ArgumentException("Expected integer");
+                        if (variable.Type is not ArrayTypeSymbol arrType) throw new ArgumentException("Expected array");
+
+                        return new BoundArrayAssignment(variable, ex, idx);
+                    }
                 case UnaryExpression unary:
                     {
                         return new BoundExpressionStatement(BindExpression(unary));
@@ -298,7 +331,7 @@ namespace Best_language.src.middle
                 case EmptyNode:
                     return new BoundEmptyStatement();
             }
-            throw new ArgumentException("Failed to bind a statement");
+            throw new ArgumentException($"Failed to bind a statement: {node}");
         }
 
         private BoundExpression BindExpression(Expression expression, bool constantOnly = false)
@@ -321,6 +354,20 @@ namespace Best_language.src.middle
 
                         return new BoundMemberAccessExpression(target, new(member.Name, type, offset));
                     }
+                case ArrayAccessExpression member:
+                    {
+                        if (constantOnly) throw new ArgumentException("Expected constants only");
+
+                        var idx = BindExpression(member.Idx);
+
+                        _scopes.TryGetVariable(member.Target, out var variable);
+
+                        if (variable.Type is not ArrayTypeSymbol tmp) throw new ArgumentException("Expected array type");
+
+                        if (idx.Type is not IntegerTypeSymbol) throw new ArgumentException("Expected integer");
+
+                        return new BoundArrayAccessExpression(variable, idx, tmp.Type);
+                    }
                 case VariableExpression variable:
                     {
                         if (_scopes.TryGetEnumValue(variable.Name, out var val)) return new BoundNumberExpression(val.Item2, val.Item1);
@@ -342,7 +389,7 @@ namespace Best_language.src.middle
                          return BindUnaryExpression(unary);
                     }
             }
-            throw new ArgumentException("Failed to BindExpression");
+            throw new ArgumentException($"Failed to BindExpression: {expression}");
         }
 
         private BoundStatement BindIf(IfDeclaration @if)

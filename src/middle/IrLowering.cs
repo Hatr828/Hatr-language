@@ -37,10 +37,9 @@ namespace Best_language.src.middle
                 case BoundVariablesDeclaration variables:
                     foreach (var variable in variables.variables) LowerNode(variable);
                     return;
-                case BoundVariableDeclaration variable when variable.Initializer is not null && variable.Initializer is BoundStructExpression st:
+                case BoundVariableDeclaration variable when variable.Initializer is not null && variable.Initializer is BoundArrExpression st:
                     {
                         List<IrValue> Irs = new();
-                        var type = (StructTypeSymbol)st.Type;
 
                         for (int i = 0; i < st.Right.Count; i++)
                         {
@@ -158,7 +157,7 @@ namespace Best_language.src.middle
                     Emit(new IrLabel("user_" + @goto.Id)); return;
                 case BoundGotoStatement @goto:
                     Emit(new IrJump("user_" + @goto.ToId)); return;
-                case BoundAssignmentStatement assignment when assignment.Right is BoundStructExpression st:
+                case BoundAssignmentStatement assignment when assignment.Right is BoundArrExpression st:
                     {
                         List<IrValue> Irs = new();
                         var type = (StructTypeSymbol)st.Type;
@@ -179,6 +178,23 @@ namespace Best_language.src.middle
                         var source = LowerExpression(assignment.Right);
 
                         Emit(new IrVariable(res, source));
+                        return;
+                    }
+                case BoundArrayAssignment assignment:
+                    {
+                        TypeSymbol type = assignment.Variable.Type switch
+                        {
+                            ArrayTypeSymbol array => array.Type,
+                            PointerTypeSymbol pointer => pointer.ElementType,
+                            _ => throw new ArgumentException("Expected arr or pointer")
+                        };
+
+                        var target = new BoundArrayAccessExpression(assignment.Variable, assignment.Right, type);
+
+                        var (address, offset) = LowerAddress(target);
+                        var right = LowerExpression(assignment.Right);
+
+                        Emit(new IrStore(address, offset, right));
                         return;
                     }
                 case BoundAssignmentMemberStatement assignment:
@@ -223,11 +239,21 @@ namespace Best_language.src.middle
                         return result;
                     }
                 case BoundMemberAccessExpression memberAccess:
-                    var (address, offset) = LowerAddress(memberAccess);
-                    var res = NewIrValue(memberAccess.Type);
+                    {
+                        var (address, offset) = LowerAddress(memberAccess);
+                        var res = NewIrValue(memberAccess.Type);
 
-                    Emit(new IrLoad(res, address, offset));
-                    return res;
+                        Emit(new IrLoad(res, address, offset));
+                        return res;
+                    }
+                case BoundArrayAccessExpression arrAccess:
+                    {
+                        var (address, offset) = LowerAddress(arrAccess);
+                        var res = NewIrValue(arrAccess.Type);
+
+                        Emit(new IrLoad(res, address, offset));
+                        return res;
+                    }
                 case BoundUnaryExpression unary:
                     {
                         bool increment = unary.Op is Operation.PlusPlusLeft or Operation.PlusPlusRight or Operation.MinusMinusLeft or Operation.MinusMinusRight;

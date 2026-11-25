@@ -117,6 +117,8 @@ namespace Best_language.src.front
         LeftParen,
         RightBrace,
         LeftBrace,
+        RightBracket,
+        LeftBracket,
 
         Indent,
         Number,
@@ -189,6 +191,8 @@ namespace Best_language.src.front
             ['('] = TokenKind.RightParen,
             ['}'] = TokenKind.LeftBrace,
             ['{'] = TokenKind.RightBrace,
+            [']'] = TokenKind.LeftBracket,
+            ['['] = TokenKind.RightBracket,
 
             ['='] = TokenKind.Equals,
             [';'] = TokenKind.SemiColon,
@@ -301,6 +305,8 @@ namespace Best_language.src.front
             [')'] = TokenKind.RightParen,
             ['{'] = TokenKind.LeftBrace,
             ['}'] = TokenKind.RightBrace,
+            [']'] = TokenKind.LeftBracket,
+            ['['] = TokenKind.RightBracket,
 
             ['='] = TokenKind.Equals,
             ['?'] = TokenKind.SemiColon,

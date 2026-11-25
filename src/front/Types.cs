@@ -67,6 +67,13 @@ namespace Best_language.src.front
 
         public override string ToString() => $"{nameof(StructTypeSymbol)} ({Name ?? "No name"})";
     }
+    public class ArrayTypeSymbol(string name, long size, TypeSymbol type) : TypeSymbol(name)
+    {
+        public TypeSymbol Type { get; } = type;
+        public long Size { get; } = size;
+
+        public override string ToString() => $"{nameof(ArrayTypeSymbol)} ({Name ?? "No name"})";
+    }
     public class FunctionTypeSymbol(TypeSymbol returnType, List<TypeSymbol>? paramsTypes = null) : TypeSymbol("function")
     {
         public TypeSymbol ReturnType { get; } = returnType;
