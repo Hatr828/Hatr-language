@@ -14,8 +14,7 @@ namespace Best_language.src
         static void Main(string[] args)
         {
             string code = @"
-                int a = '\n';
-                int b = 'b';
+                char a[] = ""Word"";
                 ";
             var sw = Stopwatch.StartNew();
 

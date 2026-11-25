@@ -289,6 +289,37 @@ namespace Best_language.src.front
                         Requires(TokenKind.LeftParen);
                         break;
                     }
+                case TokenKind.String:
+                    {
+                        string @string = _tokens[_idx++].val!;
+
+                        List<Expression> expressions = new();
+
+                        foreach (char s in @string)
+                        {
+                            expressions.Add(new NumberExpression((byte)s, typeTable.Char));
+                        }
+
+                        expressions.Add(new NumberExpression((byte)'\0', typeTable.Char));
+
+                        return new ArrayExpression(expressions);
+                    }
+                case TokenKind.RightBrace:
+                    {
+                        _idx++;
+
+                        List<Expression> expressions = new();
+
+                        while (!Consume(TokenKind.LeftBrace))
+                        {
+                            expressions.Add(GetExpression());
+
+                            if (Consume(TokenKind.Comma)) { }
+                            else if (!CheckKind(TokenKind.LeftBrace)) throw new ArgumentException("Expected left brace or comma");
+                        }
+
+                        return new ArrayExpression(expressions);
+                    }
                 case TokenKind.Number:
                     {
                         if(_tokens[_idx + 1].kind is TokenKind.Dot)
@@ -463,6 +494,8 @@ namespace Best_language.src.front
             {
                 string name;
                 TypeSymbol? subType = null;
+                bool unknownLength = false;
+                Expression? ex = null;
 
                 if (Consume(TokenKind.Multiply)) // pointer
                 {
@@ -471,20 +504,25 @@ namespace Best_language.src.front
 
                     if (Consume(TokenKind.RightBracket))
                     {
-                        NumberExpression num = (NumberExpression)GetExpression();
-                        Requires(TokenKind.LeftBracket);
-                        subType = new ArrayTypeSymbol(name, (long)num.Value, type);
+                        if (Consume(TokenKind.LeftBracket)) unknownLength = true;
+                        else
+                        {
+                            NumberExpression num = (NumberExpression)GetExpression();
+                            Requires(TokenKind.LeftBracket);
+                            subType = new ArrayTypeSymbol(name, (long)num.Value, type);
+                        }
                     }
 
-                    if (Consume(TokenKind.Equals)) // pointer with initialization
+                    if (Consume(TokenKind.Equals)) ex = GetExpression();
+
+                    if (unknownLength)
                     {
-                        bool isArrEx = false;
-
-                        if (CheckKind(TokenKind.RightBrace)) isArrEx = true;
-
-                        variables.Variables.Add(new VariableDeclaration(name, typeTable.GetPointer(subType is not null ? subType : type), isArrEx ? ParseArrayExpression() : GetExpression()));
+                        if (ex is null) throw new ArgumentException("Cannot declare array");
+                        if (ex is not ArrayExpression arr) throw new ArgumentException("Expected array expression");
+                        subType = new ArrayTypeSymbol(name, (long)arr.Right.Count, type);
                     }
-                    else variables.Variables.Add(new VariableDeclaration(name, typeTable.GetPointer(subType is not null ? subType : type)));
+
+                    variables.Variables.Add(new VariableDeclaration(name, typeTable.GetPointer(subType is not null ? subType : type), ex));
 
                     if (Consume(TokenKind.SemiColon)) return variables;
                     else if (Consume(TokenKind.Comma)) continue;
@@ -496,35 +534,29 @@ namespace Best_language.src.front
 
                 if (Consume(TokenKind.RightBracket))
                 {
-                    NumberExpression num = (NumberExpression)GetExpression();
-                    Requires(TokenKind.LeftBracket);
-                    subType = new ArrayTypeSymbol(name, (long)num.Value, type);
+                    if (Consume(TokenKind.LeftBracket)) unknownLength = true;
+                    else
+                    {
+                        NumberExpression num = (NumberExpression)GetExpression();
+                        Requires(TokenKind.LeftBracket);
+                        subType = new ArrayTypeSymbol(name, (long)num.Value, type);
+                    }
                 }
 
-                if (Consume(TokenKind.Equals)) // variable
+                if (Consume(TokenKind.Equals)) ex = GetExpression();
+
+                if (unknownLength)
                 {
-                    bool isArrEx = false;
-
-                    if (CheckKind(TokenKind.RightBrace)) isArrEx = true;
-
-                    variables.Variables.Add(new VariableDeclaration(name, subType is not null ? subType : type, isArrEx ? ParseArrayExpression() : GetExpression()));
-
-                    if (Consume(TokenKind.SemiColon)) return variables;
-                    else if (Consume(TokenKind.Comma)) continue;
-                    else throw new ArgumentException("requires semiColon or comma");
-                }
-                else if (Consume(TokenKind.SemiColon)) // variable without initialization 
-                {
-                    variables.Variables.Add(new VariableDeclaration(name, subType is not null ? subType : type));
-                    return variables;
-                }
-                else
-                {
-                    Requires(TokenKind.Comma);
-                    _scopes.TryAddVariable(name, NameKind.Variable);
-                    variables.Variables.Add(new VariableDeclaration(name, subType is not null ? subType : type));
+                    if (ex is null) throw new ArgumentException("Cannot declare array");
+                    if (ex is not ArrayExpression arr) throw new ArgumentException("Expected array expression");
+                    subType = new ArrayTypeSymbol(name, (long)arr.Right.Count, type);
                 }
 
+                variables.Variables.Add(new VariableDeclaration(name, subType is not null ? subType : type, ex));
+
+                if (Consume(TokenKind.SemiColon)) return variables;
+                
+                Requires(TokenKind.Comma);
             }
 
             return variables;
@@ -842,24 +874,6 @@ namespace Best_language.src.front
                 return new EnumDeclaration((EnumTypeSymbol)type, new());
             }
             else return new EmptyNode();
-        }
-
-        private ArrayExpression ParseArrayExpression()
-        {
-            Requires(TokenKind.RightBrace);
-
-            List<Expression> expressions = new();
-
-            while (!CheckKind(TokenKind.LeftBrace))
-            {
-                expressions.Add(GetExpression());
-
-                if (CheckKind(TokenKind.Comma)) _idx++;
-                else if (!CheckKind(TokenKind.LeftBrace)) throw new ArgumentException("Expected left brace or comma");
-            }
-            _idx++;
-
-            return new ArrayExpression(expressions);
         }
     }
 }

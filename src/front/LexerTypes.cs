@@ -122,6 +122,7 @@ namespace Best_language.src.front
 
         Indent,
         Number,
+        String,
     }
 
     public static class CSyntax

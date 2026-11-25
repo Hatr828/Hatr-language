@@ -55,6 +55,14 @@ namespace Best_language.src.front
                     res.Add(new Token(TokenKind.Number, ((int)num).ToString()));
                     continue;
                 }
+                if (temp is '\"')
+                {
+                    _idx++;
+                    ReadOnlySpan<char> s = GetString();
+                    _idx++;
+                    res.Add(new Token(TokenKind.String, s.ToString()));
+                    continue;
+                }
                 if (temp is >= '0' and <= '9')
                 {
                     string num = GetNumber();
@@ -177,6 +185,14 @@ namespace Best_language.src.front
                 }; 
             }
             else return _code[startIdx];
+        }
+
+        public ReadOnlySpan<char> GetString()
+        {
+            int startIdx = _idx;
+            while (_idx < _code.Length && _code[_idx] is not '\"') _idx++;
+
+            return _code.AsSpan(startIdx.._idx);
         }
     }
 }
