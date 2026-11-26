@@ -177,6 +177,7 @@ namespace Best_language.src.middle
             switch (rule)
             {
                 case BinaryRule.IntegerArithmetic:
+                case BinaryRule.ArithmeticComparison:
                 case BinaryRule.Arithmetic:
                     var type = GetCommonArithmeticType(left.Type, right.Type);
 
@@ -198,7 +199,6 @@ namespace Best_language.src.middle
                     return new BoundBinaryExpression(left.Type, op, left, right);
 
                 case BinaryRule.PointerComparison:
-                case BinaryRule.ArithmeticComparison:
                     return new BoundBinaryExpression(_typeTable.Int32, op, left, right);
 
                 case BinaryRule.PointerArithmetic:
@@ -269,6 +269,12 @@ namespace Best_language.src.middle
             if (expression is BoundMemberAccessExpression tmp) type = tmp.Field.Type;
 
             if (type == targetType) return expression;
+
+            if (type is ArrayTypeSymbol arr && targetType is PointerTypeSymbol)
+            {
+                var pointerType = _typeTable.GetPointer(arr.Type);
+                return BindConversion(new BoundConversionExpression(expression, pointerType), targetType); 
+            }
 
             bool sourceNumeric = type is IntegerTypeSymbol or BoolTypeSymbol or FloatTypeSymbol;
             bool targetNumeric = targetType is IntegerTypeSymbol or BoolTypeSymbol or FloatTypeSymbol;

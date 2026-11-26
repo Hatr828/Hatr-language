@@ -23,10 +23,10 @@ namespace Best_language.src.middle
         Dereference,
     }
 
-    public abstract class BoundNode
+    public closed class BoundNode
     {
-        public abstract string DName { get; }
-        public abstract IEnumerable<BoundNode> Children { get; }
+        public virtual string PrintName => GetType().Name;
+        public virtual IEnumerable<BoundNode> Children => [];
     }
     public abstract class BoundStatement : BoundNode;
     public abstract class BoundExpression(TypeSymbol type) : BoundNode
@@ -37,65 +37,33 @@ namespace Best_language.src.middle
     {
         public VariableSymbol Variable { get; } = variable;
     }
-    public class BoundEmptyStatement() : BoundStatement
-    {
-        public override string DName => $"{nameof(BoundEmptyStatement)}";
-        public override IEnumerable<BoundNode> Children => [];
-    }
+    public class BoundEmptyStatement() : BoundStatement;
     public class BoundExpressionStatement(BoundExpression expression) : BoundStatement
     {
         public BoundExpression Expression { get; } = expression;
-        public override string DName => $"{nameof(BoundExpressionStatement)}";
-        public override IEnumerable<BoundNode> Children
-        {
-            get
-            {
-                yield return Expression;
-            }
-        }
+        public override IEnumerable<BoundNode> Children => [Expression];
     }
     public class BoundProgram(List<BoundStatement> statements) : BoundNode
     {
         public List<BoundStatement> Statements { get; } = statements;
-        public override string DName => $"{nameof(BoundProgram)}";
-        public override IEnumerable<BoundNode> Children
-        {
-            get
-            {
-                foreach (BoundNode node in Statements) yield return node;
-            }
-        }
+        public override IEnumerable<BoundNode> Children => Statements;
     }
     public class BoundVariablesDeclaration : BoundStatement
     {
-        public List<BoundVariableDeclaration> variables { get; } = new();
-        public override string DName => $"{nameof(BoundVariablesDeclaration)}";
-        public override IEnumerable<BoundNode> Children
-        {
-            get                                                          
-            {
-                foreach(var variable in variables) yield return variable;
-            }
-        }
+        public List<BoundVariableDeclaration> Variables { get; } = new();
+        public override IEnumerable<BoundNode> Children => Variables;
     }
     public class BoundVariableDeclaration(VariableSymbol variable, BoundExpression? initializer) : BoundStatement
     {
         public VariableSymbol Variable { get; } = variable;
         public BoundExpression? Initializer { get; } = initializer;
-        public override string DName => $"{nameof(BoundVariableDeclaration)}: {Variable.Name} ({Variable.Type})";
-        public override IEnumerable<BoundNode> Children
-        {
-            get
-            {
-                if (Initializer is not null) yield return Initializer;
-            }
-        }
+        public override string PrintName => $"{GetType().Name}: {Variable.Name} ({Variable.Type})";
+        public override IEnumerable<BoundNode> Children => Initializer is { } t ? [t] : [];
     }
     public class BoundAssignmentStatement(BoundExpression left, BoundExpression right) : BoundStatement
     {
         public BoundExpression Left { get; } = left;
         public BoundExpression Right { get; } = right;
-        public override string DName => $"{nameof(BoundAssignmentStatement)}";
         public override IEnumerable<BoundNode> Children => [Right, Left];
     }
     public class BoundAssignmentMemberStatement(BoundExpression target, FieldSymbol field, BoundExpression right) : BoundStatement
@@ -103,7 +71,7 @@ namespace Best_language.src.middle
         public BoundExpression Target { get; } = target;
         public FieldSymbol Field { get; } = field;
         public BoundExpression Right { get; } = right;
-        public override string DName => $"{nameof(BoundAssignmentMemberStatement)}: {Field} ({Target.Type})";
+        public override string PrintName => $"{GetType().Name}: {Field} ({Target.Type})";
         public override IEnumerable<BoundNode> Children => [Target, Right];
     }
     public class BoundIfDeclaration(BoundExpression expression) : BoundStatement
@@ -112,7 +80,6 @@ namespace Best_language.src.middle
         public List<BoundStatement> Statements { get; } = new();
         public List<BoundElseIfDeclaration>? ElseIfs { get; set; }
         public BoundElseDeclaration? Else { get; set; }
-        public override string DName => $"{nameof(BoundIfDeclaration)}";
         public override IEnumerable<BoundNode> Children
         {
             get
@@ -127,70 +94,32 @@ namespace Best_language.src.middle
     public class BoundSwitchDeclaration : BoundStatement
     {
         public List<BoundCaseDeclaration> Cases { get; } = new();
-        public override string DName => $"{nameof(SwitchDeclaration)}";
-        public override IEnumerable<BoundNode> Children
-        {
-            get
-            {
-                foreach (BoundCaseDeclaration node in Cases) yield return node;
-            }
-        }
+        public override IEnumerable<BoundNode> Children => Cases;
     }
     public class BoundCaseDeclaration(BoundExpression? expression, bool isDefault) : BoundStatement
     {
         public bool IsDefault { get; set; } = isDefault;
         public BoundExpression? Expression { get; } = expression;
-        public List<BoundStatement> Statements { get; } = new();
-        public override string DName => $"{nameof(CaseDeclaration)}";
-        public override IEnumerable<BoundNode> Children
-        {
-            get
-            {
-                if (Expression is not null) yield return Expression;
-                foreach (BoundNode node in Statements) yield return node;
-            }
-        }
+        public List<BoundStatement> CodeBlock { get; } = new();
+        public override IEnumerable<BoundNode> Children => CodeBlock.Concat<BoundNode>(Expression is { } t ? [t] : []);
     }
     public class BoundElseIfDeclaration(BoundExpression expression) : BoundStatement
     {
         public BoundExpression Expression { get; } = expression;
-        public List<BoundStatement> Statements { get; } = new();
-        public override string DName => $"{nameof(BoundElseIfDeclaration)}";
-        public override IEnumerable<BoundNode> Children
-        {
-            get
-            {
-                yield return Expression;
-                foreach (BoundNode node in Statements) yield return node;
-            }
-        }
+        public List<BoundStatement> CodeBlock { get; } = new();
+        public override IEnumerable<BoundNode> Children => CodeBlock.Concat<BoundNode>([Expression]);
     }
     public class BoundElseDeclaration : BoundStatement
     {
-        public List<BoundStatement> Statements { get; } = new();
-        public override string DName => $"{nameof(BoundElseDeclaration)}";
-        public override IEnumerable<BoundNode> Children
-        {
-            get
-            {
-                foreach (BoundNode node in Statements ?? []) yield return node;
-            }
-        }
+        public List<BoundStatement> CodeBlock { get; } = new();
+        public override IEnumerable<BoundNode> Children => CodeBlock;
     }
     public class BoundWhileDeclaration(BoundExpression expression, bool isDoWhile = false) : BoundStatement
     {
         public BoundExpression Expression { get; } = expression;
-        public List<BoundStatement> Statements { get; } = new();
+        public List<BoundStatement> CodeBlock { get; } = new();
         public bool IsDoWhile { get; } = isDoWhile;
-        public override string DName => $"{nameof(BoundElseDeclaration)}";
-        public override IEnumerable<BoundNode> Children
-        {
-            get
-            {
-                yield return Expression;
-                foreach (BoundNode node in Statements ?? []) yield return node;
-            }
-        }
+        public override IEnumerable<BoundNode> Children => CodeBlock.Concat<BoundNode>([Expression]);
     }
     public class BoundForDeclaration(BoundStatement? initializer, BoundExpression? expression, BoundExpression? step) : BoundStatement
     {
@@ -198,7 +127,6 @@ namespace Best_language.src.middle
         public BoundStatement? Initializer { get; } = initializer;
         public BoundExpression? Expression { get; } = expression;
         public BoundExpression? Step { get; } = step;
-        public override string DName => $"{nameof(ForDeclaration)}:";
         public override IEnumerable<BoundNode> Children
         {
             get
@@ -213,87 +141,52 @@ namespace Best_language.src.middle
     public class BoundReturnStatement(BoundExpression? expression = null) : BoundStatement 
     {
         public BoundExpression? Expression { get; } = expression;
-        public override string DName => $"{nameof(BoundReturnStatement)}";
-        public override IEnumerable<BoundNode> Children
-        {
-            get
-            {
-                if (Expression is not null) yield return Expression;
-            }
-        }
+        public override IEnumerable<BoundNode> Children => Expression is { } ? [Expression] : [];
     }
-    public class BoundBreakStatement : BoundStatement
-    {
-        public override string DName => $"{nameof(BoundBreakStatement)}";
-        public override IEnumerable<BoundNode> Children => [];
-    }
-    public class BoundContinueStatement : BoundStatement
-    {
-        public override string DName => $"{nameof(BoundContinueStatement)}";
-        public override IEnumerable<BoundNode> Children => [];
-    }
+    public class BoundBreakStatement : BoundStatement;
+    public class BoundContinueStatement : BoundStatement;
 
     public class BoundGotoDeclaration(int id) : BoundStatement
     {
         public int Id { get; } = id;
-        public override string DName => $"{nameof(BoundGotoDeclaration)}: {Id}";
-        public override IEnumerable<BoundNode> Children => [];
+        public override string PrintName => $"{GetType().Name}: {Id}";
     }
     public class BoundGotoStatement(int to) : BoundStatement
     {
         public int ToId { get; } = to;
-        public override string DName => $"{nameof(BoundGotoStatement)}: {ToId}";
-        public override IEnumerable<BoundNode> Children => [];
+        public override string PrintName => $"{GetType().Name}: {ToId}";
     }
     public class BoundNumberExpression(TypeSymbol type, ulong value) : BoundExpression(type)
     {
         public ulong Value { get; } = value;
-        public override string DName => $"{nameof(BoundNumberExpression)}: {Value}";
-        public override IEnumerable<BoundNode> Children => [];
+        public override string PrintName => $"{GetType().Name}: {Value}";
     }
     public class BoundDoubleExpression(TypeSymbol type, double value) : BoundExpression(type)
     {
         public double Value { get; } = value;
-        public override string DName => $"{nameof(BoundDoubleExpression)}: {Value}";
-        public override IEnumerable<BoundNode> Children => [];
+        public override string PrintName => $"{GetType().Name}: {Value}";
     }
     public class BoundArrExpression(List<BoundExpression> right, TypeSymbol type) : BoundExpression(type)
     {
         public List<BoundExpression> Right { get; } = right;
-
-        public override string DName => $"{nameof(BoundArrExpression)}";
-        public override IEnumerable<BoundNode> Children
-        {
-            get
-            {
-                foreach (var ex in Right) yield return ex;
-            }
-        }
+        public override IEnumerable<BoundNode> Children => Right;
     }
     public class BoundConversionExpression(BoundExpression expression, TypeSymbol targetype) : BoundExpression(targetype)
     {
         public BoundExpression Expression { get; } = expression;
-        public override string DName => $"{nameof(BoundConversionExpression)}";
-        public override IEnumerable<BoundNode> Children
-        {
-            get
-            {
-                yield return Expression;
-            }
-        }
+        public override IEnumerable<BoundNode> Children => [Expression];
     }
     public class BoundVariableExpression(VariableSymbol variable) : BoundExpression(variable.Type)
     {
         public VariableSymbol Variable { get; } = variable;
-        public override string DName => $"{nameof(BoundVariableExpression)}: {Variable.Name} ({Variable.Type})";
-        public override IEnumerable<BoundNode> Children => [];
+        public override string PrintName => $"{GetType().Name}: {Variable.Name} ({Variable.Type})";
     }
     public class BoundMemberAccessExpression(BoundExpression target, FieldSymbol field) : BoundExpression(field.Type)
     {
         public BoundExpression Target { get; } = target;
         public FieldSymbol Field { get; } = field;
 
-        public override string DName => $"{nameof(BoundMemberAccessExpression)}: {Field} ({Target.Type})";
+        public override string PrintName => $"{GetType().Name}: {Field} ({Target.Type})";
         public override IEnumerable<BoundNode> Children => [Target];
     }
     public class BoundArrayAccessExpression(VariableSymbol variable, BoundExpression idx, TypeSymbol type) : BoundExpression(type)
@@ -301,7 +194,7 @@ namespace Best_language.src.middle
         public VariableSymbol Variable { get; } = variable;
         public BoundExpression Idx { get; } = idx;
 
-        public override string DName => $"{nameof(BoundArrayAccessExpression)}: {Variable}";
+        public override string PrintName => $"{GetType().Name}: {Variable}";
         public override IEnumerable<BoundNode> Children => [Idx];
     }
     public class BoundArrayAssignment(BoundExpression left, BoundExpression idx, BoundExpression right) : BoundStatement
@@ -311,7 +204,7 @@ namespace Best_language.src.middle
 
         public BoundExpression Right { get; } = right;
 
-        public override string DName => $"{nameof(BoundArrayAssignment)}";
+        public override string PrintName => $"{GetType().Name}";
         public override IEnumerable<BoundNode> Children => [Idx, Right, Left];
     }
     public class FieldSymbol(string name, TypeSymbol type, int offset)
@@ -325,36 +218,22 @@ namespace Best_language.src.middle
     public class BoundBoolExpression(bool value, TypeSymbol type) : BoundExpression(type)
     {
         public bool Value { get; } = value;
-        public override string DName => $"{nameof(BoundBoolExpression)}: {Value}";
-        public override IEnumerable<BoundNode> Children => [];
+        public override string PrintName => $"{GetType().Name}: {Value}";
     }
     public class BoundBinaryExpression(TypeSymbol type, Operation op, BoundExpression left, BoundExpression right) : BoundExpression(type)
     {
         public BoundExpression Left { get; } = left;
         public Operation Op { get; } = op;
         public BoundExpression Right { get; } = right;
-        public override string DName => $"{nameof(BoundBinaryExpression)}: {Op} ({Type})";
-        public override IEnumerable<BoundNode> Children
-        {
-            get
-            {
-                yield return Left;
-                yield return Right;
-            }
-        }
+        public override string PrintName => $"{GetType().Name}: {Op} ({Type})";
+        public override IEnumerable<BoundNode> Children => [Left, Right];
     }
     public class BoundUnaryExpression(TypeSymbol type, Operation op, BoundExpression right) : BoundExpression(type)
     {
         public Operation Op { get; } = op;
         public BoundExpression Right { get; } = right;
-        public override string DName => $"{nameof(BoundUnaryExpression)}: {Op} ({Type})";
-        public override IEnumerable<BoundNode> Children
-        {
-            get
-            {
-                if (Right is not null) yield return Right;
-            }
-        }
+        public override string PrintName => $"{GetType().Name}: {Op} ({Type})";
+        public override IEnumerable<BoundNode> Children => [Right];
     }
     public class BoundFuncDeclaration(FunctionTypeSymbol type, string name, List<BoundVariableDeclaration> @params, List<BoundStatement> codeBlock) : BoundStatement
     {
@@ -363,23 +242,13 @@ namespace Best_language.src.middle
         public List<BoundStatement> CodeBlock { get; } = codeBlock;
         public List<BoundVariableDeclaration> Params { get; } = @params;
 
-        public override string DName => $"{GetType().Name}:";
-        public override IEnumerable<BoundNode> Children
-        {
-            get
-            {
-                foreach (BoundNode node in Params) yield return node;
-                foreach (BoundNode node in CodeBlock) yield return node;
-            }
-        }
-
+        public override IEnumerable<BoundNode> Children => Params.Concat<BoundNode>(CodeBlock);
     }
     public class BoundFuncExpression(string name, List<BoundExpression> @params, FunctionTypeSymbol type) : BoundExpression(type.ReturnType)
     {
         public string Name { get; } = name;
         public List<BoundExpression> Params { get; } = @params;
 
-        public override string DName => $"{GetType().Name}:";
         public override IEnumerable<BoundNode> Children => Params;
 
     }
@@ -490,7 +359,7 @@ namespace Best_language.src.middle
         {
             Console.Write(indent);
             Console.Write(last ? "└── " : "├── ");
-            Console.WriteLine(node.DName);
+            Console.WriteLine(node.PrintName);
 
             indent += last ? "    " : "│   ";
 

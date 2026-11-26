@@ -20,35 +20,35 @@ namespace Best_language.src.front
     {
         public TypeSize Size { get; } = size;
         public bool IsSigned { get; } = isSigned;
-        public override string ToString() => $"{nameof(IntegerTypeSymbol)} ({Name}: {Size}, {IsSigned})";
+        public override string ToString() => $"{GetType().Name} ({Name}: {Size}, {IsSigned})";
     }
 
     public class FloatTypeSymbol(string name, TypeSize size) : TypeSymbol(name)
     {
         public TypeSize Size { get; } = size;
-        public override string ToString() => $"{nameof(FloatTypeSymbol)} ({Name}: {Size})";
+        public override string ToString() => $"{GetType().Name} ({Name}: {Size})";
     }
 
     public class BoolTypeSymbol() : TypeSymbol("bool")
     {
-        public override string ToString() => $"{nameof(BoolTypeSymbol)} ({Name})";
+        public override string ToString() => $"{GetType().Name} ({Name})";
     }
 
     public class VoidTypeSymbol() : TypeSymbol("void")
     {
-        public override string ToString() => $"{nameof(VoidTypeSymbol)} ({Name})";
+        public override string ToString() => $"{GetType().Name} ({Name})";
     }
 
     public class PointerTypeSymbol(TypeSymbol elementType) : TypeSymbol($"{elementType}*")
     {
         public TypeSymbol ElementType { get; set; } = elementType;
-        public override string ToString() => $"{nameof(PointerTypeSymbol)} ({Name})";
+        public override string ToString() => $"{GetType().Name} ({Name})";
     }
 
     public class TypedefTypeSymbol(TypeSymbol elementType) : TypeSymbol($"{elementType}*")
     {
         public TypeSymbol ElementType { get; } = elementType;
-        public override string ToString() => $"{nameof(TypedefTypeSymbol)} ({Name})";
+        public override string ToString() => $"{GetType().Name} ({Name})";
     }
 
 
@@ -57,7 +57,7 @@ namespace Best_language.src.front
         public IntegerTypeSymbol EnumType { get; } = enumType;
 
         public Dictionary<string, ulong> Members { get; } = new();
-        public override string ToString() => $"{nameof(EnumTypeSymbol)} ({Name ?? "No name"})";
+        public override string ToString() => $"{GetType().Name} ({Name ?? "No name"})";
     }
     public class StructTypeSymbol(string? name, int size, int alignment, List<TypeSymbol> types) : TypeSymbol(name!)
     {
@@ -65,14 +65,14 @@ namespace Best_language.src.front
         public int Size { get; } = size;
         public int Alignment { get; } = alignment;
 
-        public override string ToString() => $"{nameof(StructTypeSymbol)} ({Name ?? "No name"})";
+        public override string ToString() => $"{GetType().Name} ({Name ?? "No name"})";
     }
     public class ArrayTypeSymbol(string name, long size, TypeSymbol type) : TypeSymbol(name)
     {
         public TypeSymbol Type { get; } = type;
         public long Size { get; } = size;
 
-        public override string ToString() => $"{nameof(ArrayTypeSymbol)} ({Name ?? "No name"})";
+        public override string ToString() => $"{GetType().Name} ({Name ?? "No name"})";
     }
     public class FunctionTypeSymbol(TypeSymbol returnType, List<TypeSymbol>? paramsTypes = null) : TypeSymbol("function")
     {

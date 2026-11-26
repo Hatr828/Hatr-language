@@ -13,18 +13,18 @@ namespace Best_language.src.middle
     public class IrLabel(string name) : IrInstruction
     {
         public string Name { get; } = name;
-        public override string ToString() => $"{nameof(IrLabel)}: {Name}";
+        public override string ToString() => $"{GetType().Name}: {Name}";
     }
     public class IrFunc(string name) : IrInstruction
     {
         public string Name { get; } = name;
-        public override string ToString() => $"{nameof(IrFunc)}: {Name}";
+        public override string ToString() => $"{GetType().Name}: {Name}";
     }
 
     public class IrRet(IrValue? res = null) : IrInstruction
     {
         public IrValue? Res { get; } = res;
-        public override string ToString() => $"{nameof(IrRet)}: {Res}";
+        public override string ToString() => $"{GetType().Name}: {Res}";
     }
 
     public class IrConstant(IrValue left, ulong right, TypeSymbol type) : IrInstruction
@@ -33,15 +33,16 @@ namespace Best_language.src.middle
         public ulong Right { get; } = right;
         public TypeSymbol TypeRight { get; } = type;
 
-        public override string ToString() => $"{nameof(IrConstant)}: {Left}, {Right}({TypeRight})";
+        public override string ToString() => $"{GetType().Name}: {Left}, {Right}({TypeRight})";
     }
+
     public class IrArrayConstant(IrValue left, List<IrValue> right, TypeSymbol type) : IrInstruction
     {
         public IrValue Left { get; } = left;
         public List<IrValue> Right { get; } = right;
         public TypeSymbol TypeRight { get; } = type;
 
-        public override string ToString() => $"{nameof(IrArrayConstant)}: {Left}, ({string.Join(", ", Right)})({TypeRight})";
+        public override string ToString() => $"{GetType().Name}: {Left}, ({string.Join(", ", Right)})({TypeRight})";
     }
     public class IrFloatConstant(IrValue left, double right, TypeSymbol type) : IrInstruction
     {
@@ -49,27 +50,27 @@ namespace Best_language.src.middle
         public double Right { get; } = right;
         public TypeSymbol TypeRight { get; } = type;
 
-        public override string ToString() => $"{nameof(IrFloatConstant)}: {Left}, {Right}({TypeRight})";
+        public override string ToString() => $"{GetType().Name}: {Left}, {Right}({TypeRight})";
     }
     public class IrJumpIfTrue(IrValue condition, string target) : IrInstruction
     {
         public string Target { get; } = target;
         public IrValue Condition { get; } = condition;
 
-        public override string ToString() => $"{nameof(IrJumpIfTrue)}: {Target} ({Condition})";
+        public override string ToString() => $"{GetType().Name}: {Target} ({Condition})";
     }
     public class IrJumpIfNotTrue(IrValue condition, string target) : IrInstruction
     {
         public string Target { get; } = target;
         public IrValue Condition { get; } = condition;
 
-        public override string ToString() => $"{nameof(IrJumpIfNotTrue)}: {Target} ({Condition})";
+        public override string ToString() => $"{GetType().Name}: {Target} ({Condition})";
     }
     public class IrJump(string target) : IrInstruction
     {
         public string Target { get; } = target;
 
-        public override string ToString() => $"{nameof(IrJump)}: {Target}";
+        public override string ToString() => $"{GetType().Name}: {Target}";
     }
     public class IrBinary(Operation op, IrValue left, IrValue right, IrValue result) : IrInstruction
     {
@@ -79,14 +80,14 @@ namespace Best_language.src.middle
 
         public IrValue Result { get; } = result;
 
-        public override string ToString() => $"{nameof(IrBinary)}: {Result}, {Left} {Op} {Right}";
+        public override string ToString() => $"{GetType().Name}: {Result}, {Left} {Op} {Right}";
     }
     public class IrConversion(IrValue left, IrValue right) : IrInstruction
     {
         public IrValue Left { get; } = left;
         public IrValue Right { get; } = right;
 
-        public override string ToString() => $"{nameof(IrConversion)}: {Left} ({Left.Type}), {Right} ({Right.Type})";
+        public override string ToString() => $"{GetType().Name}: {Left} ({Left.Type}), {Right} ({Right.Type})";
     }
     public class IrUnary(Operation op, IrValue right, IrValue result) : IrInstruction
     {
@@ -95,21 +96,21 @@ namespace Best_language.src.middle
 
         public IrValue Result { get; } = result;
 
-        public override string ToString() => $"{nameof(IrUnary)}: {Result}, {Right}";
+        public override string ToString() => $"{GetType().Name}: {Result}, {Right} ({Op})";
     }
     public class IrVariable(IrValue left, IrValue right) : IrInstruction
     {
         public IrValue Left { get; } = left;
         public IrValue Right { get; } = right;
 
-        public override string ToString() => $"{nameof(IrVariable)}: {Left}, {Right}";
+        public override string ToString() => $"{GetType().Name}: {Left}, {Right}";
     }
     public class IrParam(IrValue left, int idx) : IrInstruction
     {
         public IrValue Left { get; } = left;
         public int Idx { get; } = idx;
 
-        public override string ToString() => $"{nameof(IrParam)}: {Left} ({Idx})";
+        public override string ToString() => $"{GetType().Name}: {Left} ({Idx})";
     }
     public class IrCall(string name, List<IrValue> @params, IrValue res) : IrInstruction
     {
@@ -117,7 +118,7 @@ namespace Best_language.src.middle
         public List<IrValue> Params { get; } = @params;
         public IrValue Res { get; } = res;
 
-        public override string ToString() => $"{nameof(IrCall)}: {Name}, {string.Join(", ", Params)} ({Res})";
+        public override string ToString() => $"{GetType().Name}: {Name}, {string.Join(", ", Params)} ({Res})";
     }
     public class IrArray(IrValue left, int size, List<IrValue> right) : IrInstruction
     {
@@ -125,7 +126,7 @@ namespace Best_language.src.middle
         public int Size { get; } = size;
         public List<IrValue> Right { get; } = right;
 
-        public override string ToString() => $"{nameof(IrArray)}: {Left}, ({string.Join(", ", Right)})";
+        public override string ToString() => $"{GetType().Name}: {Left}, ({string.Join(", ", Right)})";
     }
     public class IrLoad(IrValue left, IrValue right, int offset) : IrInstruction
     {
@@ -133,7 +134,7 @@ namespace Best_language.src.middle
         public IrValue Right { get; } = right;
         public int Offset { get; } = offset;
 
-        public override string ToString() => $"{nameof(IrLoad)}: {Left}, {Right} (_offset: {Offset})";
+        public override string ToString() => $"{GetType().Name}: {Left}, {Right} (_offset: {Offset})";
 
     }
     public class IrIndexedAddress(IrValue left, IrValue baseAddress, IrValue index, int step) : IrInstruction
@@ -143,7 +144,7 @@ namespace Best_language.src.middle
         public IrValue Index { get; } = index;
         public int Step { get; } = step;
 
-        public override string ToString() => $"{nameof(IrIndexedAddress)}: {Left}, {BaseAddress} + index: {Index} * step: {Step})";
+        public override string ToString() => $"{GetType().Name}: {Left}, {BaseAddress} + index: {Index} * step: {Step})";
 
     }
     public class IrStore(IrValue left, int offset, IrValue right) : IrInstruction
@@ -152,7 +153,7 @@ namespace Best_language.src.middle
         public int Offset { get; } = offset;
         public IrValue Right { get; } = right;
 
-        public override string ToString() => $"{nameof(IrStore)}: {Left} (_offset: {Offset}), {Right}";
+        public override string ToString() => $"{GetType().Name}: {Left} (_offset: {Offset}), {Right}";
 
     }
     public class IrProgram : IrInstruction

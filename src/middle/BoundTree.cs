@@ -43,8 +43,7 @@ namespace Best_language.src.middle
                         {
                             PreProcessAst(@if.CodeBlock);
 
-                            foreach (var elseifs in @if.ElseIfs ?? [])
-                                PreProcessAst(elseifs.CodeBlock);
+                            foreach (var elseifs in @if.ElseIfs ?? []) PreProcessAst(elseifs.CodeBlock);
 
                             if (@if.Else is not null) PreProcessAst(@if.Else.CodeBlock);
 
@@ -60,8 +59,7 @@ namespace Best_language.src.middle
                         }
                     case SwitchDeclaration @switch:
                         {
-                            foreach (var @case in @switch.Cases ?? [])
-                                PreProcessAst(@case.Statements);
+                            foreach (var @case in @switch.Cases ?? []) PreProcessAst(@case.Statements);
                             continue;
                         }
                     case ForDeclaration forDeclaration:
@@ -85,56 +83,52 @@ namespace Best_language.src.middle
                 case VariableDeclarations variables:
                     {
                         BoundVariablesDeclaration variables2 = new();
-                        foreach (var variable in variables.Variables) variables2.variables.Add((BoundVariableDeclaration)BindStatement(variable));
+                        foreach (var variable in variables.Variables) variables2.Variables.Add((BoundVariableDeclaration)BindStatement(variable));
 
                         return variables2;
                     }
-                case VariableDeclaration variable:
+                case VariableDeclaration declaration:
                     {
                         BoundVariableDeclaration temp;
 
-                        var type = ResolveEnumType(variable.Type);
-                        type = ResolveStructType(variable.Type);
+                        var type = ResolveEnumType(declaration.Type);
+                        type = ResolveStructType(declaration.Type);
 
-                        var tmp = new VariableSymbol(variable.Name, type);
-                        AddVariableToScope(tmp);
+                        var variable = new VariableSymbol(declaration.Name, type);
+                        AddVariableToScope(variable);
 
-                        if (variable.Initializer is not null)
+                        if (declaration.Initializer is not null)
                         {
-                            if (variable.Initializer is ArrayExpression st && type is StructTypeSymbol tmpType)
+                            if (declaration.Initializer is ArrayExpression st && type is StructTypeSymbol tmpType)
                             {
                                 List<BoundExpression> expressions = new();
 
                                 for(int i = tmpType.Types.Count - 1; i > -1; i--)
                                 {
-                                    if (st.Right.Count > i)
-                                        expressions.Add(BindConversion(BindExpression(st.Right[i]), tmpType.Types[i]));
-                                    else
-                                        expressions.Add(BindConversion(BindExpression(new NumberExpression(0, tmpType.Types[i])), tmpType.Types[i]));
+                                    if (st.Right.Count > i) expressions.Add(BindConversion(BindExpression(st.Right[i]), tmpType.Types[i]));
+                                    else expressions.Add(BindConversion(BindExpression(new NumberExpression(0, tmpType.Types[i])), tmpType.Types[i]));
                                 }
-                                temp = new BoundVariableDeclaration(tmp, new BoundArrExpression(expressions, type));
+                                temp = new BoundVariableDeclaration(variable, new BoundArrExpression(expressions, type));
                             }
-                            else if (variable.Initializer is ArrayExpression arrEx && type is ArrayTypeSymbol tempType)
+                            else if (declaration.Initializer is ArrayExpression arrEx && type is ArrayTypeSymbol tempType)
                             {
                                 List<BoundExpression> expressions = new();
 
                                 for (int i = (int)tempType.Size - 1; i > -1; i--)
                                 {
-                                    if (arrEx.Right.Count > i)
-                                        expressions.Add(BindConversion(BindExpression(arrEx.Right[i]), tempType.Type));
-                                    else
-                                        expressions.Add(BindConversion(BindExpression(new NumberExpression(0, tempType.Type)), tempType.Type));
+                                    if (arrEx.Right.Count > i) expressions.Add(BindConversion(BindExpression(arrEx.Right[i]), tempType.Type));
+                                    else expressions.Add(BindConversion(BindExpression(new NumberExpression(0, tempType.Type)), tempType.Type));
                                 }
-                                temp = new BoundVariableDeclaration(tmp, new BoundArrExpression(expressions, type));
+                                temp = new BoundVariableDeclaration(variable, new BoundArrExpression(expressions, type));
                             }
                             else
                             {
-                                var initializer = BindExpression(variable.Initializer);
-                                temp = new BoundVariableDeclaration(tmp, BindConversion(initializer, type));
+                                var initializer = BindExpression(declaration.Initializer);
+                                temp = new BoundVariableDeclaration(variable, BindConversion(initializer, type));
                             }
                         }
                         else
-                            temp = new BoundVariableDeclaration(tmp, null);
+                            temp = new BoundVariableDeclaration(variable, null);
 
                         return temp;
                     }
@@ -148,7 +142,7 @@ namespace Best_language.src.middle
 
                         BoundVariablesDeclaration variables = new();
 
-                        foreach (var variable in @enum.Variables) variables.variables.Add((BoundVariableDeclaration)BindStatement(variable));
+                        foreach (var variable in @enum.Variables) variables.Variables.Add((BoundVariableDeclaration)BindStatement(variable));
 
                         return variables;
                     }
@@ -159,7 +153,7 @@ namespace Best_language.src.middle
 
                         BoundVariablesDeclaration variables = new();
 
-                        foreach (var variable in @struct.Variables ?? []) variables.variables.Add((BoundVariableDeclaration)BindStatement(variable));
+                        foreach (var variable in @struct.Variables ?? []) variables.Variables.Add((BoundVariableDeclaration)BindStatement(variable));
 
                         return variables;
                     }
@@ -181,13 +175,13 @@ namespace Best_language.src.middle
 
                             if (caseEx is not null)
                             {
-                                var ex = new BoundBinaryExpression(_typeTable.Bool, Operation.EqualsEquals, switchEx, caseEx);
+                                var ex = new BoundBinaryExpression(_typeTable.Int32, Operation.EqualsEquals, switchEx, caseEx);
                                 res.Cases.Add(new(ex, false));
                             }
                             else res.Cases.Add(new(null, true));
 
                             _scopes.AddScope();
-                            foreach (var statement in @case.Statements) res.Cases[^1].Statements.Add(BindStatement(statement));
+                            foreach (var statement in @case.Statements) res.Cases[^1].CodeBlock.Add(BindStatement(statement));
                             _scopes.RemoveScope();
                         }
                         return res;
@@ -199,18 +193,18 @@ namespace Best_language.src.middle
                 case ElseIfDeclaration elseIf:
                     {
                         var If = new BoundElseIfDeclaration(new 
-                            BoundConversionExpression(BindExpression(elseIf.Expression), _typeTable.Bool));
+                            BoundConversionExpression(BindExpression(elseIf.Expression), _typeTable.Int32));
                         _scopes.AddScope();
-                        foreach (var statement in elseIf.CodeBlock) If.Statements.Add(BindStatement(statement));
+                        foreach (var statement in elseIf.CodeBlock) If.CodeBlock.Add(BindStatement(statement));
                         _scopes.RemoveScope();
                         return If;
                     }
                 case WhileDeclaration @while:
                     {
                         var res = new BoundWhileDeclaration(new 
-                            BoundConversionExpression(BindExpression(@while.Expression), _typeTable.Bool));
+                            BoundConversionExpression(BindExpression(@while.Expression), _typeTable.Int32));
                         _scopes.AddScope();
-                        foreach (var statement in @while.CodeBlock) res.Statements.Add(BindStatement(statement));
+                        foreach (var statement in @while.CodeBlock) res.CodeBlock.Add(BindStatement(statement));
                         _scopes.RemoveScope();
                         return res;
                     }
@@ -242,7 +236,7 @@ namespace Best_language.src.middle
                         if (@for.Initializer is not null) initializer = BindStatement(@for.Initializer);
                         if (@for.Step is not null) step = BindExpression(@for.Step);
                         if (@for.Expression is not null) 
-                            ex = new  BoundConversionExpression(BindExpression(@for.Expression), _typeTable.Bool);
+                            ex = new  BoundConversionExpression(BindExpression(@for.Expression), _typeTable.Int32);
 
                         BoundForDeclaration res = new(initializer, ex, step);
 
@@ -299,16 +293,20 @@ namespace Best_language.src.middle
                     }
                 case AssignmentStatement assignment:
                     {
-                        BoundExpression ex;
+                        BoundExpression right;
 
                         if (assignment.Op is Operation op)
                         {
-                            ex = BindExpression(new BinaryExpression(assignment.Left, 
+                            right = BindExpression(new BinaryExpression(assignment.Left, 
                                 GetOperationFromCompoundOperation(op), assignment.Right));
                         }
-                        else ex = BindExpression(assignment.Right);
+                        else right = BindExpression(assignment.Right);
 
-                        return new BoundAssignmentStatement(BindExpression(assignment.Left), ex);
+                        var left = BindExpression(assignment.Left);
+
+                        if (right.Type != left.Type) right = new BoundConversionExpression(right, left.Type);
+
+                        return new BoundAssignmentStatement(left, right);
                     }
                 case ArrayAssignment assignment:
                     {
@@ -391,7 +389,7 @@ namespace Best_language.src.middle
                             var ex = BindExpression(param);
                             if (ex.Type is ArrayTypeSymbol st)
                             {
-                                if (ex is not BoundVariableExpression variable) throw new ArgumentException("Expected variable");
+                                if (ex is not BoundVariableExpression variable) throw new ArgumentException("Expected declaration");
                                 ex = new BoundUnaryExpression(_typeTable.GetPointer(st.Type), Operation.ReferenceOf, ex);
                             }
                             @params.Add(ex);
@@ -425,7 +423,7 @@ namespace Best_language.src.middle
 
         private BoundStatement BindIf(IfDeclaration @if)
         {
-            var If = new BoundIfDeclaration(new BoundConversionExpression(BindExpression(@if.Expression), _typeTable.Bool));
+            var If = new BoundIfDeclaration(new BoundConversionExpression(BindExpression(@if.Expression), _typeTable.Int32));
 
             _scopes.AddScope();
 
@@ -442,7 +440,7 @@ namespace Best_language.src.middle
             {
                 _scopes.AddScope();
                 If.Else ??= new();
-                foreach (var statement in @if.Else.CodeBlock) If.Else.Statements.Add(BindStatement(statement));
+                foreach (var statement in @if.Else.CodeBlock) If.Else.CodeBlock.Add(BindStatement(statement));
                 _scopes.RemoveScope();
             }
 

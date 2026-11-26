@@ -11,6 +11,7 @@ namespace Best_language.src.back.Printers
 
             _sb.AppendLine("global  start");
             _sb.AppendLine("extern ExitProcess");
+            _sb.AppendLine("extern GetStdHandle");
             _sb.AppendLine("section .text");
 
             foreach (var instruction in instructions)

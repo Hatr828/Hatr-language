@@ -98,6 +98,7 @@ namespace Best_language.src.back.Generators
                 case Operation.PlusPlusLeft:
                     increment = true;
                     goto case Operation.MinusMinusRight;
+
                 case Operation.MinusMinusRight:
                 case Operation.MinusMinusLeft:
                     long bits = isFloat ? BitConverter.SingleToInt32Bits(1.0f) : BitConverter.DoubleToInt64Bits(1.0);

@@ -1,5 +1,6 @@
 using Best_language.src.front;
 using Microsoft.Extensions.FileProviders;
+using System.Net;
 using System.Numerics;
 
 namespace Best_language.src.middle
@@ -34,7 +35,7 @@ namespace Best_language.src.middle
             switch (node)
             {
                 case BoundVariablesDeclaration variables:
-                    foreach (var variable in variables.variables) LowerNode(variable);
+                    foreach (var variable in variables.Variables) LowerNode(variable);
                     return;
                 case BoundVariableDeclaration variable when variable.Initializer is not null && variable.Initializer is BoundArrExpression st:
                     {
@@ -110,12 +111,12 @@ namespace Best_language.src.middle
                         {
                             if (defaultStartLabel is null) continue;
                             Emit(new IrLabel(defaultStartLabel));
-                            foreach (var statement in @case.Statements) LowerNode(statement);
+                            foreach (var statement in @case.CodeBlock) LowerNode(statement);
                         }
                         else
                         {
                             Emit(new IrLabel(labels[idx++]));
-                            foreach (var statement in @case.Statements) LowerNode(statement);
+                            foreach (var statement in @case.CodeBlock) LowerNode(statement);
                         }
                     }
 
@@ -133,7 +134,7 @@ namespace Best_language.src.middle
 
                         Emit(new IrJumpIfNotTrue(condition, caseEndLabel));
 
-                        foreach (var statement in @case.Statements)
+                        foreach (var statement in @case.CodeBlock)
                             LowerNode(statement);
 
                         Emit(new IrLabel(caseEndLabel));
@@ -144,7 +145,7 @@ namespace Best_language.src.middle
 
                         Emit(new IrLabel(defaultStartLabel));
 
-                        foreach (var statement in @case.Statements)
+                        foreach (var statement in @case.CodeBlock)
                             LowerNode(statement);
                     }
                     return;
@@ -181,12 +182,28 @@ namespace Best_language.src.middle
                         Emit(new IrArray(res, type.Size, Irs));
                         return;
                     }
+                case BoundAssignmentStatement { Left: BoundUnaryExpression { Op: Operation.Dereference} } assignment:
+                    {
+                        var (address, offset) = LowerAddress(assignment.Left);
+                        var right = LowerExpression(assignment.Right);
+
+                        Emit(new IrStore(address, offset, right));
+                        return;
+                    }
+                case BoundAssignmentStatement { Left: BoundArrayAccessExpression } assignment:
+                    {
+                        var (address, offset) = LowerAddress(assignment.Left);
+                        var right = LowerExpression(assignment.Right);
+
+                        Emit(new IrStore(address, offset, right));
+                        return;
+                    }
                 case BoundAssignmentStatement assignment:
                     {
-                        var res = LowerExpression(assignment.Left);
-                        var source = LowerExpression(assignment.Right);
+                        var left = LowerExpression(assignment.Left);
+                        var right = LowerExpression(assignment.Right);
 
-                        Emit(new IrVariable(res, source));
+                        Emit(new IrVariable(left, right));
                         return;
                     }
                 case BoundArrayAssignment assignment:
@@ -335,7 +352,7 @@ namespace Best_language.src.middle
             for (int i = 0; i < @if.ElseIfs?.Count; i++)
             {
                 Emit(new IrLabel(labels[i]));
-                foreach (var statement in @if.ElseIfs[i].Statements)
+                foreach (var statement in @if.ElseIfs[i].CodeBlock)
                     LowerNode(statement);
                 Emit(new IrJump(endLabel));
             }
@@ -343,7 +360,7 @@ namespace Best_language.src.middle
             if (@if.Else is not null)
             {
                 Emit(new IrLabel(elseLabel));
-                foreach (var statement in @if.Else.Statements)
+                foreach (var statement in @if.Else.CodeBlock)
                     LowerNode(statement);
             }
 
@@ -364,7 +381,7 @@ namespace Best_language.src.middle
 
             Emit(new IrJumpIfNotTrue(condition, endLabel));
 
-            foreach (var statement in @while.Statements)
+            foreach (var statement in @while.CodeBlock)
                 LowerNode(statement);
 
             _continues.Pop();
@@ -390,7 +407,7 @@ namespace Best_language.src.middle
             foreach (var statement in func.CodeBlock)
                 LowerNode(statement);
 
-            Emit(new IrRet());
+            if (_currentProgram.Instructions[^1] is not IrRet) Emit(new IrRet());
         }
 
         private void LowerFor(BoundForDeclaration @for)

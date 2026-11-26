@@ -27,102 +27,56 @@ namespace Best_language.src.front
 
     public enum TokenKind : byte
     {
-        Typedef,
-        SizeOf,
+        Typedef, SizeOf,
         Arrow,
 
         // Do not move
         Int,
-        Enum,
-        Struct,
+        Enum, Struct,
         Void,
-        Long,
-        Char,
-        Short,
-        Bool,
-        Float, 
-        Double,
-
-        Signed, 
-        UnSigned,
+        Long, Char, Short, Bool, Float,  Double,
+        Signed,  UnSigned,
         //
 
         U, L, LU, UL, LL, ULL, LLU, F,
 
-        True,
-        False,
+        True, False,
 
         Goto,
-        If,
-        ElseIf,
-        Else,
+        If, ElseIf, Else,
 
-        For,
-        Do,
-        While,
-        Switch,
-        Case,
-        Default,
+        For, Do, While,
+        Switch, Case, Default,
 
-        Return,
-        Break,
-        Continue,
+        Return, Break, Continue,
 
-        SemiColon,
-        Comma,
-        Dot,
-        Equals,
-        Colon,
-        Not,
+        // do not move
+        SemiColon, Comma, Colon, LeftParen, LeftBrace, LeftBracket,
+        //
+        Dot, Not,
 
-        Plus,
-        Minus,
-        Multiply,
-        Divide,
-        DivisionRem,
+        Plus, Minus, Multiply, Divide, DivisionRem,
 
-        PlusEquals,
-        MinusEquals,
-        MultiplyEquals,
-        DivideEquals,
-        DivisionRemEquals,
+        // do not move
+        Equals, 
+        PlusEquals, MinusEquals, MultiplyEquals, DivideEquals, DivisionRemEquals,
+        BitAndEquals, BitOrEquals, BitXorEquals,
+        RightShiftEquals, LeftShiftEquals,
+        //
 
-        PlusPlus,
-        MinusMinus,
+        PlusPlus, MinusMinus,
 
-        BitNot,
-        BitXor,
-        BitAnd,
-        BitOr,
+        BitNot, BitXor, BitAnd, BitOr,
 
-        BitAndEquals,
-        BitOrEquals,
-        BitXorEquals,
+        RightShift, LeftShift,
 
-        RightShift,
-        LeftShift,
-        RightShiftEquals,
-        LeftShiftEquals,
+        And, Or,
+        EqualsEquals, NotEquals,
+        LessThan, GreaterThan, GreaterThanOrEquals, LessThanOrEquals,
 
-        And,
-        Or,
-        EqualsEquals,
-        NotEquals,
-        LessThan,
-        GreaterThan,
-        GreaterThanOrEquals,
-        LessThanOrEquals,
+        RightParen, RightBrace, RightBracket,
 
-        RightParen,
-        LeftParen,
-        RightBrace,
-        LeftBrace,
-        RightBracket,
-        LeftBracket,
-
-        Indent,
-        Number,
-        String,
+        Indent, Number, String,
     }
 
     public static class CSyntax

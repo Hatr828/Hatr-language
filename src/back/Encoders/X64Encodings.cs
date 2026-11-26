@@ -9,6 +9,7 @@ namespace Best_language.src.back.Encoders
         private List<PeImport> _importFixups = [];
         private readonly Dictionary<string, string> _dlls = new()
         {
+            ["GetStdHandle"] = "kernel32.dll",
             ["ExitProcess"] = "kernel32.dll",
         };
         private List<X64Label> _labelFixups = [];

@@ -21,7 +21,7 @@ namespace Best_language.src.back.Generators
         private readonly Dictionary<IrValue, (ulong, TypeSymbol)> _constants = new();
         private readonly Dictionary<IrValue, (double, TypeSymbol)> _constantsFP = new();
         private int _stackFixup;
-        private string _funcEpilogue;
+        private string _funcEpilogue = null!;
         private int _localOffset;
 
         private List<IrInstruction>? _irInstructions;
@@ -296,13 +296,32 @@ namespace Best_language.src.back.Generators
                             _constants.Add(constant.Left, (constant.Right, constant.TypeRight));
                             break;
                         }
-                    case IrArrayConstant constant:
+                    case IrArrayConstant constant when constant.TypeRight is ArrayTypeSymbol:
                         {
-                            if (constant.TypeRight is StructTypeSymbol st)
-                                _locals.Add(constant.Left, (st.Size, X64Size.custom));
-                            else if (constant.TypeRight is ArrayTypeSymbol arrType)
-                                _locals.Add(constant.Left, ((int)arrType.Size, X64Size.custom));
-                            else throw new NotImplementedException();
+                            var (arrOffset, _) = GetSlot(constant.Right[^1]);
+                            _locals.Add(constant.Left, (arrOffset, X64Size.custom));
+                            break;
+                        }
+                    case IrArrayConstant constant when constant.TypeRight is StructTypeSymbol st:
+                        {
+                            var (structOffset, _) = GetOrCreateSlot(constant.Left);
+                            
+                            for (int i = 0; i < constant.Right.Count; i++)
+                            {
+                                var fieldType = st.Types[i];
+                                var val = constant.Right[i];
+                                var size = GetX64Size(fieldType);
+
+                                bool isFloat = fieldType is FloatTypeSymbol;
+                                var reg = isFloat ? X64Register.xmm0 : GetRegister(size);
+                                var opcode = isFloat ? (size == X64Size.dword ? X64Opcode.movss : X64Opcode.movsd) : X64Opcode.mov;
+
+                                LoadValue(val, reg);
+
+                                Emit(new(opcode,
+                                    X64Operand.Mem(X64Register.rcx, -structOffset + st.Alignment, size),
+                                    X64Operand.Reg(reg)));
+                            }
                             break;
                         }
                     case IrFloatConstant constant:
@@ -358,6 +377,20 @@ namespace Best_language.src.back.Generators
 
         private void ConversionGen(IrConversion conversion)
         {
+            if (conversion.Right.Type is ArrayTypeSymbol && conversion.Left.Type is PointerTypeSymbol)
+            {
+                var (arrOffset, _) = GetSlot(conversion.Right);
+                var (pointerOffset, _) = GetOrCreateSlot(conversion.Left);
+
+                Emit(new(X64Opcode.lea, X64Operand.Reg(X64Register.rax),
+                    X64Operand.Mem(X64Register.rbp, -arrOffset, X64Size.qword)));
+
+                Emit(new(X64Opcode.mov,
+                    X64Operand.Mem(X64Register.rbp, -pointerOffset, X64Size.qword),
+                    X64Operand.Reg(X64Register.rax)));
+                return;
+            }
+
             int rightSize = GetSlotSize(conversion.Right);
             int leftSize = GetSlotSize(conversion.Left);
 

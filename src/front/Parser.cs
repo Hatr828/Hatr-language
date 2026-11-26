@@ -73,9 +73,7 @@ namespace Best_language.src.front
                             _idx++;
                             List<AstNode> block = new();
 
-                            _scopes.AddScope();
                             GetBlockCode(block);
-                            _scopes.RemoveScope();
 
                             Requires(TokenKind.While, TokenKind.RightParen);
 
@@ -95,9 +93,7 @@ namespace Best_language.src.front
 
                             Requires(TokenKind.LeftParen);
 
-                            _scopes.AddScope();
                             GetBlockCode(block);
-                            _scopes.RemoveScope();
 
                             return new WhileDeclaration(ex, block);
                         }
@@ -110,24 +106,22 @@ namespace Best_language.src.front
                             AstNode? initializer;
                             Expression? ex, step;
 
-                            if (_tokens[_idx].kind is TokenKind.SemiColon) { initializer = null; _idx++; }
+                            if (Consume(TokenKind.SemiColon)) initializer = null;
                             else initializer = GetAstNode();
 
-                            if (_tokens[_idx].kind is TokenKind.SemiColon) { ex = null; }
+                            if (CheckKind(TokenKind.SemiColon)) ex = null;
                             else ex = GetExpression();
 
                             Requires(TokenKind.SemiColon);
 
-                            if (_tokens[_idx].kind is TokenKind.LeftParen) { step = null; }
+                            if (CheckKind(TokenKind.LeftParen)) step = null;
                             else step = GetExpression();
 
                             List<AstNode> block = new();
 
                             Requires(TokenKind.LeftParen);
 
-                            _scopes.AddScope();
                             GetBlockCode(block);
-                            _scopes.RemoveScope();
 
                             return new ForDeclaration(initializer, ex, step, block);
                         }
@@ -141,9 +135,7 @@ namespace Best_language.src.front
 
                             Requires(TokenKind.LeftParen);
 
-                            _scopes.AddScope();
                             GetBlockCode(block);
-                            _scopes.RemoveScope();
 
                             return new ElseIfDeclaration(ex, block);
                         }
@@ -163,29 +155,22 @@ namespace Best_language.src.front
                             bool isArrow = CheckKind(TokenKind.Arrow);
                             string name = _tokens[++_idx].val!;
                             _idx++;
-                            Operation? op = null;
 
-                            int tmp2 = -1;
+                            bool equals = false;
 
-                            if (CheckKind(TokenKind.Equals)) tmp2 = _idx++;
-                            else if (IsOperatorEquals()) op = GetOperatorEquals();
+                            if (Consume(TokenKind.Equals)) equals = true;
 
-                            if (op is not null || tmp2 != -1)
+                            Statement res;
+                            if (equals)
                             {
-                                var temp = new MemberAssignment(isArrow ? new UnaryExpression(Operation.Dereference, new VariableExpression(target)) 
+                                res = new MemberAssignment(isArrow ? new UnaryExpression(Operation.Dereference, new VariableExpression(target)) 
                                     : new VariableExpression(target), name, null, GetExpression());
-
-                                Requires(TokenKind.SemiColon);
-
-                                return temp;
                             }
-                            else
-                            {
-                                var tmp1 = GetExpression();
-                                Requires(TokenKind.SemiColon);
+                            else res = new ExpressionStatement(GetExpression());
 
-                                return new ExpressionStatement(tmp1);
-                            }
+                            Requires(TokenKind.SemiColon);
+
+                            return res;
                         }
                     case TokenKind.Indent when _tokens[_idx + 1].kind is TokenKind.Colon:
                         {
@@ -326,7 +311,7 @@ namespace Best_language.src.front
                     }
                 case TokenKind.Number:
                     {
-                        if(_tokens[_idx + 1].kind is TokenKind.Dot)
+                        if(CheckKind(TokenKind.Dot))
                         {
                             var @double = _tokens[_idx].val! + "." + _tokens[_idx + 2].val!;
                             if (_tokens[_idx + 3].kind is TokenKind.F)
@@ -399,7 +384,7 @@ namespace Best_language.src.front
                     throw new Exception("Error in Parser, unknown token: " + _tokens[_idx].kind);
             }
 
-            while (_idx < _tokens.Count && _tokens[_idx].kind is not TokenKind.SemiColon and not TokenKind.LeftParen and not TokenKind.Colon and not TokenKind.Comma and not TokenKind.LeftBrace and not TokenKind.LeftBracket and not TokenKind.Equals)
+            while (_idx < _tokens.Count && !(_tokens[_idx].kind is >= TokenKind.SemiColon and <= TokenKind.LeftBracket || _tokens[_idx].kind is >=TokenKind.Equals and <= TokenKind.LeftShiftEquals))
             {
                 if (_tokens[_idx].kind is TokenKind.PlusPlus or TokenKind.MinusMinus)
                 {
@@ -504,18 +489,19 @@ namespace Best_language.src.front
             return variables;
         }
 
-        private VariableDeclarations ParseVariables(TypeSymbol type = null!) // needs refactoring
+        private VariableDeclarations ParseVariables(TypeSymbol type = null!)
         {
             VariableDeclarations variables = new();
             bool isType = type is not null;
-
 
             while (!Consume(TokenKind.SemiColon))
             {
                 if (!isType)
                 {
                     if (Consume(TokenKind.LeftParen)) return variables;
+
                     type = ParseType();
+
                     if (CheckKind(TokenKind.Indent) && type == typeTable.Enum)
                     {
                         type = new EnumTypeSymbol(_tokens[_idx++].val!, null!);
@@ -531,37 +517,9 @@ namespace Best_language.src.front
                 bool unknownLength = false;
                 Expression? ex = null;
 
-                if (Consume(TokenKind.Multiply)) // pointer
+                if (Consume(TokenKind.Multiply))
                 {
-                    name = Requires(true, TokenKind.Indent);
-                    _scopes.TryAddVariable(name, NameKind.Variable);
-
-                    if (Consume(TokenKind.RightBracket))
-                    {
-                        if (Consume(TokenKind.LeftBracket)) unknownLength = true;
-                        else
-                        {
-                            NumberExpression num = (NumberExpression)GetExpression();
-                            Requires(TokenKind.LeftBracket);
-                            subType = new ArrayTypeSymbol(name, (long)num.Value, type!);
-                        }
-                    }
-
-                    if (Consume(TokenKind.Equals)) ex = GetExpression();
-
-                    if (unknownLength)
-                    {
-                        if (ex is null) throw new ArgumentException("Cannot declare array");
-                        if (ex is not ArrayExpression arr) throw new ArgumentException("Expected array expression");
-                        subType = new ArrayTypeSymbol(name, (long)arr.Right.Count, type!);
-                    }
-
-                    variables.Variables.Add(new VariableDeclaration(name, typeTable.GetPointer(subType is not null ? subType : type!), ex));
-
-                    if (Consume(TokenKind.SemiColon)) return variables;
-                    else if (Consume(TokenKind.Comma)) continue;
-                    else if (!isType && Consume(TokenKind.LeftParen)) return variables;
-                    else throw new ArgumentException("requires semicolon or comma");
+                    subType = typeTable.GetPointer(type!);
                 }
 
                 name = Requires(true, TokenKind.Indent);
@@ -584,7 +542,7 @@ namespace Best_language.src.front
                 {
                     if (ex is null) throw new ArgumentException("Cannot declare array");
                     if (ex is not ArrayExpression arr) throw new ArgumentException("Expected array expression");
-                    subType = new ArrayTypeSymbol(name, (long)arr.Right.Count, type!);
+                    subType = new ArrayTypeSymbol(name, arr.Right.Count, type!);
                 }
 
                 variables.Variables.Add(new VariableDeclaration(name, subType is not null ? subType : type!, ex));
@@ -599,7 +557,7 @@ namespace Best_language.src.front
             return variables;
         }
 
-        private EnumTypeSymbol ParseEnum() // needs refactoring
+        private EnumTypeSymbol ParseEnum()
         {
             EnumTypeSymbol @enum;
 
@@ -615,43 +573,41 @@ namespace Best_language.src.front
             Requires(TokenKind.RightBrace);
 
             ulong prevIndex = 0;
-            while(!CheckKind(TokenKind.LeftBrace))
+            while(!Consume(TokenKind.LeftBrace))
             {
-                Requires(TokenKind.Indent);
-                string name = _tokens[_idx - 1].val!;
+                string name = Requires(true, TokenKind.Indent);
+
                 if (!CheckKind(TokenKind.Equals))
                 {
                     if (!CheckKind(TokenKind.LeftBrace))
                         Requires(TokenKind.Comma);
+
                     @enum.Members.Add(name, prevIndex);
-
-                    if (!_scopes.TryAddEnumMember(name, (prevIndex++, typeTable.Int32))) throw new ArgumentException($"EnumMember {name} already exist");
-
-                    if (!_scopes.TryAddVariable(name, NameKind.Enum)) throw new ArgumentException($"EnumMember {name} cannot be declared");
                 }
                 else
                 {
                     _idx++;
                     var tmp = GetExpression();
+
                     if (tmp is not NumberExpression ex) throw new ArgumentException("Expected integer constant");
-                    @enum.Members.Add(name, ex.Value);
 
                     prevIndex = ex.Value;
-
-                    if (!_scopes.TryAddEnumMember(name, (ex.Value, typeTable.Int32))) throw new ArgumentException($"EnumMember {name} already exist");
-
-                    if (!_scopes.TryAddVariable(name, NameKind.Enum)) throw new ArgumentException($"EnumMember {name} cannot be declared");
 
                     if (!CheckKind(TokenKind.LeftBrace))
                         Requires(TokenKind.Comma);
                 }
+
+                @enum.Members.Add(name, prevIndex++);
+
+                if (!_scopes.TryAddEnumMember(name, (prevIndex - 1, typeTable.Int32))) throw new ArgumentException($"EnumMember {name} already exist");
+
+                if (!_scopes.TryAddVariable(name, NameKind.Enum)) throw new ArgumentException($"EnumMember {name} cannot be declared");
             }
-            _idx++;
 
             return @enum;
         }
 
-        private StructDeclaration ParseStruct() // needs refactoring
+        private StructDeclaration ParseStruct() 
         {
             string? structName = null;
 
@@ -667,62 +623,30 @@ namespace Best_language.src.front
 
             TypeSymbol type = ParseType();
 
-            while (!CheckKind(TokenKind.LeftBrace))
+            while (!Consume(TokenKind.LeftBrace))
             {
+                if (Consume(TokenKind.Multiply)) type = typeTable.GetPointer(type);
 
-                if (CheckKind(TokenKind.Multiply)) // pointer
+                names.Add(Requires(true, TokenKind.Indent));
+                types.Add(type);
+
+                if (Consume(TokenKind.SemiColon))
                 {
-                    _idx++;
-                    Requires(TokenKind.Indent);
-                    names.Add(_tokens[_idx - 1].val!);
-
-                    type = typeTable.GetPointer(type);
-                    types.Add(type);
-
-                    if (CheckKind(TokenKind.Comma))
-                    {
-                        _idx++;
-                        continue;
-                    }
-                    else if (CheckKind(TokenKind.SemiColon))
-                    {
-                        _idx++;
-                        if(!CheckKind(TokenKind.LeftBrace)) type = ParseType();
-
-                        continue;
-                    }
-                    else throw new ArgumentException("requires semiColon or comma");
-                }
-
-                Requires(TokenKind.Indent);
-                if (CheckKind(TokenKind.SemiColon))
-                {
-                    _idx++;
-                    names.Add(_tokens[_idx - 2].val!);
-                    types.Add(type);
-
                     if (!CheckKind(TokenKind.LeftBrace)) type = ParseType();
 
                     continue;
                 }
-                else if (CheckKind(TokenKind.Comma))
-                {
-                    _idx++;
-                    names.Add(_tokens[_idx - 2].val!);
-                    types.Add(type);
-                    continue;
-                }
+                else if (Consume(TokenKind.Comma)) continue;
 
                 throw new ArgumentException("Unknown syntax for struct");
             }
-            _idx++;
 
             return new StructDeclaration(new(structName, GetSizeForStruct(types, out var alignment), alignment, types), names);
         }                                     
 
-        private Statement ParseFunction(TypeSymbol type) // needs refactoring
+        private Statement ParseFunction(TypeSymbol type)
         {
-            if (Consume(TokenKind.Indent, TokenKind.RightParen)) // function
+            if (Consume(TokenKind.Indent, TokenKind.RightParen))
             {
                 string name = _tokens[_idx - 2].val!;
 
@@ -733,9 +657,7 @@ namespace Best_language.src.front
 
                 List<AstNode> block = new();
 
-                _scopes.AddScope();
                 GetBlockCode(block);
-                _scopes.RemoveScope();
 
                 return new FuncDeclaration(new(type, types), name, @params.Variables, block);
             }
@@ -745,18 +667,17 @@ namespace Best_language.src.front
 
         private IfDeclaration ParseIf()
         {
-
-            _idx++;
-            Requires(TokenKind.RightParen);
+            Requires(TokenKind.If, TokenKind.RightParen);
 
             Expression ex = GetExpression();
             List<AstNode> block = new();
 
             Requires(TokenKind.LeftParen);
-
-            _scopes.AddScope();
-            GetBlockCode(block);
-            _scopes.RemoveScope();
+            if (!CheckKind(TokenKind.RightBrace))
+            {
+                block.Add(GetAstNode());
+            }
+            else GetBlockCode(block);
 
             if (_idx >= _tokens.Count) return new IfDeclaration(ex, block);
 
@@ -772,19 +693,20 @@ namespace Best_language.src.front
             @if.Else = new();
             _idx++;
 
-            _scopes.AddScope();
-            GetBlockCode(@if.Else.CodeBlock);
-            _scopes.RemoveScope();
+            if (!CheckKind(TokenKind.RightBrace))
+            {
+                @if.Else.CodeBlock.Add(GetAstNode());
+            }
+            else GetBlockCode(@if.Else.CodeBlock);
 
             return @if;
         }
 
-        private SwitchDeclaration ParseSwitch() // needs refactoring
+        private SwitchDeclaration ParseSwitch()
         {
             _scopes.AddScope();
 
-            _idx++;
-            Requires(TokenKind.RightParen);
+            Requires(TokenKind.Switch, TokenKind.RightParen);
 
             Expression ex = GetExpression();
             List<CaseDeclaration> cases = new();
@@ -807,10 +729,10 @@ namespace Best_language.src.front
 
                 bool wasBrace = false;
 
-                if (_tokens.Count > _idx && _tokens[_idx].kind is TokenKind.RightBrace)
+                if (_tokens.Count > _idx && Consume(TokenKind.RightBrace))
                 {
                     _scopes.AddScope();
-                    wasBrace = true; _idx++;
+                    wasBrace = true;
                 }
 
                 while (_tokens.Count > _idx && _tokens[_idx].kind is not TokenKind.Case and not TokenKind.Default and not TokenKind.LeftBrace)
@@ -818,11 +740,7 @@ namespace Best_language.src.front
                     block.Add(GetAstNode()!);
                 }
 
-                if (_tokens.Count > _idx && wasBrace && _tokens[_idx].kind is TokenKind.LeftBrace)
-                {
-                    _scopes.RemoveScope();
-                    _idx++;
-                }
+                if (_tokens.Count > _idx && wasBrace && Consume(TokenKind.LeftBrace)) _scopes.RemoveScope();
 
                 if (caseEx is null) cases.Add(new(caseEx, block, true));
                 else cases.Add(new(caseEx, block));
@@ -856,9 +774,8 @@ namespace Best_language.src.front
                 if (!_scopes.TryGetEnum(enumName2, out var enumType)) throw new ArgumentException($"Unknown type: {typeName}");
                 type = enumType;
             }
-            else if (CheckKind(TokenKind.Enum))
+            else if (Consume(TokenKind.Enum))
             {
-                _idx++;
                 declareEnum = true;
                 type = ParseEnum();
             }
@@ -867,11 +784,9 @@ namespace Best_language.src.front
             string? enumName = null;
 
 
-            while (!CheckKind(TokenKind.SemiColon))
+            while (!Consume(TokenKind.SemiColon))
             {
-                Requires(TokenKind.Indent);
-
-                string name = _tokens[_idx - 1].val!;
+                string name = Requires(true, TokenKind.Indent);
 
                 if (enumName is null) enumName = name;
 
@@ -882,14 +797,12 @@ namespace Best_language.src.front
                 else
                     _scopes.TryAddTypedef(name, type);
 
-                if (CheckKind(TokenKind.Comma)) _idx++;
+                Consume(TokenKind.Comma);
             }
-            _idx++;
 
             if (declareEnum)
             {
-                if (type.Name is null)
-                    type.Name = enumName!;
+                if (type.Name is null) type.Name = enumName!;
                 return new EnumDeclaration((EnumTypeSymbol)type, new());
             }
             else return new EmptyNode();

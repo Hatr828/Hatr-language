@@ -42,13 +42,16 @@ namespace Best_language.src.front
 
         private void GetBlockCode<T>(List<T> list) where T : AstNode
         {
+            _scopes.AddScope();
+
             Requires(TokenKind.RightBrace);
 
-            while (_tokens[_idx].kind is not TokenKind.LeftBrace)
+            while (!Consume(TokenKind.LeftBrace))
             {
                 list.Add((T)GetAstNode());
             }
-            _idx++;
+
+            _scopes.RemoveScope();
         }
 
         private TypeSymbol GetCommonArithmeticType(TypeSymbol left, TypeSymbol right)

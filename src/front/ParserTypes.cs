@@ -8,25 +8,14 @@ namespace Best_language.src.front
 {
     public closed class AstNode
     {
-        public abstract string DName { get; }
-        public abstract IEnumerable<AstNode> Children { get; }
+        public virtual string PrintName => GetType().Name;
+        public virtual IEnumerable<AstNode> Children => [];
     }
-    public class EmptyNode : AstNode
-    {
-        public override string DName => $"{nameof(EmptyNode)}";
-        public override IEnumerable<AstNode> Children => [];
-    }
+    public class EmptyNode : AstNode;
     public class ProgramNode(List<AstNode> nodes) : AstNode
     {
         public List<AstNode> Nodes { get; } = nodes;
-        public override string DName => $"{nameof(ProgramNode)}";
-        public override IEnumerable<AstNode> Children
-        {
-            get
-            {
-                foreach (AstNode node in Nodes) yield return node;
-            }
-        }
+        public override IEnumerable<AstNode> Children => Nodes;
     }
 
     public abstract class Expression : AstNode;
@@ -34,28 +23,25 @@ namespace Best_language.src.front
     {
         public ulong Value { get; } = value;
         public TypeSymbol Type { get; } = type;
-        public override string DName => $"{nameof(NumberExpression)}: {Value} ({Type})";
-        public override IEnumerable<AstNode> Children => [];
+        public override string PrintName => $"{GetType().Name}: {Value} ({Type})";
     }
     public class DoubleExpression(double value, TypeSymbol type) : Expression
     {
         public double Value { get; } = value;
         public TypeSymbol Type { get; } = type;
-        public override string DName => $"{nameof(DoubleExpression)}: {Value} ({Type})";
-        public override IEnumerable<AstNode> Children => [];
+        public override string PrintName => $"{GetType().Name}: {Value} ({Type})";
     }
     public class VariableExpression(string name) : Expression
     {
         public string Name { get; } = name;
-        public override string DName => $"{nameof(VariableExpression)}: {Name}";
-        public override IEnumerable<AstNode> Children => [];
+        public override string PrintName => $"{GetType().Name}: {Name}";
     }
     public class MemberAccessExpression(Expression target, string memberName) : Expression
     {
         public Expression Target { get; } = target;
         public string Name { get; } = memberName;
 
-        public override string DName => $"{nameof(MemberAccessExpression)}: target.{Name}";
+        public override string PrintName => $"{GetType().Name}: target.{Name}";
         public override IEnumerable<AstNode> Children => [Target];
     }
     public class ArrayAccessExpression(string target, Expression idx) : Expression
@@ -63,17 +49,17 @@ namespace Best_language.src.front
         public string Target { get; } = target;
         public Expression Idx { get; } = idx;
 
-        public override string DName => $"{nameof(ArrayAccessExpression)}: {Target}";
+        public override string PrintName => $"{GetType().Name}: {Target}";
         public override IEnumerable<AstNode> Children => [Idx];
     }
-    public class MemberAssignment(Expression target, string memberName, Operation? op, Expression initializer) : Expression
+    public class MemberAssignment(Expression target, string memberName, Operation? op, Expression initializer) : Statement
     {
         public Expression Target { get; } = target;
         public string Name { get; } = memberName;
         public Operation? Op { get; } = op;
         public Expression Initializer { get; } = initializer;
 
-        public override string DName => $"{nameof(MemberAssignment)}: target.{Name} {Op}";
+        public override string PrintName => $"{GetType().Name}: target.{Name} {Op}";
         public override IEnumerable<AstNode> Children => [Target, Initializer];
     }
     public class ArrayAssignment(Expression left, Expression idx, Operation? op, Expression right) : Expression
@@ -84,43 +70,29 @@ namespace Best_language.src.front
         public Operation? Op = op;
         public Expression Right { get; } = right;
 
-        public override string DName => $"{nameof(ArrayAssignment)}: {Op}";
+        public override string PrintName => $"{GetType().Name}: {Op}";
         public override IEnumerable<AstNode> Children => [Idx, Right, Left];
     }
     public class BoolExpression(bool value, TypeSymbol type) : Expression
     {
         public bool Value { get; } = value;
         public TypeSymbol Type { get; } = type;
-        public override string DName => $"{nameof(BoolExpression)}: {Value}";
-        public override IEnumerable<AstNode> Children => [];
+        public override string PrintName => $"{GetType().Name}: {Value}";
     }
     public class BinaryExpression(Expression left, Operation op, Expression right) : Expression
     {
         public Expression Left { get; } = left;
         public Operation Op { get; } = op;
         public Expression Right { get; } = right;
-        public override string DName => $"{nameof(BinaryExpression)}: {Op}";
-        public override IEnumerable<AstNode> Children
-        {
-            get
-            {
-                yield return Left;
-                yield return Right;
-            }
-        }
+        public override string PrintName => $"{GetType().Name}: {Op}";
+        public override IEnumerable<AstNode> Children => [Left, Right];
     }
     public class UnaryExpression(Operation op, Expression right) : Expression
     {
         public Operation Op { get; } = op;
         public Expression Right { get; } = right;
-        public override string DName => $"{nameof(UnaryExpression)}: {Op}";
-        public override IEnumerable<AstNode> Children
-        {
-            get
-            {
-                yield return Right;
-            }
-        }
+        public override string PrintName => $"{GetType().Name}: {Op}";
+        public override IEnumerable<AstNode> Children => [Right];
     }
 
     public abstract class Statement : AstNode;
@@ -128,41 +100,22 @@ namespace Best_language.src.front
     {
         public EnumTypeSymbol Type { get; } = type;
         public List<VariableDeclaration> Variables { get; } = variables;
-        public override string DName => $"{nameof(EnumDeclaration)} ({Type})";
-        public override IEnumerable<AstNode> Children
-        {
-            get
-            {
-                foreach (var variable in Variables) yield return variable;
-            }
-        }
+        public override string PrintName => $"{GetType().Name} ({Type})";
+        public override IEnumerable<AstNode> Children => Variables;
     }
     public class StructDeclaration(StructTypeSymbol type, List<string> names) : Statement
     {
         public StructTypeSymbol Type { get; } = type;
         public List<string> Names { get; } = names;
         public List<VariableDeclaration>? Variables { get; set; }
-        public override string DName => $"{nameof(StructDeclaration)} ({Type})";
-        public override IEnumerable<AstNode> Children
-        {
-            get
-            {
-                if (Variables is not null)
-                    foreach (var variable in Variables) yield return variable;
-            }
-        }
+        public override string PrintName => $"{GetType().Name} ({Type})";
+        public override IEnumerable<AstNode> Children => Variables ?? [];
     }
     public class VariableDeclarations : Statement
     {
         public List<VariableDeclaration> Variables { get; set; } = new();
-        public override string DName => $"{nameof(VariableDeclarations)}";
-        public override IEnumerable<AstNode> Children
-        {
-            get
-            {
-                 foreach(var variable in Variables) yield return variable;
-            }
-        }
+        public override string PrintName => $"{GetType().Name}";
+        public override IEnumerable<AstNode> Children => Variables;
     }
     public class VariableDeclaration(string name, TypeSymbol type, Expression? initializer = null) : Statement
     {
@@ -170,21 +123,15 @@ namespace Best_language.src.front
         public Expression? Initializer { get; } = initializer;
 
         public TypeSymbol Type { get; } = type;
-        public override string DName => $"{nameof(VariableDeclaration)}: {Name} ({Type})";
-        public override IEnumerable<AstNode> Children
-        {
-            get
-            {
-                if (Initializer is not null) yield return Initializer;
-            }
-        }
+        public override string PrintName => $"{GetType().Name}: {Name} ({Type})";
+        public override IEnumerable<AstNode> Children => Initializer is { } t ? [t] : [];
     }
     public class AssignmentStatement(Expression left, Operation? op, Expression right) : Statement
     {
         public Expression Left { get; } = left;
         public Operation? Op = op;
         public Expression Right { get; } = right;
-        public override string DName => $"{nameof(AssignmentStatement)}: ({Op})";
+        public override string PrintName => $"{GetType().Name}: ({Op})";
         public override IEnumerable<AstNode> Children => [Left, Right];
     }
 
@@ -192,61 +139,31 @@ namespace Best_language.src.front
     {
         public List<Expression> Right { get; } = right;
 
-        public override string DName => $"{nameof(ArrayExpression)}";
-        public override IEnumerable<AstNode> Children
-        {
-            get
-            {
-                foreach (var ex in Right) yield return ex;
-            }
-        }
+
+        public override IEnumerable<AstNode> Children => Right;
     }
     public class ExpressionStatement(Expression right) : Statement
     {
         public Expression Right { get; } = right;
-        public override string DName => $"{nameof(ExpressionStatement)}";
-        public override IEnumerable<AstNode> Children
-        {
-            get
-            {
-                if (Right is not null) yield return Right;
-            }
-        }
+        public override IEnumerable<AstNode> Children => [Right];
     }
     public class GotoStatement(string to) : Statement
     {
         public string To { get; } = to;
-        public override string DName => $"{nameof(GotoStatement)}: {To}";
-        public override IEnumerable<AstNode> Children => [];
+        public override string PrintName => $"{GetType().Name}: {To}";
     }
     public class ReturnStatement(Expression? expression = null) : Statement
     {
         public Expression? Expression { get; } = expression;
-        public override string DName => $"{nameof(ReturnStatement)}";
-        public override IEnumerable<AstNode> Children
-        {
-            get
-            {
-                if (Expression is not null) yield return Expression;
-            }
-        }
+        public override IEnumerable<AstNode> Children  => Expression is { } t ? [t] : [];
     }
-    public class BreakStatement() : Statement
-    {
-        public override string DName => $"{nameof(BreakStatement)}";
-        public override IEnumerable<AstNode> Children => [];
-    }
-    public class ContinueStatement() : Statement
-    {
-        public override string DName => $"{nameof(ContinueStatement)}";
-        public override IEnumerable<AstNode> Children => [];
-    }
+    public class BreakStatement() : Statement;
+    public class ContinueStatement() : Statement;
 
     public class GotoDeclaration(string name) : Statement
     {
         public string Name { get; } = name;
-        public override string DName => $"{nameof(GotoDeclaration)}: {Name}";
-        public override IEnumerable<AstNode> Children => [];
+        public override string PrintName => $"{GetType().Name}: {Name}";
     }
     public class IfDeclaration(Expression expression, List<AstNode> codeBlock) : Statement
     {
@@ -256,7 +173,6 @@ namespace Best_language.src.front
         public List<ElseIfDeclaration>? ElseIfs { get; set; }
         public ElseDeclaration? Else { get; set; }
 
-        public override string DName => $"{nameof(IfDeclaration)}:";
         public override IEnumerable<AstNode> Children
         {
             get
@@ -273,31 +189,14 @@ namespace Best_language.src.front
     {
         public Expression Expression { get; } = expression;
         public List<CaseDeclaration> Cases { get; } = cases;
-        public override string DName => $"{nameof(SwitchDeclaration)}:";
-        public override IEnumerable<AstNode> Children
-        {
-            get
-            {
-                yield return Expression;
-                foreach (AstNode node in Cases) yield return node;
-            }
-        }
-
+        public override IEnumerable<AstNode> Children => Cases.Concat<AstNode>([Expression]);
     }
     public class CaseDeclaration(Expression? expression, List<AstNode> codeBlock, bool isDefault = false) : Statement
     {
         public bool IsDefault { get; set; } = isDefault;
         public Expression? Expression { get; } = expression;
         public List<AstNode> Statements { get; } = codeBlock;
-        public override string DName => $"{nameof(CaseDeclaration)}:";
-        public override IEnumerable<AstNode> Children
-        {
-            get
-            {
-                if (Expression is not null) yield return Expression;
-                foreach (AstNode node in Statements) yield return node;
-            }
-        }
+        public override IEnumerable<AstNode> Children => Statements.Concat<AstNode>(Expression is { } t ? [t] : []);
     }
     public class FuncDeclaration(FunctionTypeSymbol type, string name, List<VariableDeclaration> @params, List<AstNode> codeBlock) : Statement
     {
@@ -306,23 +205,13 @@ namespace Best_language.src.front
         public List<AstNode> CodeBlock { get; } = codeBlock;
         public List<VariableDeclaration> Params { get; } = @params;
 
-        public override string DName => $"{GetType().Name}:";
-        public override IEnumerable<AstNode> Children
-        {
-            get
-            {
-                foreach (AstNode node in Params) yield return node;
-                foreach (AstNode node in CodeBlock) yield return node;
-            }
-        }
-
+        public override IEnumerable<AstNode> Children => CodeBlock.Concat<AstNode>(Params);
     }
     public class FuncExpression(string name, List<Expression> @params) : Expression
     {
         public string Name { get; } = name;
         public List<Expression> Params { get; } = @params;
 
-        public override string DName => $"{GetType().Name}:";
         public override IEnumerable<AstNode> Children => Params;
 
     }
@@ -330,42 +219,22 @@ namespace Best_language.src.front
     {
         public Expression Expression { get; } = expression;
         public List<AstNode> CodeBlock { get; } = codeBlock;
-        public override string DName => $"{GetType().Name}:";
-        public override IEnumerable<AstNode> Children
-        {
-            get
-            {
-                yield return Expression;
-                foreach (AstNode node in CodeBlock) yield return node;
-            }
-        }
+
+        public override IEnumerable<AstNode> Children => CodeBlock.Concat<AstNode>([Expression]);
     }
     public class ElseDeclaration : Statement
     {
         public List<AstNode> CodeBlock { get; } = new();
-        public override string DName => $"{GetType().Name}:";
-        public override IEnumerable<AstNode> Children
-        {
-            get
-            {
-                foreach (AstNode node in CodeBlock ?? []) yield return node;
-            }
-        }
+
+        public override IEnumerable<AstNode> Children => CodeBlock;
     }
     public class WhileDeclaration(Expression expression, List<AstNode> codeBlock, bool isDoWhile = false) : Statement
     {
         public List<AstNode> CodeBlock { get; } = codeBlock;
         public Expression Expression { get; } = expression;
         public bool IsDoWhile { get; } = isDoWhile;
-        public override string DName => $"{GetType().Name}:";
-        public override IEnumerable<AstNode> Children
-        {
-            get
-            {
-                yield return Expression;
-                foreach (AstNode node in CodeBlock ?? []) yield return node;
-            }
-        }
+
+        public override IEnumerable<AstNode> Children => CodeBlock.Concat<AstNode>([Expression]);
     }
     public class ForDeclaration(AstNode? initializer, Expression? expression, Expression? step, List<AstNode> codeBlock) : Statement
     {
@@ -373,7 +242,7 @@ namespace Best_language.src.front
         public AstNode? Initializer { get; } = initializer;
         public Expression? Expression { get; } = expression;
         public Expression? Step { get; } = step;
-        public override string DName => $"{GetType().Name}:";
+
         public override IEnumerable<AstNode> Children
         {
             get
@@ -477,9 +346,7 @@ namespace Best_language.src.front
 
     public enum NameKind
     {
-        TypeDef,
-        Variable,
-        Enum,
+        TypeDef, Variable, Enum,
     }
 
     public static class AstPrinter
@@ -488,7 +355,7 @@ namespace Best_language.src.front
         {
             Console.Write(indent);
             Console.Write(last ? "└── " : "├── ");
-            Console.WriteLine(node.DName);
+            Console.WriteLine(node.PrintName);
 
             indent += last ? "    " : "│   ";
 
@@ -512,51 +379,31 @@ namespace Best_language.src.front
     {
         // do not move
 
-        PlusEquals,
-        MinusEquals,
-        MultiplyEquals,
+        PlusEquals, MinusEquals, MultiplyEquals,
+        BitAndEquals, BitOrEquals, BitXorEquals,
 
-        BitAndEquals,
-        BitOrEquals,
-        BitXorEquals,
-        Plus,
-        Minus,
-        Multiply,
-        BitXor,
-        BitAnd,
-        BitOr,
+        Plus, Minus, Multiply,
+        BitXor, BitAnd, BitOr,
 
-        DivideEquals,
-        Divide,
+        DivideEquals, Divide,
         //
-        Dereference,
-        ReferenceOf,
-        DivisionRemEquals,
-        DivisionRem,
+        Dereference, ReferenceOf,
+        DivisionRemEquals, DivisionRem,
 
-        PlusPlusRight,
-        PlusPlusLeft,
-        MinusMinusRight,
-        MinusMinusLeft,
+        PlusPlusRight, PlusPlusLeft,
+        MinusMinusRight, MinusMinusLeft,
 
         // do not move
-        LessThan,
-        LessThanOrEqual,
-        GreaterThan,
-        GreaterThanOrEqual,
-        EqualsEquals,
-        NotEquals,
+        LessThan, LessThanOrEqual,
+        GreaterThan, GreaterThanOrEqual,
+        EqualsEquals, NotEquals,
         //
 
         BitNot,
 
-        RightShift,
-        LeftShift,
-        RightShiftEquals,
-        LeftShiftEquals,
+        RightShift, LeftShift,
+        RightShiftEquals, LeftShiftEquals,
 
-        And,
-        Or,
-        Not
+        And, Or, Not
     }
 }
