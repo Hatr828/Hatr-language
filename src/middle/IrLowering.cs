@@ -10,7 +10,6 @@ namespace Best_language.src.middle
         private int _nextLebelId;
         private TypeTable _typeTable = null!;
         private IrProgram _currentProgram = new();
-
         private Dictionary<VariableSymbol, IrValue> _variables = new();
         private Stack<string> _breaks = new();
         private Stack<string> _continues = new();
@@ -66,16 +65,20 @@ namespace Best_language.src.middle
                         return;
                     }
                 case BoundWhileDeclaration @while:
-                        LowerWhile(@while);
-                        return;
+                    LowerWhile(@while);
+                    return;
 
                 case BoundForDeclaration @for:
-                        LowerFor(@for);
-                        return;
+                    LowerFor(@for);
+                    return;
 
                 case BoundIfDeclaration @if:
-                        LowerIf(@if);
-                        return;
+                    LowerIf(@if);
+                    return;
+
+                case BoundFuncDeclaration func:
+                    LowerFunc(func);
+                    return;
 
                 case BoundSwitchDeclaration @switch:
                     string endLabel = NewLabelName("switch_end");
@@ -116,7 +119,6 @@ namespace Best_language.src.middle
                         }
                     }
 
-
                     _breaks.Pop();
 
                     Emit(new IrLabel(endLabel));
@@ -153,6 +155,13 @@ namespace Best_language.src.middle
                 case BoundContinueStatement:
                     Emit(new IrJump(_continues.Peek()));
                     return;
+                case BoundReturnStatement rt:
+                    {
+                        IrValue? res = null;
+                        if (rt.Expression is not null) res = LowerExpression(rt.Expression);
+                        Emit(new IrRet(res));
+                        return;
+                    }
                 case BoundGotoDeclaration @goto:
                     Emit(new IrLabel("user_" + @goto.Id)); return;
                 case BoundGotoStatement @goto:
@@ -167,14 +176,14 @@ namespace Best_language.src.middle
                             Irs.Add(LowerExpression(st.Right[i]));
                         }
 
-                        var res = ResolveVariable(assignment.Variable);
+                        var res = LowerExpression(assignment.Left);
 
                         Emit(new IrArray(res, type.Size, Irs));
                         return;
                     }
                 case BoundAssignmentStatement assignment:
                     {
-                        var res = ResolveVariable(assignment.Variable);
+                        var res = LowerExpression(assignment.Left);
                         var source = LowerExpression(assignment.Right);
 
                         Emit(new IrVariable(res, source));
@@ -182,16 +191,7 @@ namespace Best_language.src.middle
                     }
                 case BoundArrayAssignment assignment:
                     {
-                        TypeSymbol type = assignment.Variable.Type switch
-                        {
-                            ArrayTypeSymbol array => array.Type,
-                            PointerTypeSymbol pointer => pointer.ElementType,
-                            _ => throw new ArgumentException("Expected arr or pointer")
-                        };
-
-                        var target = new BoundArrayAccessExpression(assignment.Variable, assignment.Right, type);
-
-                        var (address, offset) = LowerAddress(target);
+                        var (address, offset) = LowerAddress(assignment.Left);
                         var right = LowerExpression(assignment.Right);
 
                         Emit(new IrStore(address, offset, right));
@@ -238,6 +238,20 @@ namespace Best_language.src.middle
 
                         return result;
                     }
+                case BoundFuncExpression func:
+                    {
+                        List<IrValue> @params = [];
+                        for (int i = 0; i < func.Params.Count; i++)
+                        {
+                            @params.Add(LowerExpression(func.Params[i])); 
+                        }
+
+                        var res = NewIrValue(func.Type);
+
+                        Emit(new IrCall(func.Name, @params, res));
+
+                        return res;
+                    } 
                 case BoundMemberAccessExpression memberAccess:
                     {
                         var (address, offset) = LowerAddress(memberAccess);
@@ -339,7 +353,7 @@ namespace Best_language.src.middle
         private void LowerWhile(BoundWhileDeclaration @while)
         {
             string whileLabel = NewLabelName("while");
-            string endLabel = NewLabelName("end");
+            string endLabel = NewLabelName("while_end");
 
             _continues.Push(whileLabel);
             _breaks.Push(endLabel);
@@ -358,6 +372,25 @@ namespace Best_language.src.middle
 
             Emit(new IrJump(whileLabel));
             Emit(new IrLabel(endLabel));
+        }
+
+        private void LowerFunc(BoundFuncDeclaration func)
+        {
+            Emit(new IrFunc(func.Name));
+
+            for (int i = 0; i < func.Params.Count; i++)
+            {
+                var param = func.Params[i];
+                var slot = NewIrValue(param.Variable.Type);
+
+                _variables.Add(param.Variable, slot);
+                Emit(new IrParam(slot, i));
+            }
+
+            foreach (var statement in func.CodeBlock)
+                LowerNode(statement);
+
+            Emit(new IrRet());
         }
 
         private void LowerFor(BoundForDeclaration @for)

@@ -61,7 +61,7 @@ namespace Best_language.src.middle
 
             // ArithmeticComparison
             [(Operation.EqualsEquals, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.ArithmeticComparison,
-            [(Operation.EqualsEquals, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.ArithmeticComparison,
+            [(Operation.NotEquals, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.ArithmeticComparison,
             [(Operation.LessThan, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.ArithmeticComparison,
             [(Operation.LessThanOrEqual, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.ArithmeticComparison,
             [(Operation.GreaterThan, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.ArithmeticComparison,
@@ -361,7 +361,15 @@ namespace Best_language.src.middle
 
             return type;
         }
+        private TypeSymbol ResolveArrType(TypeSymbol type)
+        {
+            if (type is PointerTypeSymbol pointer)
+                return _typeTable.GetPointer(ResolveEnumType(pointer.ElementType));
 
+            if (type is ArrayTypeSymbol arr) return _typeTable.GetPointer(arr.Type);
+
+            return type;
+        }
         private TypeSymbol ResolveStructType(TypeSymbol type)
         {
             if (type is PointerTypeSymbol pointer)

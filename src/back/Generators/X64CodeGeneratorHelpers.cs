@@ -316,7 +316,7 @@ namespace Best_language.src.back.Generators
             _constantsFP.Remove(conversion.Left);
         }
 
-        private void Compare(X64Opcode op, X64Register l, X64Register r)
+        private void Compare(X64Opcode op, X64Register l, X64Register r, X64Size resSize)
         {
             Emit(new(X64Opcode.cmp,
                 X64Operand.Reg(l),
@@ -324,9 +324,12 @@ namespace Best_language.src.back.Generators
 
             Emit(new(op, X64Operand.Reg(X64Register.al)));
 
-            Emit(new(X64Opcode.movzx,
-                X64Operand.Reg(l),
-                X64Operand.Reg(X64Register.al)));
+            if (resSize != X64Size.@byte)
+            {
+                Emit(new(X64Opcode.movzx,
+                    X64Operand.Reg(X64Register.eax),
+                    X64Operand.Reg(X64Register.al)));
+            }
         }
         private void CompareFloat(X64Opcode op, bool isFloat)
         {
@@ -407,9 +410,9 @@ namespace Best_language.src.back.Generators
             int size = GetSlotSize(value);
             X64Size x64Size = GetX64Size(size);
 
-            offset += size;
-            _locals.Add(value, (offset, x64Size));
-            return (offset, x64Size);
+            _localOffset += size;
+            _locals.Add(value, (_localOffset, x64Size));
+            return (_localOffset, x64Size);
         }
         private (int, X64Size) GetSlot(IrValue value)
         {
@@ -514,24 +517,62 @@ namespace Best_language.src.back.Generators
             _ => throw new ArgumentException()
         };
 
+        private X64Register GetFloatParamRegister(int idx) => idx switch
+        {
+            1 => X64Register.xmm0,
+            2 => X64Register.xmm1,
+            3 => X64Register.xmm2,
+            4 => X64Register.xmm3,
+            _ => throw new ArgumentException("Expected _idx < 4"),
+        };
+        private X64Register GetIntegerParamRegister(int idx, X64Size size)
+        {
+            ReadOnlySpan<X64Register> registers = size switch
+            {
+                X64Size.@byte => [X64Register.al, X64Register.dl, X64Register.r8b, X64Register.r9b],
+                X64Size.word => [X64Register.cx, X64Register.dx, X64Register.r8w, X64Register.r9w],
+                X64Size.dword => [X64Register.ecx, X64Register.edx, X64Register.r8d, X64Register.r9d],
+                X64Size.qword => [X64Register.rcx, X64Register.rdx, X64Register.r8, X64Register.r9],
+                _ => throw new ArgumentException("Unknown size"),
+            };
+
+            return registers[idx]; 
+        }
+
         private void Emit(X64Instruction instruction)
         {
             _instructions.Add(instruction);
         }
 
-        public void AppendStartFunc()
+        private int AlignUp(int val, int alignment) => checked(val + alignment - 1) & ~(alignment - 1);
+        private void AppendStartFunc()
         {
             Emit(new(X64Opcode.label, X64Operand.Label("start")));
-            Emit(new(X64Opcode.push, X64Operand.Reg(X64Register.rbp)));
-            Emit(new(X64Opcode.mov, X64Operand.Reg(X64Register.rbp), X64Operand.Reg(X64Register.rsp)));
-            Emit(new(X64Opcode.sub, X64Operand.Reg(X64Register.rsp), X64Operand.Imm(X64Size.dword, -1))); // Later should be added stack size by program
-            StackIdx = _instructions.Count - 1;
-        }
-        public void AppendEndFunc()
-        {
-            Emit(new(X64Opcode.xor, X64Operand.Reg(X64Register.ecx), X64Operand.Reg(X64Register.ecx)));
-            Emit(new(X64Opcode.sub, X64Operand.Reg(X64Register.rsp), X64Operand.Imm(X64Size.@byte, 32)));
+            Emit(new(X64Opcode.sub, X64Operand.Reg(X64Register.rsp), X64Operand.Imm(X64Size.dword, 40)));
+
+            Emit(new(X64Opcode.call, X64Operand.Label("main")));
+
+            Emit(new(X64Opcode.mov, X64Operand.Reg(X64Register.ecx), X64Operand.Reg(X64Register.eax)));
+
             Emit(new(X64Opcode.call, X64Operand.Symbol("ExitProcess")));
+        }
+
+        private void FuncEpilogue()
+        {
+            int offset = AlignUp(_localOffset, 16);
+
+            _instructions[_stackFixup].Operands[1] = X64Operand.Imm(X64Size.@byte, offset);
+
+            Emit(new(X64Opcode.label, X64Operand.Label(_funcEpilogue)));
+
+            if (offset > 0)
+                Emit(new(X64Opcode.add,
+                  X64Operand.Reg(X64Register.rsp),
+                  X64Operand.Imm(X64Size.dword, offset)));
+
+            Emit(new(X64Opcode.pop, X64Operand.Reg(X64Register.rbp)));
+
+            Emit(new(X64Opcode.ret));
         }
     }
 }

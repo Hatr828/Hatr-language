@@ -22,7 +22,7 @@
         // 0 operands
         cqo, ret,
         // 1 operands
-        push,
+        push, pop,
         not, neg,
         idiv,
         jnz, jz, jmp,

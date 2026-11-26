@@ -181,7 +181,8 @@ namespace Best_language.src.front
                     'r' => '\r',
                     '\\' => '\\',
                     '\'' => '\'',
-                    _ => throw new ArgumentException("Unknown sequence")
+                    '0' => '\0',
+                    _ => throw new ArgumentException($"Unknown sequence: {_code[_idx - 1]}")
                 }; 
             }
             else return _code[startIdx];

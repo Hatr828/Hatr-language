@@ -66,36 +66,6 @@ namespace Best_language.src.middle
             }
         }
     }
-    public class BoundParamsDeclaration(TypeSymbol type, string name, BoundExpression? initializer = null) : BoundStatement
-    {
-        public TypeSymbol Type { get; } = type;
-        public string Name { get; } = name;
-        public BoundExpression? Initializer { get; } = initializer;
-        public override string DName => $"{nameof(BoundParamsDeclaration)}: {Name} ({Type})";
-        public override IEnumerable<BoundNode> Children
-        {
-            get
-            {
-                if (Initializer is not null) yield return Initializer;
-            }
-        }
-    }
-    public class BoundFunction(TypeSymbol type, string name, List<BoundParamsDeclaration> @params,  List<BoundStatement> statements) : BoundStatement
-    {
-        public TypeSymbol Type { get; } = type;
-        public string Name { get; } = name;
-        public List<BoundStatement> Statements { get; } = statements;
-        public List<BoundParamsDeclaration> Params { get; } = @params;
-        public override string DName => $"{nameof(BoundFunction)}: {Name} ({Type})";
-        public override IEnumerable<BoundNode> Children
-        {
-            get
-            {
-                foreach (BoundNode node in Params) yield return node;
-                foreach (BoundNode node in Statements) yield return node;
-            }
-        }
-    }
     public class BoundVariablesDeclaration : BoundStatement
     {
         public List<BoundVariableDeclaration> variables { get; } = new();
@@ -121,12 +91,12 @@ namespace Best_language.src.middle
             }
         }
     }
-    public class BoundAssignmentStatement(VariableSymbol variable, BoundExpression right) : BoundStatement
+    public class BoundAssignmentStatement(BoundExpression left, BoundExpression right) : BoundStatement
     {
-        public VariableSymbol Variable { get; } = variable;
+        public BoundExpression Left { get; } = left;
         public BoundExpression Right { get; } = right;
-        public override string DName => $"{nameof(BoundAssignmentStatement)}: {Variable.Name}";
-        public override IEnumerable<BoundNode> Children => [Right];
+        public override string DName => $"{nameof(BoundAssignmentStatement)}";
+        public override IEnumerable<BoundNode> Children => [Right, Left];
     }
     public class BoundAssignmentMemberStatement(BoundExpression target, FieldSymbol field, BoundExpression right) : BoundStatement
     {
@@ -240,15 +210,15 @@ namespace Best_language.src.middle
             }
         }
     }
-    public class BoundReturnStatement(BoundExpression expression) : BoundStatement 
+    public class BoundReturnStatement(BoundExpression? expression = null) : BoundStatement 
     {
-        public BoundExpression Expression { get; } = expression;
+        public BoundExpression? Expression { get; } = expression;
         public override string DName => $"{nameof(BoundReturnStatement)}";
         public override IEnumerable<BoundNode> Children
         {
             get
             {
-                yield return Expression;
+                if (Expression is not null) yield return Expression;
             }
         }
     }
@@ -334,15 +304,15 @@ namespace Best_language.src.middle
         public override string DName => $"{nameof(BoundArrayAccessExpression)}: {Variable}";
         public override IEnumerable<BoundNode> Children => [Idx];
     }
-    public class BoundArrayAssignment(VariableSymbol variable, BoundExpression idx, BoundExpression right) : BoundStatement
+    public class BoundArrayAssignment(BoundExpression left, BoundExpression idx, BoundExpression right) : BoundStatement
     {
-        public VariableSymbol Variable { get; } = variable;
+        public BoundExpression Left { get; } = left;
         public BoundExpression Idx { get; } = idx;
 
         public BoundExpression Right { get; } = right;
 
-        public override string DName => $"{nameof(BoundArrayAssignment)}: {Variable}";
-        public override IEnumerable<BoundNode> Children => [Idx, Right];
+        public override string DName => $"{nameof(BoundArrayAssignment)}";
+        public override IEnumerable<BoundNode> Children => [Idx, Right, Left];
     }
     public class FieldSymbol(string name, TypeSymbol type, int offset)
     {
@@ -386,6 +356,33 @@ namespace Best_language.src.middle
             }
         }
     }
+    public class BoundFuncDeclaration(FunctionTypeSymbol type, string name, List<BoundVariableDeclaration> @params, List<BoundStatement> codeBlock) : BoundStatement
+    {
+        public FunctionTypeSymbol Type { get; } = type;
+        public string Name { get; } = name;
+        public List<BoundStatement> CodeBlock { get; } = codeBlock;
+        public List<BoundVariableDeclaration> Params { get; } = @params;
+
+        public override string DName => $"{GetType().Name}:";
+        public override IEnumerable<BoundNode> Children
+        {
+            get
+            {
+                foreach (BoundNode node in Params) yield return node;
+                foreach (BoundNode node in CodeBlock) yield return node;
+            }
+        }
+
+    }
+    public class BoundFuncExpression(string name, List<BoundExpression> @params, FunctionTypeSymbol type) : BoundExpression(type.ReturnType)
+    {
+        public string Name { get; } = name;
+        public List<BoundExpression> Params { get; } = @params;
+
+        public override string DName => $"{GetType().Name}:";
+        public override IEnumerable<BoundNode> Children => Params;
+
+    }
 
     public class VariableSymbol(string name, TypeSymbol type)
     {
@@ -398,6 +395,7 @@ namespace Best_language.src.middle
         private readonly List<Dictionary<string, VariableSymbol>> _userVariables = new();
         private readonly List<Dictionary<string, (ulong, IntegerTypeSymbol)>> _enums = new();
         private readonly List<Dictionary<string, EnumTypeSymbol>> _userEnums = new();
+        private readonly Dictionary<string, FunctionTypeSymbol> _userFunctions = new();
         private readonly List<Dictionary<string, (StructTypeSymbol, List<string>)>> _userStructs = new();
 
         public bool TryAddVariable(VariableSymbol variable)
@@ -415,6 +413,10 @@ namespace Best_language.src.middle
         public bool TryAddStruct(StructTypeSymbol type, List<string> names)
         {
             return _userStructs[^1].TryAdd(type.Name, (type, names));
+        }
+        public bool TryAddFunction(string name, FunctionTypeSymbol type)
+        {
+            return _userFunctions.TryAdd(name, type);
         }
 
         public bool TryGetVariable(string name, out VariableSymbol variable)
@@ -465,6 +467,7 @@ namespace Best_language.src.middle
             val = (null!, null!);
             return false;
         }
+        public bool TryGetFunction(string name, out FunctionTypeSymbol type) =>  _userFunctions.TryGetValue(name, out type!);
 
         public void AddScope()
         {

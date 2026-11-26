@@ -50,6 +50,14 @@ namespace Best_language.src.middle
 
                             continue;
                         }
+                    case FuncDeclaration func:
+                        {
+                            PreProcessAst(func.CodeBlock);
+
+                            if (!_scopes.TryAddFunction(func.Name, func.Type)) throw new ArgumentException("Function already exist");
+
+                            continue;
+                        }
                     case SwitchDeclaration @switch:
                         {
                             foreach (var @case in @switch.Cases ?? [])
@@ -209,20 +217,21 @@ namespace Best_language.src.middle
                 case FuncDeclaration func:
                     {
                         List<BoundStatement> codeBlock = new();
-                        List<BoundParamsDeclaration> @params = new();
+                        List<BoundVariableDeclaration> @params = new();
+
                         _scopes.AddScope();
                         foreach (var param in func.Params)
                         {
-                            if(param.Initializer is not null)
-                                @params.Add(new(param.Type, param.Name, BindExpression(param.Initializer)));
-                            else
-                                @params.Add(new(param.Type, param.Name));
-
-                            AddVariableToScope(new VariableSymbol(param.Name, param.Type));
+                            if (param.Initializer is not null) throw new ArgumentException("Cannot have function with default params");
+                            @params.Add((BoundVariableDeclaration)BindStatement(param));
                         }
+
                         foreach (var statement in func.CodeBlock) codeBlock.Add(BindStatement(statement));
                         _scopes.RemoveScope();
-                        return new BoundFunction(func.ReturnType, func.Name, @params, codeBlock);
+
+                        _scopes.TryGetFunction(func.Name, out var type);
+
+                        return new BoundFuncDeclaration(type, func.Name, @params, codeBlock);
                     }                             
                 case ForDeclaration @for:
                     {
@@ -256,7 +265,10 @@ namespace Best_language.src.middle
                     }
                 case ReturnStatement st:
                     {
-                        return new BoundReturnStatement(BindExpression(st.Expression!));
+                        if (st.Expression is not null)
+                            return new BoundReturnStatement(BindExpression(st.Expression));
+                        else
+                            return new BoundReturnStatement();
                     }
                 case BreakStatement:
                     {
@@ -291,14 +303,12 @@ namespace Best_language.src.middle
 
                         if (assignment.Op is Operation op)
                         {
-                            ex = BindExpression(new BinaryExpression(new VariableExpression(assignment.Name), 
+                            ex = BindExpression(new BinaryExpression(assignment.Left, 
                                 GetOperationFromCompoundOperation(op), assignment.Right));
                         }
                         else ex = BindExpression(assignment.Right);
 
-                        GetVariable(assignment.Name, out var variable);
-
-                        return new BoundAssignmentStatement(variable, ex);
+                        return new BoundAssignmentStatement(BindExpression(assignment.Left), ex);
                     }
                 case ArrayAssignment assignment:
                     {
@@ -306,19 +316,18 @@ namespace Best_language.src.middle
 
                         if (assignment.Op is Operation op)
                         {
-                            ex = BindExpression(new BinaryExpression(new VariableExpression(assignment.Target),
+                            ex = BindExpression(new BinaryExpression(assignment.Left,
                                 GetOperationFromCompoundOperation(op), assignment.Right));
                         }
                         else ex = BindExpression(assignment.Right);
 
-                        GetVariable(assignment.Target, out var variable);
-
                         BoundExpression idx = BindExpression(assignment.Idx);
+                        BoundExpression left = BindExpression(assignment.Left);
 
                         if (idx.Type is not IntegerTypeSymbol) throw new ArgumentException("Expected integer");
-                        if (variable.Type is not ArrayTypeSymbol arrType) throw new ArgumentException("Expected array");
+                        if (left.Type is not ArrayTypeSymbol arrType) throw new ArgumentException("Expected array");
 
-                        return new BoundArrayAssignment(variable, ex, idx);
+                        return new BoundArrayAssignment(left, ex, idx);
                     }
                 case UnaryExpression unary:
                     {
@@ -362,11 +371,33 @@ namespace Best_language.src.middle
 
                         _scopes.TryGetVariable(member.Target, out var variable);
 
-                        if (variable.Type is not ArrayTypeSymbol tmp) throw new ArgumentException("Expected array type");
-
                         if (idx.Type is not IntegerTypeSymbol) throw new ArgumentException("Expected integer");
 
-                        return new BoundArrayAccessExpression(variable, idx, tmp.Type);
+                        if (variable.Type is ArrayTypeSymbol tmp)
+                            return new BoundArrayAccessExpression(variable, idx, tmp.Type);
+                        else if (variable.Type is PointerTypeSymbol pt)
+                            return new BoundArrayAccessExpression(variable, idx, pt.ElementType);
+                        else throw new ArgumentException("Expected array or pointer");
+                    }
+                case FuncExpression func:
+                    {
+                        if (constantOnly) throw new ArgumentException("Expected constants only");
+                        if (!_scopes.TryGetFunction(func.Name, out var type)) throw new ArgumentException("Unknown function");
+
+                        List<BoundExpression> @params = new();
+
+                        foreach (var param in func.Params)
+                        {
+                            var ex = BindExpression(param);
+                            if (ex.Type is ArrayTypeSymbol st)
+                            {
+                                if (ex is not BoundVariableExpression variable) throw new ArgumentException("Expected variable");
+                                ex = new BoundUnaryExpression(_typeTable.GetPointer(st.Type), Operation.ReferenceOf, ex);
+                            }
+                            @params.Add(ex);
+                        }
+
+                        return new BoundFuncExpression(func.Name, @params, type);
                     }
                 case VariableExpression variable:
                     {

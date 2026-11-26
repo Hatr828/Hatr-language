@@ -1,9 +1,11 @@
 using Best_language.src.back.Instructions;
 using Best_language.src.front;
 using Best_language.src.middle;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Win32;
 using System.Drawing;
 using System.Numerics;
+using System.Numerics.Colors;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
@@ -18,26 +20,26 @@ namespace Best_language.src.back.Generators
 
         private readonly Dictionary<IrValue, (ulong, TypeSymbol)> _constants = new();
         private readonly Dictionary<IrValue, (double, TypeSymbol)> _constantsFP = new();
-
-        private int offset;
+        private int _stackFixup;
+        private string _funcEpilogue;
+        private int _localOffset;
 
         private List<IrInstruction>? _irInstructions;
         private List<X64Instruction> _instructions = new();
 
-        private int idx;
-        private int StackIdx;
+        private int _idx;
 
         public List<X64Instruction> GenerateInstructions()
         {
-            idx = 0;
+            _idx = 0;
             _instructions = new();
             _irInstructions = _irProgram.Instructions;
 
             AppendStartFunc();
 
-            while (idx < _irInstructions.Count)
+            while (_idx < _irInstructions.Count)
             {
-                switch (_irInstructions[idx++])
+                switch (_irInstructions[_idx++])
                 {
                     case IrBinary binary:
                         {
@@ -89,22 +91,145 @@ namespace Best_language.src.back.Generators
 
                             break;
                         }
+                    case IrRet ret:
+                        {
+                            if (ret.Res is IrValue res)
+                            {
+                                var reg = res.Type is FloatTypeSymbol ? X64Register.xmm0 : GetRegisterSame(res.Type);
+
+                                LoadValue(res, reg);
+                            }
+
+                            Emit(new(X64Opcode.jmp, X64Operand.Label(_funcEpilogue!)));
+                            break;
+                        }
+                    case IrFunc func:
+                        {
+                            if (_funcEpilogue is not null)
+                            {
+                                FuncEpilogue();
+                            }
+
+                            _localOffset = 0;
+                            _locals.Clear();
+                            _funcEpilogue = func.Name + "_epilogue";
+
+                            Emit(new(X64Opcode.label, X64Operand.Label(func.Name)));
+
+                            Emit(new(X64Opcode.push, X64Operand.Reg(X64Register.rbp)));
+
+                            Emit(new(X64Opcode.mov,
+                                X64Operand.Reg(X64Register.rbp),
+                                X64Operand.Reg(X64Register.rsp)));
+
+
+                            _stackFixup = _instructions.Count;
+
+                            Emit(new(X64Opcode.sub,
+                                X64Operand.Reg(X64Register.rsp),
+                                X64Operand.Imm(X64Size.dword, 0)));
+
+                            break;
+                        }
+                    case IrCall call:
+                        {
+                            int count = call.Params.Count;
+                            int stackSize = AlignUp(32 + Math.Max(0, count - 4) * 8, 16);
+
+                            Emit(new(X64Opcode.sub,
+                                X64Operand.Reg(X64Register.rsp),
+                                X64Operand.Imm(X64Size.dword, stackSize)));
+
+                            for (int i = 4; i < count; i++)
+                            {
+                                var arg = call.Params[i];
+                                var size = GetX64Size(arg.Type);
+
+                                bool isFloat = arg.Type is FloatTypeSymbol;
+                                var reg = isFloat ? X64Register.xmm4 : GetRegisterSame(size);
+
+                                var opcode = isFloat ? (size == X64Size.dword ? X64Opcode.movss : X64Opcode.movsd) : X64Opcode.mov;
+
+                                LoadValue(arg, reg);
+
+                                Emit(new(opcode, X64Operand.Mem(X64Register.rsp, 32 + (i - 4) * 8, size),
+                                    X64Operand.Reg(reg)));
+                            }
+
+                            for (int i = 0; i < Math.Min(count, 4); i++)
+                            {
+                                var arg = call.Params[i];
+                                var reg = arg.Type is FloatTypeSymbol ? GetFloatParamRegister(i) : GetIntegerParamRegister(i, GetX64Size(arg.Type));
+
+                                LoadValue(arg, reg);
+                            }
+
+                            Emit(new(X64Opcode.call, X64Operand.Label(call.Name)));
+
+                            Emit(new(X64Opcode.add,
+                                X64Operand.Reg(X64Register.rsp),
+                                X64Operand.Imm(X64Size.dword, stackSize)));
+
+                            if (call.Res.Type is not VoidTypeSymbol)
+                            {
+                                var (slot, size) = GetOrCreateSlot(call.Res);
+                                bool isFloat = call.Res.Type is FloatTypeSymbol;
+                                var reg = isFloat ? X64Register.xmm0 : GetRegisterSame(size);
+                                var opcode = isFloat ? (size == X64Size.dword ? X64Opcode.movss : X64Opcode.movsd) : X64Opcode.mov;
+
+                                Emit(new(opcode, X64Operand.Mem(X64Register.rbp, -slot, size),
+                                    X64Operand.Reg(reg)));
+                            }
+                            break;
+                        }
+                    case IrParam param:
+                        {
+                            var (slot, size) = GetOrCreateSlot(param.Left);
+                            bool isFloat = param.Left.Type is FloatTypeSymbol;
+
+                            var opcode = isFloat ? (size == X64Size.dword ? X64Opcode.movss : X64Opcode.movsd) : X64Opcode.mov;
+
+                            X64Register left;
+
+                            if (param.Idx < 4)
+                            {
+                                left = isFloat ? GetFloatParamRegister(param.Idx) : GetIntegerParamRegister(param.Idx, size); 
+                            }
+                            else
+                            {
+                                int offset = 48 + (param.Idx - 4) * 8;
+
+                                left = isFloat ? X64Register.xmm4 : GetRegisterSame(size);
+
+                                Emit(new(opcode,
+                                    X64Operand.Reg(left),
+                                    X64Operand.Mem(X64Register.rbp, offset, size)));
+                            }
+                            Emit(new(opcode,
+                                X64Operand.Mem(X64Register.rbp, -slot, size),
+                                X64Operand.Reg(left)));
+
+                            break;
+                        }
                     case IrVariable variable:
                         {
-                            if (variable.Right.Type is FloatTypeSymbol)
-                                LoadValue(variable.Right, X64Register.xmm0);
-                            else
-                                LoadValue(variable.Right, GetRegister(variable.Right.Type));
+                            var type = variable.Right.Type;
+                            var size1 = GetX64Size(type);
+                            bool isFloat = type is FloatTypeSymbol;
+
+                            var reg = isFloat ? X64Register.xmm0 : GetRegister(size1);
+                            var opcode = isFloat ? (size1 == X64Size.dword ? X64Opcode.movss : X64Opcode.movsd) : X64Opcode.mov;
+
+                            LoadValue(variable.Right, reg);
 
                             (int slot, X64Size size) = GetOrCreateSlot(variable.Left);
+
                             _constants.Remove(variable.Right);
                             _constantsFP.Remove(variable.Right);
 
-                            bool isFloat = variable.Right.Type is FloatTypeSymbol;
-
-                            Emit(new(isFloat ? X64Opcode.movsd : X64Opcode.mov,
+                            Emit(new(opcode,
                                 X64Operand.Mem(X64Register.rbp, -slot, size),
-                                X64Operand.Reg(isFloat ? X64Register.xmm0 : GetRegister(size))));
+                                X64Operand.Reg(reg)));
                             break;
                         }
                     case IrLoad address:
@@ -219,13 +344,14 @@ namespace Best_language.src.back.Generators
                             break;
                         }
                     default:
-                        throw new ArgumentException("Cannot generate instruction for: " + _irInstructions[idx - 1]);
+                        throw new ArgumentException("Cannot generate instruction for: " + _irInstructions[_idx - 1]);
                 }
             }
 
-            AppendEndFunc();
-
-            _instructions[StackIdx].Operands[1] = X64Operand.Imm(X64Size.dword, ((offset + 15) & ~15));
+            if (_funcEpilogue is not null)
+            {
+                FuncEpilogue();
+            }
 
             return _instructions;
         }
@@ -385,7 +511,7 @@ namespace Best_language.src.back.Generators
                     break;
 
                 case >= Operation.LessThan and <= Operation.NotEquals:
-                    Compare(GetOpcodeFromOperationInt(binary.Op), l, r);
+                    Compare(GetOpcodeFromOperationInt(binary.Op), l, r, GetX64Size(binary.Result.Type));
                     break;
 
                 case Operation.Divide:

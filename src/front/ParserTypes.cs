@@ -76,16 +76,16 @@ namespace Best_language.src.front
         public override string DName => $"{nameof(MemberAssignment)}: target.{Name} {Op}";
         public override IEnumerable<AstNode> Children => [Target, Initializer];
     }
-    public class ArrayAssignment(string target, Expression idx, Operation? op, Expression right) : Expression
+    public class ArrayAssignment(Expression left, Expression idx, Operation? op, Expression right) : Expression
     {
-        public string Target { get; } = target;
+        public Expression Left { get; } = left;
         public Expression Idx { get; } = idx;
 
         public Operation? Op = op;
         public Expression Right { get; } = right;
 
-        public override string DName => $"{nameof(ArrayAssignment)}: {Target} {Op}";
-        public override IEnumerable<AstNode> Children => [Idx, Right];
+        public override string DName => $"{nameof(ArrayAssignment)}: {Op}";
+        public override IEnumerable<AstNode> Children => [Idx, Right, Left];
     }
     public class BoolExpression(bool value, TypeSymbol type) : Expression
     {
@@ -179,20 +179,13 @@ namespace Best_language.src.front
             }
         }
     }
-    public class AssignmentStatement(string name, Operation? op, Expression right) : Statement
+    public class AssignmentStatement(Expression left, Operation? op, Expression right) : Statement
     {
-        public string Name { get; } = name;
-
+        public Expression Left { get; } = left;
         public Operation? Op = op;
         public Expression Right { get; } = right;
-        public override string DName => $"{nameof(AssignmentStatement)}: {Name} ({Op})";
-        public override IEnumerable<AstNode> Children
-        {
-            get
-            {
-                if (Right is not null) yield return Right;
-            }
-        }
+        public override string DName => $"{nameof(AssignmentStatement)}: ({Op})";
+        public override IEnumerable<AstNode> Children => [Left, Right];
     }
 
     public class ArrayExpression(List<Expression> right) : Expression
@@ -306,24 +299,14 @@ namespace Best_language.src.front
             }
         }
     }
-
-    public class ParamDeclaration(string name, TypeSymbol type, Expression? initializer) : Statement
+    public class FuncDeclaration(FunctionTypeSymbol type, string name, List<VariableDeclaration> @params, List<AstNode> codeBlock) : Statement
     {
-        public string Name { get; } = name;
-        public Expression? Initializer { get; } = initializer;
-        public TypeSymbol Type { get; } = type;
-
-        public override string DName => $"{nameof(ParamDeclaration)}: {Name} ({Type})";
-        public override IEnumerable<AstNode> Children => [];
-    }
-    public class FuncDeclaration(TypeSymbol type, string name, List<ParamDeclaration> @params, List<AstNode> codeBlock) : Statement
-    {
-        public TypeSymbol ReturnType { get; } = type;
+        public FunctionTypeSymbol Type { get; } = type;
         public string Name { get; } = name;
         public List<AstNode> CodeBlock { get; } = codeBlock;
-        public List<ParamDeclaration> Params { get; } = @params;
+        public List<VariableDeclaration> Params { get; } = @params;
 
-        public override string DName => $"{nameof(IfDeclaration)}:";
+        public override string DName => $"{GetType().Name}:";
         public override IEnumerable<AstNode> Children
         {
             get
@@ -334,11 +317,20 @@ namespace Best_language.src.front
         }
 
     }
+    public class FuncExpression(string name, List<Expression> @params) : Expression
+    {
+        public string Name { get; } = name;
+        public List<Expression> Params { get; } = @params;
+
+        public override string DName => $"{GetType().Name}:";
+        public override IEnumerable<AstNode> Children => Params;
+
+    }
     public class ElseIfDeclaration(Expression expression, List<AstNode> codeBlock) : Statement
     {
         public Expression Expression { get; } = expression;
         public List<AstNode> CodeBlock { get; } = codeBlock;
-        public override string DName => $"{nameof(ElseIfDeclaration)}:";
+        public override string DName => $"{GetType().Name}:";
         public override IEnumerable<AstNode> Children
         {
             get
@@ -351,7 +343,7 @@ namespace Best_language.src.front
     public class ElseDeclaration : Statement
     {
         public List<AstNode> CodeBlock { get; } = new();
-        public override string DName => $"{nameof(ElseDeclaration)}:";
+        public override string DName => $"{GetType().Name}:";
         public override IEnumerable<AstNode> Children
         {
             get
@@ -365,7 +357,7 @@ namespace Best_language.src.front
         public List<AstNode> CodeBlock { get; } = codeBlock;
         public Expression Expression { get; } = expression;
         public bool IsDoWhile { get; } = isDoWhile;
-        public override string DName => $"{nameof(WhileDeclaration)}:";
+        public override string DName => $"{GetType().Name}:";
         public override IEnumerable<AstNode> Children
         {
             get
@@ -381,7 +373,7 @@ namespace Best_language.src.front
         public AstNode? Initializer { get; } = initializer;
         public Expression? Expression { get; } = expression;
         public Expression? Step { get; } = step;
-        public override string DName => $"{nameof(ForDeclaration)}:";
+        public override string DName => $"{GetType().Name}:";
         public override IEnumerable<AstNode> Children
         {
             get

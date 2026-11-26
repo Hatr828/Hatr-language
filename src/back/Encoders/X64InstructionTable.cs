@@ -1118,6 +1118,32 @@ namespace Best_language.src.back.Encoders
                 ]
             });
 
+            // pop r 16/64
+            Add(new X64Form
+            {
+                Kind = X64Opcode.pop,
+                Opcode = 0x58,
+                OpcodePlusRegister = true,
+                SizeMode = X64OperandSizeMode.Default64,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.Register, Role = X64OperandRole.OpcodeRegister, Size = X64Size.operand }
+                ]
+            });
+
+            // pop r/m 16/64
+            Add(new X64Form
+            {
+                Kind = X64Opcode.pop,
+                Opcode = 0x8F,
+                Extension = 0,
+                SizeMode = X64OperandSizeMode.Default64,
+
+                Operands = [
+                    new() { Kind = X64OperandKind.RegisterOrMemory, Role = X64OperandRole.ModRmRm, Size = X64Size.operand }
+                ]
+            });
+
             // sub r/m 8, r 8
             Add(new X64Form
             {

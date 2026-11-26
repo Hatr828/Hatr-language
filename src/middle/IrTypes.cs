@@ -1,5 +1,6 @@
 using Best_language.src.front;
 using System.Drawing;
+using System.Xml.Linq;
 
 namespace Best_language.src.middle
 {
@@ -13,6 +14,17 @@ namespace Best_language.src.middle
     {
         public string Name { get; } = name;
         public override string ToString() => $"{nameof(IrLabel)}: {Name}";
+    }
+    public class IrFunc(string name) : IrInstruction
+    {
+        public string Name { get; } = name;
+        public override string ToString() => $"{nameof(IrFunc)}: {Name}";
+    }
+
+    public class IrRet(IrValue? res = null) : IrInstruction
+    {
+        public IrValue? Res { get; } = res;
+        public override string ToString() => $"{nameof(IrRet)}: {Res}";
     }
 
     public class IrConstant(IrValue left, ulong right, TypeSymbol type) : IrInstruction
@@ -92,6 +104,21 @@ namespace Best_language.src.middle
 
         public override string ToString() => $"{nameof(IrVariable)}: {Left}, {Right}";
     }
+    public class IrParam(IrValue left, int idx) : IrInstruction
+    {
+        public IrValue Left { get; } = left;
+        public int Idx { get; } = idx;
+
+        public override string ToString() => $"{nameof(IrParam)}: {Left} ({Idx})";
+    }
+    public class IrCall(string name, List<IrValue> @params, IrValue res) : IrInstruction
+    {
+        public string Name { get; } = name;
+        public List<IrValue> Params { get; } = @params;
+        public IrValue Res { get; } = res;
+
+        public override string ToString() => $"{nameof(IrCall)}: {Name}, {string.Join(", ", Params)} ({Res})";
+    }
     public class IrArray(IrValue left, int size, List<IrValue> right) : IrInstruction
     {
         public IrValue Left { get; } = left;
@@ -106,7 +133,7 @@ namespace Best_language.src.middle
         public IrValue Right { get; } = right;
         public int Offset { get; } = offset;
 
-        public override string ToString() => $"{nameof(IrLoad)}: {Left}, {Right} (offset: {Offset})";
+        public override string ToString() => $"{nameof(IrLoad)}: {Left}, {Right} (_offset: {Offset})";
 
     }
     public class IrIndexedAddress(IrValue left, IrValue baseAddress, IrValue index, int step) : IrInstruction
@@ -125,7 +152,7 @@ namespace Best_language.src.middle
         public int Offset { get; } = offset;
         public IrValue Right { get; } = right;
 
-        public override string ToString() => $"{nameof(IrStore)}: {Left} (offset: {Offset}), {Right}";
+        public override string ToString() => $"{nameof(IrStore)}: {Left} (_offset: {Offset}), {Right}";
 
     }
     public class IrProgram : IrInstruction

@@ -192,13 +192,14 @@ namespace Best_language.src.front
                             _idx += 2;
                             return new GotoDeclaration(_tokens[_idx - 2].val!);
                         }
-                    case TokenKind.Indent:
+                    case TokenKind.Indent or TokenKind.Multiply:
                         {
-                            string name = _tokens[_idx++].val!;
-
                             Expression ex;
                             Expression? idx = null;
+                            Expression left;
                             Operation? op = null;
+
+                            left = GetExpression();
 
                             if (Consume(TokenKind.RightBracket))
                             {
@@ -208,22 +209,25 @@ namespace Best_language.src.front
 
                             if (Consume(TokenKind.Equals)) { }
                             else if (IsOperatorEquals()) op = GetOperatorEquals();
+                            else
+                            {
+                                Requires(TokenKind.SemiColon);
+                                return new ExpressionStatement(left);
+                            }
 
                             ex = GetExpression();
                             Requires(TokenKind.SemiColon);
 
-                            if (idx is not null) return new ArrayAssignment(name, idx, op, ex);
-                            else return new AssignmentStatement(name, op, ex);
+                            if (idx is not null) return new ArrayAssignment(left, idx, op, ex);
+                            else return new AssignmentStatement(left, op, ex);
                         }
                     case TokenKind.Return:
                         {
-                            if (_tokens[_idx].kind is TokenKind.SemiColon)
+                            _idx++;
+                            if (Consume(TokenKind.SemiColon))
                             {
-                                _idx += 2;
                                 return new ReturnStatement();
                             }
-
-                            _idx++;
 
                             var ex = GetExpression();
                             Requires(TokenKind.SemiColon);
@@ -336,6 +340,20 @@ namespace Best_language.src.front
                         else left = ParseNumber();
                         break;
                     }
+                case TokenKind.Indent when _tokens[_idx + 1].kind is TokenKind.RightParen:
+                    {
+                        string name = _tokens[_idx++].val!;
+                        _idx++;
+                        List<Expression> @params = new();
+
+                        while (!Consume(TokenKind.LeftParen))
+                        {
+                            @params.Add(GetExpression());
+                            if (!CheckKind(TokenKind.LeftParen)) Requires(TokenKind.Comma);
+                        }
+                        left = new FuncExpression(name, @params);
+                        break;
+                    }
                 case TokenKind.Indent when _tokens[_idx + 1].kind is TokenKind.Dot or TokenKind.Arrow:
                     {
                         string target = _tokens[_idx++].val!;
@@ -381,7 +399,7 @@ namespace Best_language.src.front
                     throw new Exception("Error in Parser, unknown token: " + _tokens[_idx].kind);
             }
 
-            while (_idx < _tokens.Count && _tokens[_idx].kind is not TokenKind.SemiColon and not TokenKind.LeftParen and not TokenKind.Colon and not TokenKind.Comma and not TokenKind.LeftBrace and not TokenKind.LeftBracket)
+            while (_idx < _tokens.Count && _tokens[_idx].kind is not TokenKind.SemiColon and not TokenKind.LeftParen and not TokenKind.Colon and not TokenKind.Comma and not TokenKind.LeftBrace and not TokenKind.LeftBracket and not TokenKind.Equals)
             {
                 if (_tokens[_idx].kind is TokenKind.PlusPlus or TokenKind.MinusMinus)
                 {
@@ -486,12 +504,28 @@ namespace Best_language.src.front
             return variables;
         }
 
-        private VariableDeclarations ParseVariables(TypeSymbol type) // needs refactoring
+        private VariableDeclarations ParseVariables(TypeSymbol type = null!) // needs refactoring
         {
             VariableDeclarations variables = new();
+            bool isType = type is not null;
+
 
             while (!Consume(TokenKind.SemiColon))
             {
+                if (!isType)
+                {
+                    if (Consume(TokenKind.LeftParen)) return variables;
+                    type = ParseType();
+                    if (CheckKind(TokenKind.Indent) && type == typeTable.Enum)
+                    {
+                        type = new EnumTypeSymbol(_tokens[_idx++].val!, null!);
+                    }
+                    else if (CheckKind(TokenKind.Indent) && type == typeTable.Struct)
+                    {
+                        type = new StructTypeSymbol(_tokens[_idx++].val!, -1, 0, null!);
+                    }
+                }
+
                 string name;
                 TypeSymbol? subType = null;
                 bool unknownLength = false;
@@ -509,7 +543,7 @@ namespace Best_language.src.front
                         {
                             NumberExpression num = (NumberExpression)GetExpression();
                             Requires(TokenKind.LeftBracket);
-                            subType = new ArrayTypeSymbol(name, (long)num.Value, type);
+                            subType = new ArrayTypeSymbol(name, (long)num.Value, type!);
                         }
                     }
 
@@ -519,14 +553,15 @@ namespace Best_language.src.front
                     {
                         if (ex is null) throw new ArgumentException("Cannot declare array");
                         if (ex is not ArrayExpression arr) throw new ArgumentException("Expected array expression");
-                        subType = new ArrayTypeSymbol(name, (long)arr.Right.Count, type);
+                        subType = new ArrayTypeSymbol(name, (long)arr.Right.Count, type!);
                     }
 
-                    variables.Variables.Add(new VariableDeclaration(name, typeTable.GetPointer(subType is not null ? subType : type), ex));
+                    variables.Variables.Add(new VariableDeclaration(name, typeTable.GetPointer(subType is not null ? subType : type!), ex));
 
                     if (Consume(TokenKind.SemiColon)) return variables;
                     else if (Consume(TokenKind.Comma)) continue;
-                    else throw new ArgumentException("requires semiColon or comma");
+                    else if (!isType && Consume(TokenKind.LeftParen)) return variables;
+                    else throw new ArgumentException("requires semicolon or comma");
                 }
 
                 name = Requires(true, TokenKind.Indent);
@@ -539,7 +574,7 @@ namespace Best_language.src.front
                     {
                         NumberExpression num = (NumberExpression)GetExpression();
                         Requires(TokenKind.LeftBracket);
-                        subType = new ArrayTypeSymbol(name, (long)num.Value, type);
+                        subType = new ArrayTypeSymbol(name, (long)num.Value, type!);
                     }
                 }
 
@@ -549,13 +584,15 @@ namespace Best_language.src.front
                 {
                     if (ex is null) throw new ArgumentException("Cannot declare array");
                     if (ex is not ArrayExpression arr) throw new ArgumentException("Expected array expression");
-                    subType = new ArrayTypeSymbol(name, (long)arr.Right.Count, type);
+                    subType = new ArrayTypeSymbol(name, (long)arr.Right.Count, type!);
                 }
 
-                variables.Variables.Add(new VariableDeclaration(name, subType is not null ? subType : type, ex));
+                variables.Variables.Add(new VariableDeclaration(name, subType is not null ? subType : type!, ex));
 
                 if (Consume(TokenKind.SemiColon)) return variables;
-                
+
+                if (!isType && Consume(TokenKind.LeftParen)) return variables;
+
                 Requires(TokenKind.Comma);
             }
 
@@ -685,40 +722,22 @@ namespace Best_language.src.front
 
         private Statement ParseFunction(TypeSymbol type) // needs refactoring
         {
-            if (CheckKind(TokenKind.Indent, TokenKind.RightParen)) // function
+            if (Consume(TokenKind.Indent, TokenKind.RightParen)) // function
             {
-                _idx += 2;
                 string name = _tokens[_idx - 2].val!;
 
-                List<ParamDeclaration> @params = new();
+                var @params = ParseVariables();
+                List<TypeSymbol> types = new();
 
-                while (!CheckKind(TokenKind.LeftParen))
-                {
-                    var typeParam = ParseType();
-                    var NameParam = _tokens[_idx++].val!;
-                    Expression? initializer = null;
+                foreach (var param in @params.Variables) types.Add(param.Type);
 
-                    if (CheckKind(TokenKind.Equals))
-                    {
-                        _idx++;
-
-                        initializer = GetExpression();
-                    }
-
-                    if (_tokens[_idx].kind != TokenKind.LeftParen)
-                        Requires(TokenKind.Comma);
-
-                    @params.Add(new(NameParam, typeParam, initializer));
-                }
-
-                _idx++; // LeftParen
                 List<AstNode> block = new();
 
                 _scopes.AddScope();
                 GetBlockCode(block);
                 _scopes.RemoveScope();
 
-                return new FuncDeclaration(type, name, @params, block);
+                return new FuncDeclaration(new(type, types), name, @params.Variables, block);
             }
 
             throw new ArgumentException("Not function, expected function");

@@ -5,21 +5,21 @@ namespace Best_language.src.back.Encoders
 {
     public partial class X64Encoder
     {
-        private List<byte> _code = new();
-        private List<PeImport> _importFixups = new();
+        private List<byte> _code = [];
+        private List<PeImport> _importFixups = [];
         private readonly Dictionary<string, string> _dlls = new()
         {
             ["ExitProcess"] = "kernel32.dll",
         };
-        private List<X64Label> _labelFixups = new();
-        private Dictionary<string, int> _labels = new();
+        private List<X64Label> _labelFixups = [];
+        private Dictionary<string, int> _labels = [];
 
         public (byte[] bytes, List<PeImport> importFixups) Encode(List<X64Instruction> instructions)
         {
-            _code = new();
-            _importFixups = new();
-            _labelFixups = new();
-            _labels = new();
+            _code = [];
+            _importFixups = [];
+            _labelFixups = [];
+            _labels = [];
 
         outer: foreach (var instruction in instructions)
             {
@@ -44,7 +44,7 @@ namespace Best_language.src.back.Encoders
 
             foreach (var fixup in _labelFixups)
             {
-                if (!_labels.TryGetValue(fixup.Name, out int target)) throw new ArgumentException();
+                if (!_labels.TryGetValue(fixup.Name, out int target)) throw new ArgumentException("");
 
                 int displacement = checked(target - fixup.NextInstruction);
 

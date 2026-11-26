@@ -14,7 +14,60 @@ namespace Best_language.src
         static void Main(string[] args)
         {
             string code = @"
-                char a[] = ""Word"";
+                int add(int a, int b)
+                {
+                    return a + b;
+                }
+
+                int twice(int x)
+                {
+                    return add(x, x);
+                }
+
+                void set(int *p, int value)
+                {
+                    *p = value;
+                }
+
+                int string_length(char *s)
+                {
+                    int n = 0;
+
+                    while (s[n] != '\0')
+                    {
+                        n =+ 1;
+                    }
+
+                    return n;
+                }
+
+                int main()
+                {
+                    if (add(10, 20) != 30)
+                    {
+                        return 1;
+                    }
+
+                    if (twice(7) != 14)
+                    {
+                        return 2;
+                    }
+
+                    int x = 0;
+                    set(&x, 42);
+                    if (x != 42)
+                    {
+                        return 3;
+                    }
+
+                    char word[] = ""Word"";
+                    if (string_length(word) != 4)
+                    {
+                        return 4;
+                    }
+
+                    return 0;
+                }
                 ";
             var sw = Stopwatch.StartNew();
 

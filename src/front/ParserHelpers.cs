@@ -268,6 +268,7 @@ namespace Best_language.src.front
         private readonly Dictionary<TokenKind[], TypeSymbol> _types = new(new TokenKindSpanComparer())
         {
             [[TokenKind.Bool]] = typeTable.Bool,
+            [[TokenKind.Void]] = typeTable.Void,
             [[TokenKind.Enum]] = typeTable.Enum,
             [[TokenKind.Struct]] = typeTable.Struct,
 
