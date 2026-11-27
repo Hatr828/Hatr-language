@@ -1,5 +1,8 @@
 ﻿using Best_language.src.back.Instructions;
 using Best_language.src.front;
+using System.Buffers.Binary;
+using System.Diagnostics;
+using System.IO.IsolatedStorage;
 
 namespace Best_language.src.middle
 {
@@ -52,13 +55,13 @@ namespace Best_language.src.middle
             return res;
         }
 
-        private int GetTypeSize(TypeSymbol type) => type switch
+        private static int GetTypeSize(TypeSymbol type) => type switch
         {
             BoolTypeSymbol => 1,
             IntegerTypeSymbol tmp => (int)tmp.Size,
             FloatTypeSymbol tmp => (int)tmp.Size,
             PointerTypeSymbol => 8,
-            _ => throw new ArgumentException()
+            _ => throw new ArgumentException("")
         };
 
         private IrValue LowerStruct(BoundExpression ex, StructTypeSymbol type)
@@ -79,6 +82,12 @@ namespace Best_language.src.middle
         {
             switch (expression)
             {
+                case BoundVariableExpression variable when _globalVariables.TryGetValue(variable.Variable.Name, out var irGlobal):
+                    {
+                        var address = NewIrValue(_typeTable.GetPointer(irGlobal.Type));
+                        Emit(new IrGlobalAddress(address, irGlobal.Name));
+                        return (address, 0);
+                    }
                 case BoundVariableExpression variable:
                     {
                         var storage = ResolveVariable(variable.Variable);
@@ -126,6 +135,44 @@ namespace Best_language.src.middle
 
                 default: throw new InvalidOperationException($"Cannot take address of {expression}");
             }
+        }
+
+        private byte[] GetBytesFromConstant(BoundExpression ex, TypeSymbol type)
+        {
+            var bytes = new byte[GetTypeSize(type)];
+
+            WriteConstant(ex, type, bytes);
+
+            return bytes;
+        }
+
+        private void WriteConstant(BoundExpression ex, TypeSymbol type, Span<byte> bytes)
+        {
+            if (type is ArrayTypeSymbol arr && ex is BoundArrExpression initializer)
+            {
+                int elementSize = GetTypeSize(arr.Type);
+                int count = initializer.Right.Count;
+
+                if (count * elementSize > bytes.Length) throw new ArgumentException("Span<byte> is too small.");
+
+                for (int i = 0; i < count; i++)
+                {
+                    var el = initializer.Right[count - i - 1];
+
+                    WriteConstant(el, arr.Type, bytes.Slice(i * elementSize, elementSize));
+                }
+                return;
+            }
+
+            if (type is IntegerTypeSymbol && ex is BoundNumberExpression num)
+            {
+                Span<byte> buffer = stackalloc byte[8];
+                BinaryPrimitives.WriteUInt64BigEndian(buffer, num.Value);
+
+                buffer[..bytes.Length].CopyTo(bytes);
+            }
+
+            throw new NotSupportedException("");
         }
     }
 }

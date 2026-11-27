@@ -8,12 +8,25 @@ namespace Best_language.src.middle
 
     public record struct IrValue(int Id, TypeSymbol Type)
     {
-        public override string ToString() => $"t{Id}";
+        public readonly override string ToString() => $"t{Id}";
     }
     public class IrLabel(string name) : IrInstruction
     {
         public string Name { get; } = name;
         public override string ToString() => $"{GetType().Name}: {Name}";
+    }
+    public class IrGlobal(string name, TypeSymbol type, byte[]? data = null) : IrInstruction
+    {
+        public string Name { get; } = name;
+        public TypeSymbol Type { get; } = type;
+        public byte[]? Data { get; } = data;
+        public override string ToString() => $"{GetType().Name}: {Name} ({Type})";
+    }
+    public class IrGlobalAddress(IrValue address, string name) : IrInstruction
+    {
+        public string Name { get; } = name;
+        public IrValue Address { get; } = address;
+        public override string ToString() => $"{GetType().Name}: {Address} ({Name})";
     }
     public class IrFunc(string name) : IrInstruction
     {
@@ -168,7 +181,7 @@ namespace Best_language.src.middle
     }
     public class IrProgram : IrInstruction
     {
-        public List<IrInstruction> Instructions { get; } = new();
+        public List<IrInstruction> Instructions { get; } = [];
     }
 
     public static class IrPrinter

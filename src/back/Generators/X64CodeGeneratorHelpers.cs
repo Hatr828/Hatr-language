@@ -177,7 +177,7 @@ namespace Best_language.src.back.Generators
             }
         }
 
-        private X64Opcode GetOpcodeFromOperationInt(Operation op) => op switch
+        private static X64Opcode GetOpcodeFromOperationInt(Operation op) => op switch
         {
             Operation.PlusEquals or Operation.Plus => X64Opcode.add,
             Operation.MinusEquals or Operation.Minus => X64Opcode.sub,
@@ -195,7 +195,7 @@ namespace Best_language.src.back.Generators
 
             _ => throw new NotImplementedException()
         };
-        private X64Opcode GetOpcodeFromOperationFloat(Operation op, bool isFloat) => op switch
+        private static X64Opcode GetOpcodeFromOperationFloat(Operation op, bool isFloat) => op switch
         {
             Operation.PlusEquals or Operation.Plus => isFloat ? X64Opcode.addss : X64Opcode.addsd,
             Operation.MinusEquals or Operation.Minus => isFloat ? X64Opcode.subss : X64Opcode.subsd,
@@ -212,7 +212,7 @@ namespace Best_language.src.back.Generators
             _ => throw new NotImplementedException()
         };
 
-        private void ULongToFloatConversion(IrConversion conversion, int rightSize, int leftSize)
+        private void ULongToFloatConversion(IrConversion conversion, int leftSize)
         {
             string suffix = Guid.NewGuid().ToString("N");
             string smallLabel = $"u64_fp_u64_{suffix}";
@@ -255,11 +255,8 @@ namespace Best_language.src.back.Generators
 
             Emit(new(leftSize == 4 ? X64Opcode.movss : X64Opcode.movsd,
                 X64Operand.Mem(X64Register.rbp, -destination.Item1, destination.Item2), X64Operand.Reg(X64Register.xmm0)));
-
-            _constants.Remove(conversion.Left);
-            _constantsFP.Remove(conversion.Left);
         }
-        private void FloatToUlongConversion(IrConversion conversion, int rightSize, int leftSize)
+        private void FloatToUlongConversion(IrConversion conversion, int rightSize)
         {
             string suffix = Guid.NewGuid().ToString("N");
             string smallLabel = $"fp_to_u64_{suffix}";
@@ -313,9 +310,6 @@ namespace Best_language.src.back.Generators
             var destination = GetOrCreateSlot(conversion.Left);
 
             Emit(new(X64Opcode.mov, X64Operand.Mem(X64Register.rbp, -destination.Item1, destination.Item2), X64Operand.Reg(X64Register.rax)));
-
-            _constants.Remove(conversion.Left);
-            _constantsFP.Remove(conversion.Left);
         }
 
         private void Compare(X64Opcode op, X64Register l, X64Register r, X64Size resSize)
@@ -382,11 +376,11 @@ namespace Best_language.src.back.Generators
                         X64Operand.Reg(register),
                         X64Operand.Imm(GetX64Size(constant.type), (long)constant.val)));
                 }
-                else throw new ArgumentException();
+                else throw new ArgumentException("");
             }
             else if (_constantsFP.TryGetValue(value, out (double val, TypeSymbol type) constantFP))
             {
-                if (constantFP.type is FloatTypeSymbol type)
+                if (constantFP.type is FloatTypeSymbol)
                 {
                     long bits = BitConverter.DoubleToInt64Bits(constantFP.val);
 
@@ -398,7 +392,7 @@ namespace Best_language.src.back.Generators
                         X64Operand.Reg(register),
                         X64Operand.Reg(X64Register.rax)));
                 }
-                else throw new ArgumentException();
+                else throw new ArgumentException("");
             }
             else
                 throw new InvalidOperationException($"Unknown IR value: {value}");
@@ -424,7 +418,7 @@ namespace Best_language.src.back.Generators
             throw new ArgumentException($"Unknown slot fot {value}");
         }
 
-        private int GetSlotSize(IrValue value) => value.Type switch
+        private static int GetSlotSize(IrValue value) => value.Type switch
         {
             BoolTypeSymbol => 1,
             IntegerTypeSymbol type => (int)type.Size,
@@ -432,18 +426,18 @@ namespace Best_language.src.back.Generators
             PointerTypeSymbol => 8,
             StructTypeSymbol st => st.Size,
             ArrayTypeSymbol type => checked((int)type.Size * GetTypeSize(type.Type)),
-            _ => throw new ArgumentException()
+            _ => throw new ArgumentException("")
         };
 
-        private X64Size GetX64Size(TypeSymbol type) => type switch
+        private static X64Size GetX64Size(TypeSymbol type) => type switch
         {
             BoolTypeSymbol => (X64Size)1,
             IntegerTypeSymbol tmp => (X64Size)tmp.Size,
             FloatTypeSymbol tmp => (X64Size)tmp.Size,
             PointerTypeSymbol => (X64Size)8,
-            _ => throw new ArgumentException()
+            _ => throw new ArgumentException("")
         };
-        private X64Size GetX64Size(int slot) => slot switch
+        private static X64Size GetX64Size(int slot) => slot switch
         {
             1 => X64Size.@byte,
             2 => X64Size.word,
@@ -451,76 +445,84 @@ namespace Best_language.src.back.Generators
             8 => X64Size.qword,
             _ => X64Size.custom,
         };
-        private int GetTypeSize(TypeSymbol type) => type switch
+        private static int GetTypeSize(TypeSymbol type) => type switch
         {
             BoolTypeSymbol => 1,
             FloatTypeSymbol @float => (int)@float.Size,
             IntegerTypeSymbol integer => (int)integer.Size,
+            ArrayTypeSymbol arr => GetTypeSize(arr.Type) * arr.Size,
+            StructTypeSymbol st => st.Size,
             PointerTypeSymbol => 8,
 
             _ => throw new NotImplementedException(),
         };
 
-        private X64Register GetRegisterSame(int size) => size switch
+        private static int GetTypeAlignment(TypeSymbol type) => type switch
+        {
+            IntegerTypeSymbol or FloatTypeSymbol or BoolTypeSymbol or PointerTypeSymbol => GetTypeSize(type),
+            ArrayTypeSymbol arr => GetTypeAlignment(arr.Type),
+            StructTypeSymbol st => GetTypeAlignment(st),
+            _ => throw new NotImplementedException(""),
+        };
+        private static X64Register GetRegisterSame(int size) => size switch
         {
             1 => X64Register.al,
             2 => X64Register.ax,
             4 => X64Register.eax,
             8 => X64Register.rax,
-            _ => throw new ArgumentException()
+            _ => throw new ArgumentException("")
         };
-        private X64Register GetRegisterSame(TypeSymbol type) => type switch
+        private static X64Register GetRegisterSame(TypeSymbol type) => type switch
         {
             BoolTypeSymbol => X64Register.al,
             IntegerTypeSymbol tmp => GetRegisterSame((int)tmp.Size),
             FloatTypeSymbol tmp => GetRegisterSame((int)tmp.Size),
             PointerTypeSymbol => X64Register.rax,
-            _ => throw new ArgumentException()
+            _ => throw new ArgumentException("")
         };
-        private X64Register GetRegisterSame(IrValue value) => value.Type switch
+        private static X64Register GetRegisterSame(IrValue value) => value.Type switch
         {
             BoolTypeSymbol => X64Register.al,
             IntegerTypeSymbol type => GetRegisterSame((int)type.Size),
             FloatTypeSymbol type => GetRegisterSame((int)type.Size),
             PointerTypeSymbol => X64Register.rax,
-            _ => throw new ArgumentException()
+            _ => throw new ArgumentException("")
         };
-        private X64Register GetRegisterSame(X64Size size) => size switch
+        private static X64Register GetRegisterSame(X64Size size) => size switch
         {
             X64Size.@byte => X64Register.al,
             X64Size.word => X64Register.ax,
             X64Size.dword => X64Register.eax,
             X64Size.qword => X64Register.rax,
-            _ => throw new ArgumentException()
+            _ => throw new ArgumentException("")
         };
 
-        private X64Register GetRegister(X64Size size) => size switch
+        private static X64Register GetRegister(X64Size size) => size switch
         {
             X64Size.@byte => X64Register.r8b,
             X64Size.word => X64Register.cx,
             X64Size.dword => X64Register.edx,
             X64Size.qword => X64Register.rax,
-            _ => throw new ArgumentException()
+            _ => throw new ArgumentException("")
         };
-        private X64Register GetRegister(TypeSymbol type) => type switch
+        private static X64Register GetRegister(TypeSymbol type) => type switch
         {
             BoolTypeSymbol => X64Register.r8b,
             IntegerTypeSymbol tmp => GetRegister((int)tmp.Size),
             FloatTypeSymbol tmp => GetRegister((int)tmp.Size),
             PointerTypeSymbol => X64Register.rax,
-            _ => throw new ArgumentException()
+            _ => throw new ArgumentException("")
         };
-        private X64Register GetRegister(int size) => size switch
+        private static X64Register GetRegister(int size) => size switch
         {
             1 => X64Register.r8b,
             2 => X64Register.cx,
             4 => X64Register.edx,
             8 => X64Register.rax,
-
-            _ => throw new ArgumentException()
+            _ => throw new ArgumentException("")
         };
 
-        private X64Register GetFloatParamRegister(int idx) => idx switch
+        private static X64Register GetFloatParamRegister(int idx) => idx switch
         {
             1 => X64Register.xmm0,
             2 => X64Register.xmm1,
@@ -529,7 +531,7 @@ namespace Best_language.src.back.Generators
             _ => throw new ArgumentException("Expected _idx < 4"),
         };
 
-        private X64Opcode GetConvertor(X64Register reg) => X64Operand.GetSize(reg) switch
+        private static X64Opcode GetConvertor(X64Register reg) => X64Operand.GetSize(reg) switch
         {
             X64Size.qword => X64Opcode.cqo,
             X64Size.dword => X64Opcode.cdq,
@@ -537,7 +539,7 @@ namespace Best_language.src.back.Generators
             X64Size.@byte => X64Opcode.cbw,
             _ => throw new NotSupportedException()
         };
-        private X64Register GetIntegerParamRegister(int idx, X64Size size)
+        private static X64Register GetIntegerParamRegister(int idx, X64Size size)
         {
             ReadOnlySpan<X64Register> registers = size switch
             {
@@ -556,7 +558,7 @@ namespace Best_language.src.back.Generators
             _instructions.Add(instruction);
         }
 
-        private int AlignUp(int val, int alignment) => checked(val + alignment - 1) & ~(alignment - 1);
+        private static int AlignUp(int val, int alignment) => checked(val + alignment - 1) & ~(alignment - 1);
         private void AppendStartFunc()
         {
             Emit(new(X64Opcode.label, X64Operand.Label("start")));

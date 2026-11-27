@@ -22,16 +22,36 @@ namespace Best_language.src
                 throw new ArgumentException("Expected args, at least path to code");
 #else
                 code = @"
+
+int g;
+
+int
+effect()
+{
+        g = 1;
+        return 1;
+}
+
 int
 main()
 {
-        int arr[2];
+    int x;
 
-        arr[0] = 1;
-        arr[1] = 2;
-
-        return arr[0] + arr[1] - 3;
+    g = 0;
+    x = 0;
+    if(x && effect())
+        return 1;
+    if(g)
+        return 2;
+    x = 1;
+    if(x && effect()) {
+        if(g != 1)
+                return 3;
+    } else {
+        return 4;
+    }
 }
+
 
                 ";
 #endif
@@ -100,7 +120,7 @@ main()
             Console.WriteLine($"X64CodeGenerator done in: {sw.ElapsedTicks} ticks");
             Console.WriteLine("\n ---- \n");
 
-            string assembly = X64Printer.GenerateAsm(instructions);
+            string assembly = X64Printer.GenerateAsm(instructions, codeGen.data, codeGen.dataOffsets);
             Console.WriteLine(assembly);
 
             BuildAndRun(assembly);
@@ -109,13 +129,13 @@ main()
             sw.Restart();
 
             var encoder = new X64Encoder();
-            var tmp = encoder.Encode(instructions);
+            var (bytes, importFixups, dataFixups) = encoder.Encode(instructions);
 
             sw.Stop();
             Console.WriteLine($"X64Encoder done in: {sw.ElapsedTicks} ticks");
             Console.WriteLine("\n ---- \n");
 
-            var exe = PeWriter.Build(tmp.bytes, tmp.importFixups);
+            var exe = PeWriter.Build(bytes, importFixups, dataFixups, codeGen.data, codeGen.dataOffsets);
             File.WriteAllBytes("program_.exe", exe);
             RunProcess("program_.exe", "");
         }

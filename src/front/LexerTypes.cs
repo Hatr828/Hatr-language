@@ -81,7 +81,7 @@ namespace Best_language.src.front
 
     public static class CSyntax
     {
-        public static Dictionary<string, TokenKind> keywords = new()
+        public readonly static Dictionary<string, TokenKind> keywords = new()
         {
             ["typedef"] = TokenKind.Typedef,
 
@@ -116,7 +116,10 @@ namespace Best_language.src.front
             ["do"] = TokenKind.Do,
 
             ["goto"] = TokenKind.Goto,
+        };
 
+        public readonly static Dictionary<string, TokenKind> literalsEndings = new()
+        {
             ["U"] = TokenKind.U,
             ["L"] = TokenKind.L,
             ["UL"] = TokenKind.UL,
@@ -134,7 +137,7 @@ namespace Best_language.src.front
             ["f"] = TokenKind.F,
         };
 
-        public static Dictionary<char, TokenKind> chars = new()
+        public readonly static Dictionary<char, TokenKind> chars = new()
         {
             ['*'] = TokenKind.Multiply,
             ['+'] = TokenKind.Plus,
@@ -165,7 +168,7 @@ namespace Best_language.src.front
             ['^'] = TokenKind.BitXor,
         };
 
-        public static Dictionary<string, TokenKind> doubleChars = new()
+        public readonly static Dictionary<string, TokenKind> doubleChars = new()
         {
             [">="] = TokenKind.GreaterThanOrEquals,
             ["=="] = TokenKind.EqualsEquals,
@@ -193,7 +196,7 @@ namespace Best_language.src.front
             ["&="] = TokenKind.BitAndEquals,
         };
 
-        public static Dictionary<(string, string), TokenKind> specialKeywords = new()
+        public readonly static Dictionary<(string, string), TokenKind> specialKeywords = new()
         {
             [("else", "if")] = TokenKind.ElseIf,
         };

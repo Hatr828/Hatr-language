@@ -10,6 +10,7 @@ namespace Best_language.src.front
         private int _idx;
 
         private readonly Dictionary<string, TokenKind> _keywords;
+        private readonly Dictionary<string, TokenKind> _literalsEndings;
 
         private readonly Dictionary<char, TokenKind> _chars;
 
@@ -21,17 +22,11 @@ namespace Best_language.src.front
         {
             _code = code;
 
-#if DEBUG
             _keywords = CSyntax.keywords;
             _chars = CSyntax.chars;
             _doubleChars = CSyntax.doubleChars;
             _specialKeywords = CSyntax.specialKeywords;
-#else
-            _keywords = HatrSyntax.keywords;
-            _chars = HatrSyntax.chars;
-            _doubleChars = HatrSyntax.doubleChars;
-            _specialKeywords = HatrSyntax.specialKeywords;
-#endif
+            _literalsEndings = CSyntax.literalsEndings;
         }
 
         public List<Token> GetTokens()
@@ -79,6 +74,14 @@ namespace Best_language.src.front
                 {
                     string num = GetNumber();
                     res.Add(new Token(TokenKind.Number, num));
+                    ReadOnlySpan<char> word2 = GetSecondWordWithoutChangingIdx(out int idx);
+
+                    if (_literalsEndings.TryGetValue(word2.ToString(), out var token2))
+                    {
+                        res.Add(new Token(token2));
+                        _idx = idx;
+                    }
+
                     continue;
                 }
 

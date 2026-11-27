@@ -13,13 +13,15 @@ namespace Best_language.src.back.Encoders
             ["ExitProcess"] = "kernel32.dll",
         };
         private List<X64Label> _labelFixups = [];
+        private List<X64Label> _dataFixups = [];
         private Dictionary<string, int> _labels = [];
 
-        public (byte[] bytes, List<PeImport> importFixups) Encode(List<X64Instruction> instructions)
+        public (byte[] bytes, List<PeImport> importFixups, List<X64Label> dataFixups) Encode(List<X64Instruction> instructions)
         {
             _code = [];
             _importFixups = [];
             _labelFixups = [];
+            _dataFixups = [];
             _labels = [];
 
         outer: foreach (var instruction in instructions)
@@ -52,7 +54,7 @@ namespace Best_language.src.back.Encoders
                 BinaryPrimitives.WriteInt32LittleEndian(res.AsSpan(fixup.Offset, 4), displacement);
             }
 
-            return (res, _importFixups);
+            return (res, _importFixups, _dataFixups);
         }
         public void EncodeLabel(X64Operand operand)
         {
@@ -179,7 +181,8 @@ namespace Best_language.src.back.Encoders
         {
             List<byte> bytes = new();
 
-            (int Offset, int Size, string Name)? fixup = null;
+            (int Offset, int Size, string Name)? importFixup = null;
+            (int Offset, string Name)? dataFixup = null;
 
             bool prefix = (form.Prefixes & X64Prefixes.OperandSize) != 0 || (size == 2 &&
                 (form.SizeMode is X64OperandSizeMode.Standard || form.SizeMode is X64OperandSizeMode.Default64));
@@ -201,6 +204,8 @@ namespace Best_language.src.back.Encoders
                 var operand = operands[i];
 
                 if (operand.Kind is not X64ValueKind.Register and not X64ValueKind.Memory) continue;
+
+                if (operand.Kind is X64ValueKind.Memory && operand.Name is not null) continue;
 
                 var register = operand.Register!.Value;
                 int code = GetRegisterCode(register);
@@ -261,7 +266,13 @@ namespace Best_language.src.back.Encoders
 
                 var rm = GetOperand(form, operands, X64OperandRole.ModRmRm);
 
-                EncodeModRm(bytes, regField, rm);
+                if (rm.Kind is X64ValueKind.Memory && rm.Name is { } name)
+                {
+                    bytes.Add((byte)(((regField & 7) << 3) | 0x05));
+                    dataFixup = (bytes.Count, name);
+                    EncodeInteger(bytes, 0, 4);
+                }
+                else EncodeModRm(bytes, regField, rm);
             }
 
             for (int i = 0; i < operands.Length; i++)
@@ -274,9 +285,9 @@ namespace Best_language.src.back.Encoders
                 {
                     int width = GetSize(spec.Size, size);
 
-                    if (fixup is not null) throw new ArgumentException();
+                    if (importFixup is not null) throw new ArgumentException();
 
-                    fixup = (bytes.Count, width, operand.Name!);
+                    importFixup = (bytes.Count, width, operand.Name!);
                     EncodeInteger(bytes, 0, width);
                 }
             }
@@ -286,8 +297,10 @@ namespace Best_language.src.back.Encoders
 
             _code.AddRange(bytes);
 
-            if (fixup is not null)
-                _labelFixups.Add(new(fixup.Value.Size, start + fixup.Value.Offset, nextInstruction, fixup.Value.Name));
+            if (importFixup is { } iFixup)
+                _labelFixups.Add(new(iFixup.Size, start + iFixup.Offset, nextInstruction, iFixup.Name));
+            if (dataFixup is { } dFixup)
+                _dataFixups.Add(new(4, start + dFixup.Offset, nextInstruction, dFixup.Name));
         }
         public void EncodeModRm(List<byte> bytes, int regField, X64Operand operand)
         {

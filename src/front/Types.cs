@@ -56,7 +56,7 @@ namespace Best_language.src.front
     {
         public IntegerTypeSymbol EnumType { get; } = enumType;
 
-        public Dictionary<string, ulong> Members { get; } = new();
+        public Dictionary<string, ulong> Members { get; } = [];
         public override string ToString() => $"{GetType().Name} ({Name ?? "No name"})";
     }
     public class StructTypeSymbol(string? name, int size, int alignment, List<TypeSymbol> types) : TypeSymbol(name!)
@@ -67,10 +67,10 @@ namespace Best_language.src.front
 
         public override string ToString() => $"{GetType().Name} ({Name ?? "No name"})";
     }
-    public class ArrayTypeSymbol(string name, long size, TypeSymbol type) : TypeSymbol(name)
+    public class ArrayTypeSymbol(string name, int size, TypeSymbol type) : TypeSymbol(name)
     {
         public TypeSymbol Type { get; } = type;
-        public long Size { get; } = size;
+        public int Size { get; } = size;
 
         public override string ToString() => $"{GetType().Name} ({Name ?? "No name"})";
     }
@@ -109,7 +109,7 @@ namespace Best_language.src.front
         public UndefineTypeSymbol Enum { get; } = new UndefineTypeSymbol("enum");
         public UndefineTypeSymbol Struct { get; } = new UndefineTypeSymbol("struct");
 
-        private Dictionary<TypeSymbol, PointerTypeSymbol> _pointers = new();
+        private readonly Dictionary<TypeSymbol, PointerTypeSymbol> _pointers = [];
 
         public PointerTypeSymbol GetPointer(TypeSymbol elementType)
         {
@@ -123,11 +123,12 @@ namespace Best_language.src.front
         }
 
 
-        public int GetTypeSize(TypeSymbol type) => type switch
+        public static int GetTypeSize(TypeSymbol type) => type switch
         {
             IntegerTypeSymbol integer => (int)integer.Size,
             FloatTypeSymbol fp => (int)fp.Size,
             EnumTypeSymbol @enum => GetTypeSize(@enum.EnumType),
+            PointerTypeSymbol => 8,
 
             _ => throw new NotImplementedException()
         };

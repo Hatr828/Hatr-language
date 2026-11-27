@@ -10,10 +10,11 @@ namespace Best_language.src.middle
         private int _nextId;
         private int _nextLebelId;
         private TypeTable _typeTable = null!;
-        private IrProgram _currentProgram = new();
-        private Dictionary<VariableSymbol, IrValue> _variables = new();
-        private Stack<string> _breaks = new();
-        private Stack<string> _continues = new();
+        private readonly IrProgram _currentProgram = new();
+        private readonly Dictionary<string, IrGlobal> _globalVariables = [];
+        private readonly Dictionary<VariableSymbol, IrValue> _variables = [];
+        private readonly Stack<string> _breaks = [];
+        private readonly Stack<string> _continues = [];
 
         private IrValue NewIrValue(TypeSymbol type) => new(_nextId++, type);
         private string NewLabelName(string name) => $"{name}_{_nextLebelId++}";
@@ -37,19 +38,42 @@ namespace Best_language.src.middle
                 case BoundVariablesDeclaration variables:
                     foreach (var variable in variables.Variables) LowerNode(variable);
                     return;
-                case BoundVariableDeclaration variable when variable.Initializer is not null && variable.Initializer is BoundArrExpression st:
+                case BoundVariableDeclaration variable when variable.Variable.Type is ArrayTypeSymbol arrayType && variable.Initializer is BoundArrExpression initializer:
                     {
-                        List<IrValue> Irs = new();
+                        var array = LowerExpression(initializer);
+                        _variables.Add(variable.Variable, array);
+                        return;
+                    }
+                case BoundGlobalVariablesDeclaration variables:
+                    foreach (var variable in variables.Variables) LowerNode(variable);
+                    return;
+                case BoundGlobalVariableDeclaration variable:
+                    {
+                        var name = variable.Variable.Name;
+                        var type = variable.Variable.Type;
 
-                        for (int i = 0; i < st.Right.Count; i++)
+                        if (variable.Initializer is null)
                         {
-                            var value2 = LowerExpression(st.Right[i]);
-                            var res = EmitCopy(value2);
-                            Irs.Add(res);
+                            var tmp = new IrGlobal(name, type);
+
+                            Emit(tmp);
+
+                            _globalVariables.Add(name, tmp);
+                            return;
                         }
 
-                        var value = EmitConstant(Irs, st.Type);
-                        _variables.Add(variable.Variable, value);
+                        byte[] value = GetBytesFromConstant(variable.Initializer, type);
+                        var global = new IrGlobal(name, type, value);
+
+                        Emit(global);
+
+                        _globalVariables.Add(name, global);
+                        return;
+                    }
+                case BoundVariableDeclaration variable when variable.Variable.Type is ArrayTypeSymbol arrayType && variable.Initializer is BoundArrExpression initializer:
+                    {
+                        var array = LowerExpression(initializer);
+                        _variables.Add(variable.Variable, array);
                         return;
                     }
                 case BoundVariableDeclaration variable:
@@ -83,7 +107,7 @@ namespace Best_language.src.middle
 
                 case BoundSwitchDeclaration @switch:
                     string endLabel = NewLabelName("switch_end");
-                    List<string> labels = new();
+                    List<string> labels = [];
                     string? defaultStartLabel = null;
 
                     _breaks.Push(endLabel);
@@ -188,8 +212,36 @@ namespace Best_language.src.middle
                     return EmitConstant(num.Value, num.Type);
                 case BoundBoolExpression ex:
                     return EmitConstant((ulong)(ex.Value ? 1 : 0), ex.Type);
+                case BoundVariableExpression variable when _globalVariables.TryGetValue(variable.Variable.Name, out var irGlobal):
+                    {
+                        var (address, offset) = LowerAddress(variable);
+                        var res = NewIrValue(variable.Type);
+
+                        Emit(new IrLoad(res, address, offset));
+                        return res;
+                    }
                 case BoundVariableExpression variable:
                     return ResolveVariable(variable.Variable);
+                case BoundBinaryExpression { Op: Operation.And or Operation.Or } binary:
+                    {
+                        bool isAnd = binary.Op is Operation.And;
+                        var left = LowerExpression(binary.Left);
+                        var result = NewIrValue(binary.Type);
+                        string endLabel = NewLabelName("logical_end");
+
+                        Emit(new IrVariable(result, EmitConstant(isAnd ? 0UL : 1UL, binary.Type)));
+
+                        Emit(isAnd ? new IrJumpIfNotTrue(left, endLabel) : new IrJumpIfTrue(left, endLabel));
+
+                        var right = LowerExpression(binary.Right);
+
+                        Emit(new IrVariable(result, EmitConstant(isAnd ? 1UL : 0UL, binary.Type)));
+
+                        Emit(isAnd ? new IrJumpIfNotTrue(right, endLabel) : new IrJumpIfTrue(right, endLabel));
+
+                        Emit(new IrLabel(endLabel));
+                        return result;
+                    }
                 case BoundBinaryExpression binary:
                     {
                         var left = LowerExpression(binary.Left);    
@@ -254,7 +306,7 @@ namespace Best_language.src.middle
                     {
                         var val = LowerExpression(assignment.Right);
 
-                        if (assignment.Left is BoundVariableExpression variable)
+                        if (assignment.Left is BoundVariableExpression variable && !_globalVariables.ContainsKey(variable.Variable.Name))
                         {
                             Emit(new IrVariable(ResolveVariable(variable.Variable), val));
                         }
@@ -273,6 +325,11 @@ namespace Best_language.src.middle
 
                         Emit(new IrLoad(res, address, offset));
                         return res;
+                    }
+                case BoundUnaryExpression { Op: Operation.ReferenceOf, Right: BoundArrayAccessExpression el}:
+                    {
+                        var (address, _) = LowerAddress(el);
+                        return address;
                     }
                 case BoundUnaryExpression unary:
                     {
@@ -300,6 +357,14 @@ namespace Best_language.src.middle
 
                         return result;
                     }
+                case BoundArrExpression st:
+                    {
+                        List<IrValue> Irs = [];
+
+                        foreach (var element in st.Right) Irs.Add(LowerExpression(element));
+
+                        return EmitConstant(Irs, st.Type);
+                    }
                 case BoundConversionExpression conversion:
                     {
                         var right = LowerExpression(conversion.Expression);
@@ -320,7 +385,7 @@ namespace Best_language.src.middle
         {
             IrValue condition = LowerExpression(@if.Expression);
 
-            List<string> labels = new();
+            List<string> labels = [];
             for (int i = 0; i < @if.ElseIfs?.Count; i++) labels.Add(NewLabelName("elseIf"));
             string ifLabel = NewLabelName("if");
             string endLabel = NewLabelName("if_end");

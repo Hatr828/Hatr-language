@@ -8,7 +8,7 @@ namespace Best_language.src.front
 {
     public partial class Parser
     {
-        private List<Token> _tokens = new();
+        private List<Token> _tokens = [];
         public static TypeTable typeTable = new();
         private ParserScopes _scopes = new();
         private int _idx;
@@ -19,7 +19,7 @@ namespace Best_language.src.front
             _scopes = new();
             _idx = 0;
 
-            List<AstNode> res = new List<AstNode>();
+            List<AstNode> res = [];
 
             _scopes.AddScope();
             while (_idx < _tokens.Count)
@@ -28,7 +28,7 @@ namespace Best_language.src.front
             }
             _scopes.RemoveScope();
 #if DEBUG
-            if (!_scopes.IsEmpty()) throw new ArgumentException();
+            if (!_scopes.IsEmpty()) throw new ArgumentException("");
 #endif
 
             return new(res);
@@ -72,7 +72,7 @@ namespace Best_language.src.front
                     case TokenKind.Do:
                         {
                             _idx++;
-                            List<AstNode> block = new();
+                            List<AstNode> block = [];
 
                             if (!CheckKind(TokenKind.RightBrace))
                             {
@@ -94,7 +94,7 @@ namespace Best_language.src.front
                             Requires(TokenKind.RightParen);
 
                             Expression ex = GetExpression();
-                            List<AstNode> block = new();
+                            List<AstNode> block = [];
 
                             Requires(TokenKind.LeftParen);
 
@@ -126,7 +126,7 @@ namespace Best_language.src.front
                             if (CheckKind(TokenKind.LeftParen)) step = null;
                             else step = GetExpression();
 
-                            List<AstNode> block = new();
+                            List<AstNode> block = [];
 
                             Requires(TokenKind.LeftParen);
 
@@ -144,7 +144,7 @@ namespace Best_language.src.front
                             Requires(TokenKind.RightParen);
 
                             Expression ex = GetExpression();
-                            List<AstNode> block = new();
+                            List<AstNode> block = [];
 
                             Requires(TokenKind.LeftParen);
 
@@ -249,7 +249,7 @@ namespace Best_language.src.front
                     {
                         string @string = _tokens[_idx++].val!;
 
-                        List<Expression> expressions = new();
+                        List<Expression> expressions = [];
 
                         foreach (char s in @string)
                         {
@@ -264,7 +264,7 @@ namespace Best_language.src.front
                     {
                         _idx++;
 
-                        List<Expression> expressions = new();
+                        List<Expression> expressions = [];
 
                         while (!Consume(TokenKind.LeftBrace))
                         {
@@ -278,16 +278,16 @@ namespace Best_language.src.front
                     }
                 case TokenKind.Number:
                     {
-                        if(CheckKind(TokenKind.Dot))
+                        if(Consume(TokenKind.Number, TokenKind.Dot))
                         {
-                            var @double = _tokens[_idx].val! + "." + _tokens[_idx + 2].val!;
-                            if (_tokens[_idx + 3].kind is TokenKind.F)
+                            var @double = _tokens[_idx - 2].val! + "." + _tokens[_idx].val!;
+                            if (_tokens[_idx + 1].kind is TokenKind.F)
                             {
                                 left = new DoubleExpression(float.Parse(@double), typeTable.Float);
                                 _idx++;
                             }
                             else left = new DoubleExpression(double.Parse(@double), typeTable.Double);
-                            _idx += 3;
+                            _idx += 1;
                         }
                         else left = ParseNumber();
                         break;
@@ -303,13 +303,21 @@ namespace Best_language.src.front
 
                         left = new MemberAccessExpression(isArrow ? new UnaryExpression(Operation.Dereference, variable) : variable, name);
 
+                        while (_idx < _tokens.Count && _tokens[_idx].kind is TokenKind.Dot or TokenKind.Arrow)
+                        {
+                            isArrow = Consume(TokenKind.Arrow);
+                            name = Requires(true, TokenKind.Indent);
+
+                            var tmp = isArrow ? new UnaryExpression(Operation.Dereference, left) : left;
+                            left = new MemberAccessExpression(tmp, name);
+                        }
                         break;
                     }
                 case TokenKind.Indent when _tokens[_idx + 1].kind is TokenKind.RightParen:
                     {
                         string name = _tokens[_idx++].val!;
                         _idx++;
-                        List<Expression> @params = new();
+                        List<Expression> @params = [];
 
                         while (!Consume(TokenKind.LeftParen))
                         {
@@ -346,7 +354,7 @@ namespace Best_language.src.front
                 case TokenKind.True:
                 case TokenKind.False:
                     {
-                        left = new BoolExpression(_tokens[_idx++].kind is TokenKind.True ? true : false, typeTable.Bool);
+                        left = new BoolExpression(_tokens[_idx++].kind is TokenKind.True, typeTable.Bool);
                         break;
                     }
                 default:
@@ -374,13 +382,15 @@ namespace Best_language.src.front
                 _idx++;
 
                 var right = GetExpression(++opPriority);
-                var tmp = new BinaryExpression(left, op, right);
 
-                if (left is NumberExpression && right is NumberExpression) left = CombineBinary(op, (NumberExpression)left, (NumberExpression)right);
-                else if (left is DoubleExpression && right is NumberExpression) left = CombineBinary(op, (DoubleExpression)left, (NumberExpression)right);
-                else if (left is NumberExpression && right is DoubleExpression) left = CombineBinary(op, (NumberExpression)left, (DoubleExpression)right);
-                else if (left is DoubleExpression && right is DoubleExpression) left = CombineBinary(op, (DoubleExpression)left, (DoubleExpression)right);
-                else left = tmp;
+                left = (left, right) switch
+                {
+                    (NumberExpression l, NumberExpression r) => CombineBinary(op, l, r),
+                    (DoubleExpression l, NumberExpression r) => CombineBinary(op, l, r),
+                    (NumberExpression l, DoubleExpression r) => CombineBinary(op, l, r),
+                    (DoubleExpression l, DoubleExpression r) => CombineBinary(op, l, r),
+                    _ => new BinaryExpression(left, op, right),
+                };
             }
 
             if (priority == 0 && _idx < _tokens.Count)
@@ -443,6 +453,7 @@ namespace Best_language.src.front
             else if (type == typeTable.Struct && (CheckKind(TokenKind.Indent, TokenKind.RightBrace) || CheckKind(TokenKind.RightBrace)))
             {
                 @struct = ParseStruct();
+                type = @struct.Type;
             }
             else if (CheckKind(TokenKind.Indent) && type == typeTable.Enum)
             {
@@ -465,7 +476,7 @@ namespace Best_language.src.front
             return variables;
         }
 
-        private VariableDeclarations ParseVariables(TypeSymbol type = null!)
+        private VariableDeclarations ParseVariables(TypeSymbol type = null!, bool convertArray = false)
         {
             VariableDeclarations variables = new();
             bool isType = type is not null;
@@ -508,7 +519,8 @@ namespace Best_language.src.front
                     {
                         NumberExpression num = (NumberExpression)GetExpression();
                         Requires(TokenKind.LeftBracket);
-                        subType = new ArrayTypeSymbol(name, (long)num.Value, type!);
+                        if (convertArray) subType = typeTable.GetPointer(type!);
+                        else subType = new ArrayTypeSymbol(name, (int)num.Value, type!);
                     }
                 }
 
@@ -518,7 +530,8 @@ namespace Best_language.src.front
                 {
                     if (ex is null) throw new ArgumentException("Cannot declare array");
                     if (ex is not ArrayExpression arr) throw new ArgumentException("Expected array expression");
-                    subType = new ArrayTypeSymbol(name, arr.Right.Count, type!);
+                    if (convertArray) subType = typeTable.GetPointer(type!);
+                    else subType = new ArrayTypeSymbol(name, arr.Right.Count, type!);
                 }
 
                 variables.Variables.Add(new VariableDeclaration(name, subType is not null ? subType : type!, ex));
@@ -585,22 +598,32 @@ namespace Best_language.src.front
 
         private StructDeclaration ParseStruct() 
         {
-            string? structName = null;
+            string structName;
 
             if (CheckKind(TokenKind.Indent))
             {
                 structName = _tokens[_idx++].val!;
             }
+            else structName = _idx.ToString();
 
             Requires(TokenKind.RightBrace);
 
-            List<TypeSymbol> types = new();
-            List<string> names = new();
+            List<TypeSymbol> types = [];
+            List<string> names = [];
 
             TypeSymbol type = ParseType();
 
             while (!Consume(TokenKind.LeftBrace))
             {
+                if (CheckKind(TokenKind.Indent) && type == typeTable.Enum)
+                {
+                    type = new EnumTypeSymbol(_tokens[_idx++].val!, null!);
+                }
+                else if (CheckKind(TokenKind.Indent) && type == typeTable.Struct)
+                {
+                    type = new StructTypeSymbol(_tokens[_idx++].val!, -1, 0, null!);
+                }
+
                 while (Consume(TokenKind.Multiply)) type = typeTable.GetPointer(type);
 
                 names.Add(Requires(true, TokenKind.Indent));
@@ -620,7 +643,7 @@ namespace Best_language.src.front
             return new StructDeclaration(new(structName, GetSizeForStruct(types, out var alignment), alignment, types), names);
         }                                     
 
-        private Statement ParseFunction(TypeSymbol type)
+        private FuncDeclaration ParseFunction(TypeSymbol type)
         {
             if (Consume(TokenKind.Indent, TokenKind.RightParen))
             {
@@ -629,13 +652,13 @@ namespace Best_language.src.front
                 VariableDeclarations? @params;
 
                 if (Consume(TokenKind.Void, TokenKind.LeftParen)) @params = null;
-                else @params = ParseVariables();
+                else @params = ParseVariables(convertArray: true);
 
-                List<TypeSymbol> types = new();
+                List<TypeSymbol> types = [];
 
                 foreach (var param in @params is not null ? @params.Variables : []) types.Add(param.Type);
 
-                List<AstNode> block = new();
+                List<AstNode> block = [];
 
                 GetBlockCode(block);
 
@@ -650,7 +673,7 @@ namespace Best_language.src.front
             Requires(TokenKind.If, TokenKind.RightParen);
 
             Expression ex = GetExpression();
-            List<AstNode> block = new();
+            List<AstNode> block = [];
 
             Requires(TokenKind.LeftParen);
 
@@ -666,7 +689,7 @@ namespace Best_language.src.front
 
             while (_tokens.Count > _idx && _tokens[_idx].kind is TokenKind.ElseIf)
             {
-                @if.ElseIfs ??= new();
+                @if.ElseIfs ??= [];
                 @if.ElseIfs.Add((ElseIfDeclaration)GetAstNode());
             }
 
@@ -690,13 +713,13 @@ namespace Best_language.src.front
             Requires(TokenKind.Switch, TokenKind.RightParen);
 
             Expression ex = GetExpression();
-            List<CaseDeclaration> cases = new();
+            List<CaseDeclaration> cases = [];
 
             Requires(TokenKind.LeftParen, TokenKind.RightBrace);
 
             while (_tokens.Count > _idx && _tokens[_idx].kind != TokenKind.LeftBrace)
             {
-                List<AstNode> block = new();
+                List<AstNode> block = [];
                 Expression? caseEx = null;
 
                 if (_tokens.Count > _idx && _tokens[_idx].kind != TokenKind.Default)
@@ -739,6 +762,7 @@ namespace Best_language.src.front
             _idx++;
             TypeSymbol type;
             bool declareEnum = false;
+            StructDeclaration? structDecl = null;
 
 
             string typeName = _tokens[_idx].val!;
@@ -760,6 +784,11 @@ namespace Best_language.src.front
                 declareEnum = true;
                 type = ParseEnum();
             }
+            else if (Consume(TokenKind.Struct))
+            {
+                structDecl = ParseStruct();
+                type = structDecl.Type;
+            }
             else type = ParseType();
 
             string? enumName = null;
@@ -769,7 +798,7 @@ namespace Best_language.src.front
             {
                 string name = Requires(true, TokenKind.Indent);
 
-                if (enumName is null) enumName = name;
+                if (enumName is {}) enumName = name;
 
                 if (!_scopes.TryAddVariable(name, NameKind.TypeDef)) throw new ArgumentException($"Cannot define {name} because variable with the same name in the same scope already exist");
 
@@ -783,9 +812,10 @@ namespace Best_language.src.front
 
             if (declareEnum)
             {
-                if (type.Name is null) type.Name = enumName!;
-                return new EnumDeclaration((EnumTypeSymbol)type, new());
+                if (type.Name is { }) type.Name = enumName!;
+                return new EnumDeclaration((EnumTypeSymbol)type, []);
             }
+            else if (structDecl is not null) return structDecl;
             else return new EmptyNode();
         }
     }

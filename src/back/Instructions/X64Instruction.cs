@@ -200,6 +200,7 @@
         public static X64Operand Reg(X64Register register) => new(X64ValueKind.Register, GetSize(register), register);
         public static X64Operand Mem(X64Register register, int offset, X64Size size) => new(X64ValueKind.Memory, size, register, offset);
         public static X64Operand Imm(X64Size size, long value) => new(X64ValueKind.Immediate, size, value: value);
+        public static X64Operand RipRelative(X64Size size, string name) => new(X64ValueKind.Memory, size, name: name);
         public static X64Operand Label(string name) => new(X64ValueKind.Label, 0, name: name);
         public static X64Operand Symbol(string name) => new(X64ValueKind.Symbol, 0, name: name);
 

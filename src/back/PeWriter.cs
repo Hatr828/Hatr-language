@@ -17,21 +17,30 @@ namespace Best_language.src.back
         public const int optionalHeaderSize = 0xF0; // 240
         private const int section = optional + optionalHeaderSize;
 
-        public static byte[] Build(byte[] code, IReadOnlyList<PeImport> importFixups)
+        public static byte[] Build(byte[] code, IReadOnlyList<PeImport> importFixups, IReadOnlyList<X64Label> dataFixups, List<byte> globalData, IReadOnlyDictionary<string, int> dataOffsets)
         {
             int rawSize = Align(code.Length, fileAlignment);
-            int importRva = Align(checked(codeRva + code.Length), sectionAlignment);
+            int importRva = Align(checked(codeRva + rawSize), sectionAlignment);
 
             byte[] imports = BuildImports(importFixups, importRva,
                 out var addresses, out int directorySize, out int iatOffset, out int iatSize);
 
             bool hasImports = imports.Length != 0;
+            bool hasData = dataFixups.Count != 0;
+
+            ushort numberSections = 1;
+
+            if (hasData) numberSections++; if(hasImports) numberSections++;
 
             int importRawSize = Align(imports.Length, fileAlignment);
             int importFileOffset = checked(headerSize + rawSize);
-            int imageSize = hasImports ? Align(checked(importRva + importRawSize), sectionAlignment) : Align(checked(codeRva + rawSize), sectionAlignment);
 
-            byte[] file = new byte[checked(importRawSize + importFileOffset)];
+            int dataRva = Align(checked(importRva + importRawSize), sectionAlignment);
+            int dataFileOffset = checked(importFileOffset + importRawSize);
+            int dataRawSize = Align(globalData.Count, fileAlignment);
+
+            int imageSize = Align(checked(dataRawSize + dataRva), sectionAlignment);
+            byte[] file = new byte[checked(dataFileOffset + dataRawSize)];
 
             //DOS header
             Write16(0, 0x5A4D, file);
@@ -42,14 +51,14 @@ namespace Best_language.src.back
 
             //coff
             Write16(coff, 0x8664, file); // Machine
-            Write16(coff + 2, (ushort)(hasImports ? 2 : 1), file);  // NumberOfSections
+            Write16(coff + 2, numberSections, file);  // NumberOfSections
             Write16(coff + 16, optionalHeaderSize, file); // SizeOfOptionalHeader
             Write16(coff + 18, 0x23, file); // Characteristics
 
             //optional
             Write16(optional, 0x20B, file); // PE32+ (Magic)
             Write32(optional + 4, (uint)rawSize, file); // SizeOfCode
-            Write32(optional + 8, (uint)importRawSize, file); // SizeOfInitializedData
+            Write32(optional + 8, (uint)checked(importRawSize + dataRawSize), file); // SizeOfInitializedData
             Write32(optional + 16, codeRva, file); // AddressOfEntryPoint
             Write32(optional + 20, codeRva, file);  // BaseOfCode
             Write64(optional + 24, imageBase, file); // ImageBase
@@ -86,9 +95,18 @@ namespace Best_language.src.back
 
             WriteSection(file, section, ".text", code.Length, codeRva, rawSize, headerSize, 0x60000020);
 
+            int nextSection = section + 40;
+
             if (hasImports)
             {
-                WriteSection(file, section + 40, ".idata", imports.Length, importRva, importRawSize, importFileOffset, 0xC0000040);
+                WriteSection(file, nextSection, ".idata", imports.Length, importRva, importRawSize, importFileOffset, 0xC0000040);
+                nextSection += 40;
+            }
+
+            if (hasData)
+            {
+                WriteSection(file, nextSection, ".data", dataFixups.Count, dataRva, dataRawSize, dataFileOffset, 0xC0000040);
+                globalData.CopyTo(file, dataFileOffset); 
             }
 
             code.CopyTo(file, headerSize);
@@ -98,6 +116,15 @@ namespace Best_language.src.back
             {
                 uint targetRva = addresses[fixup];
                 long nextInstructionRva = (long)codeRva + fixup.Offset + 4;
+                int displacement = checked((int)(targetRva - nextInstructionRva));
+
+                BinaryPrimitives.WriteInt32LittleEndian(file.AsSpan(headerSize + fixup.Offset, 4), displacement);
+            }
+
+            foreach (X64Label fixup in dataFixups)
+            {
+                long targetRva = (long)dataRva + dataOffsets[fixup.Name];
+                long nextInstructionRva = (long)codeRva + fixup.NextInstruction;
                 int displacement = checked((int)(targetRva - nextInstructionRva));
 
                 BinaryPrimitives.WriteInt32LittleEndian(file.AsSpan(headerSize + fixup.Offset, 4), displacement);

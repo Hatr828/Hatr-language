@@ -50,10 +50,22 @@ namespace Best_language.src.middle
     }
     public class BoundVariablesDeclaration : BoundStatement
     {
-        public List<BoundVariableDeclaration> Variables { get; } = new();
+        public List<BoundVariableDeclaration> Variables { get; } = [];
+        public override IEnumerable<BoundNode> Children => Variables;
+    }
+    public class BoundGlobalVariablesDeclaration : BoundStatement
+    {
+        public List<BoundGlobalVariableDeclaration> Variables { get; } = [];
         public override IEnumerable<BoundNode> Children => Variables;
     }
     public class BoundVariableDeclaration(VariableSymbol variable, BoundExpression? initializer) : BoundStatement
+    {
+        public VariableSymbol Variable { get; } = variable;
+        public BoundExpression? Initializer { get; } = initializer;
+        public override string PrintName => $"{GetType().Name}: {Variable.Name} ({Variable.Type})";
+        public override IEnumerable<BoundNode> Children => Initializer is { } t ? [t] : [];
+    }
+    public class BoundGlobalVariableDeclaration(VariableSymbol variable, BoundExpression? initializer) : BoundStatement
     {
         public VariableSymbol Variable { get; } = variable;
         public BoundExpression? Initializer { get; } = initializer;
@@ -70,7 +82,7 @@ namespace Best_language.src.middle
     public class BoundIfDeclaration(BoundExpression expression) : BoundStatement
     {
         public BoundExpression Expression { get; } = expression;
-        public List<BoundStatement> Statements { get; } = new();
+        public List<BoundStatement> Statements { get; } = [];
         public List<BoundElseIfDeclaration>? ElseIfs { get; set; }
         public BoundElseDeclaration? Else { get; set; }
         public override IEnumerable<BoundNode> Children
@@ -86,37 +98,37 @@ namespace Best_language.src.middle
     }
     public class BoundSwitchDeclaration : BoundStatement
     {
-        public List<BoundCaseDeclaration> Cases { get; } = new();
+        public List<BoundCaseDeclaration> Cases { get; } = [];
         public override IEnumerable<BoundNode> Children => Cases;
     }
     public class BoundCaseDeclaration(BoundExpression? expression, bool isDefault) : BoundStatement
     {
         public bool IsDefault { get; set; } = isDefault;
         public BoundExpression? Expression { get; } = expression;
-        public List<BoundStatement> CodeBlock { get; } = new();
+        public List<BoundStatement> CodeBlock { get; } = [];
         public override IEnumerable<BoundNode> Children => CodeBlock.Concat<BoundNode>(Expression is { } t ? [t] : []);
     }
     public class BoundElseIfDeclaration(BoundExpression expression) : BoundStatement
     {
         public BoundExpression Expression { get; } = expression;
-        public List<BoundStatement> CodeBlock { get; } = new();
+        public List<BoundStatement> CodeBlock { get; } = [];
         public override IEnumerable<BoundNode> Children => CodeBlock.Concat<BoundNode>([Expression]);
     }
     public class BoundElseDeclaration : BoundStatement
     {
-        public List<BoundStatement> CodeBlock { get; } = new();
+        public List<BoundStatement> CodeBlock { get; } = [];
         public override IEnumerable<BoundNode> Children => CodeBlock;
     }
     public class BoundWhileDeclaration(BoundExpression expression, bool isDoWhile = false) : BoundStatement
     {
         public BoundExpression Expression { get; } = expression;
-        public List<BoundStatement> CodeBlock { get; } = new();
+        public List<BoundStatement> CodeBlock { get; } = [];
         public bool IsDoWhile { get; } = isDoWhile;
         public override IEnumerable<BoundNode> Children => CodeBlock.Concat<BoundNode>([Expression]);
     }
     public class BoundForDeclaration(BoundStatement? initializer, BoundExpression? expression, BoundExpression? step) : BoundStatement
     {
-        public List<BoundStatement> Statements { get; set; } = new();
+        public List<BoundStatement> Statements { get; set; } = [];
         public BoundStatement? Initializer { get; } = initializer;
         public BoundExpression? Expression { get; } = expression;
         public BoundExpression? Step { get; } = step;
@@ -164,7 +176,7 @@ namespace Best_language.src.middle
         public List<BoundExpression> Right { get; } = right;
         public override IEnumerable<BoundNode> Children => Right;
     }
-    public class BoundConversionExpression(BoundExpression expression, TypeSymbol targetype) : BoundExpression(targetype)
+    public class BoundConversionExpression(BoundExpression expression, TypeSymbol targetType) : BoundExpression(targetType)
     {
         public BoundExpression Expression { get; } = expression;
         public override IEnumerable<BoundNode> Children => [Expression];
@@ -244,11 +256,11 @@ namespace Best_language.src.middle
 
     public class BoundScopes
     {
-        private readonly List<Dictionary<string, VariableSymbol>> _userVariables = new();
-        private readonly List<Dictionary<string, (ulong, IntegerTypeSymbol)>> _enums = new();
-        private readonly List<Dictionary<string, EnumTypeSymbol>> _userEnums = new();
-        private readonly Dictionary<string, FunctionTypeSymbol> _userFunctions = new();
-        private readonly List<Dictionary<string, (StructTypeSymbol, List<string>)>> _userStructs = new();
+        private readonly List<Dictionary<string, VariableSymbol>> _userVariables = [];
+        private readonly List<Dictionary<string, (ulong, IntegerTypeSymbol)>> _enums = [];
+        private readonly List<Dictionary<string, EnumTypeSymbol>> _userEnums = [];
+        private readonly Dictionary<string, FunctionTypeSymbol> _userFunctions = [];
+        private readonly List<Dictionary<string, (StructTypeSymbol, List<string>)>> _userStructs = [];
 
         public bool TryAddVariable(VariableSymbol variable)
         {
@@ -321,12 +333,14 @@ namespace Best_language.src.middle
         }
         public bool TryGetFunction(string name, out FunctionTypeSymbol type) =>  _userFunctions.TryGetValue(name, out type!);
 
+        public int GetAmountOfScopes() => _userVariables.Count;
+
         public void AddScope()
         {
-            _userVariables.Add(new());
-            _enums.Add(new());
-            _userEnums.Add(new());
-            _userStructs.Add(new());
+            _userVariables.Add([]);
+            _enums.Add([]);
+            _userEnums.Add([]);
+            _userStructs.Add([]);
         }
         public void RemoveScope()
         {

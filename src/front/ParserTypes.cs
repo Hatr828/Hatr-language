@@ -92,7 +92,7 @@ namespace Best_language.src.front
     }
     public class VariableDeclarations : Statement
     {
-        public List<VariableDeclaration> Variables { get; set; } = new();
+        public List<VariableDeclaration> Variables { get; set; } = [];
         public override string PrintName => $"{GetType().Name}";
         public override IEnumerable<AstNode> Children => Variables;
     }
@@ -117,7 +117,6 @@ namespace Best_language.src.front
     public class ArrayExpression(List<Expression> right) : Expression
     {
         public List<Expression> Right { get; } = right;
-
 
         public override IEnumerable<AstNode> Children => Right;
     }
@@ -203,7 +202,7 @@ namespace Best_language.src.front
     }
     public class ElseDeclaration : Statement
     {
-        public List<AstNode> CodeBlock { get; } = new();
+        public List<AstNode> CodeBlock { get; } = [];
 
         public override IEnumerable<AstNode> Children => CodeBlock;
     }
@@ -236,10 +235,10 @@ namespace Best_language.src.front
 
     public class ParserScopes
     {
-        private readonly List<Dictionary<string, NameKind>> _nameKinds = new();
-        private List<Dictionary<string, TypeSymbol>> _typedefs = new();
-        private List<Dictionary<string, EnumTypeSymbol>> _enums = new();
-        private List<Dictionary<string, (ulong, TypeSymbol)>> _enumNames = new();
+        private readonly List<Dictionary<string, NameKind>> _nameKinds = [];
+        private readonly List<Dictionary<string, TypeSymbol>> _typedefs = [];
+        private readonly List<Dictionary<string, EnumTypeSymbol>> _enums = [];
+        private readonly List<Dictionary<string, (ulong, TypeSymbol)>> _enumNames = [];
         public bool TryAddVariable(string name, NameKind kind)
         {
             return _nameKinds[^1].TryAdd(name, kind);
@@ -308,10 +307,10 @@ namespace Best_language.src.front
 
         public void AddScope()
         {
-            _nameKinds.Add(new());
-            _typedefs.Add(new());
-            _enums.Add(new());
-            _enumNames.Add(new());
+            _nameKinds.Add([]);
+            _typedefs.Add([]);
+            _enums.Add([]);
+            _enumNames.Add([]);
         }
         public void RemoveScope()
         {

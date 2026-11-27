@@ -4,7 +4,7 @@ namespace Best_language.src.middle
 {
     public partial class BoundTree
     {
-        private Dictionary<(Operation op, System.Type, System.Type), BinaryRule> _binaryRules = new()
+        private readonly Dictionary<(Operation op, System.Type, System.Type), BinaryRule> _binaryRules = new()
         {
             // IntegerArithmetic
             [(Operation.Plus, typeof(IntegerTypeSymbol), typeof(IntegerTypeSymbol))] = BinaryRule.IntegerArithmetic,
@@ -123,7 +123,7 @@ namespace Best_language.src.middle
             //
         };
 
-        private Dictionary<(Operation op, System.Type), UnaryRule> _unaryRules = new()
+        private readonly Dictionary<(Operation op, System.Type), UnaryRule> _unaryRules = new()
         {
             [(Operation.PlusPlusLeft, typeof(IntegerTypeSymbol))] = UnaryRule.Arithmetic,
             [(Operation.PlusPlusRight, typeof(IntegerTypeSymbol))] = UnaryRule.Arithmetic,
@@ -327,7 +327,7 @@ namespace Best_language.src.middle
             if (!_scopes.TryGetVariable(name, out variable)) throw new ArgumentException($"Variable {name} not exist");
         }
 
-        private Operation GetOperationFromCompoundOperation(Operation op) => op switch
+        private static Operation GetOperationFromCompoundOperation(Operation op) => op switch
         {
             Operation.MinusEquals => Operation.Minus,
             Operation.PlusEquals => Operation.Plus,
@@ -345,10 +345,11 @@ namespace Best_language.src.middle
             _ => throw new ArgumentException("Unknown compound operation")
         };
 
-        private bool CanTakeAddress(BoundExpression ex) => ex switch
+        private static bool CanTakeAddress(BoundExpression ex) => ex switch
         {
             BoundVariableExpression => true,
             BoundMemberAccessExpression => true,
+            BoundArrayAccessExpression => true,
             BoundUnaryExpression unary when unary.Op is Operation.Dereference => true,
 
             _ => false,
@@ -367,7 +368,7 @@ namespace Best_language.src.middle
 
             return type;
         }
-        private bool CanAssign(BoundExpression ex) => ex switch
+        private static bool CanAssign(BoundExpression ex) => ex switch
         {
             BoundVariableExpression => true,
             BoundArrayAccessExpression => true,
@@ -383,7 +384,7 @@ namespace Best_language.src.middle
             if (type is StructTypeSymbol @struct)
             {
                 if (_scopes.TryGetStruct(@struct.Name, out var structType)) return structType.Item1;
-                else throw new ArgumentException($"Unknown enum name: {@struct.Name}");
+                else throw new ArgumentException($"Unknown struct name: {@struct.Name}");
             }
 
             return type;

@@ -54,7 +54,7 @@ namespace Best_language.src.front
             _scopes.RemoveScope();
         }
 
-        private TypeSymbol GetCommonArithmeticType(TypeSymbol left, TypeSymbol right)
+        private static TypeSymbol GetCommonArithmeticType(TypeSymbol left, TypeSymbol right)
         {
             if (left is BoolTypeSymbol || left is IntegerTypeSymbol left_ && (int)left_.Size < 4) left = typeTable.Int32;
 
@@ -158,7 +158,7 @@ namespace Best_language.src.front
             _ => throw new ArgumentException("Unknown Operation")
         };
 
-        private NumberExpression CombineUnary(Operation op, NumberExpression num) => op switch
+        private static NumberExpression CombineUnary(Operation op, NumberExpression num) => op switch
         {
             Operation.Plus => new(num.Value, num.Type),
             Operation.Minus => new(~num.Value + 1, num.Type),
@@ -166,14 +166,14 @@ namespace Best_language.src.front
             Operation.BitNot => new(~num.Value, num.Type),
             _ => throw new ArgumentException($"Unexpected unary operation: {op}")
         };
-        private DoubleExpression CombineUnary(Operation op, DoubleExpression num) => op switch
+        private static DoubleExpression CombineUnary(Operation op, DoubleExpression num) => op switch
         {
             Operation.Plus => new(num.Value, num.Type),
             Operation.Minus => new(-num.Value, num.Type),
             Operation.Not => new(num.Value == 0.0 ? 1 : 0, num.Type),
             _ => throw new ArgumentException($"Unexpected unary operation: {op}")
         };
-        private NumberExpression CombineBinary(Operation op, NumberExpression left, NumberExpression right) => op switch
+        private static NumberExpression CombineBinary(Operation op, NumberExpression left, NumberExpression right) => op switch
         {
             Operation.Plus => new(left.Value + right.Value, GetCommonArithmeticType(left.Type, right.Type)),
             Operation.Minus => new(left.Value - right.Value, GetCommonArithmeticType(left.Type, right.Type)),
@@ -197,7 +197,7 @@ namespace Best_language.src.front
 
             _ => throw new ArgumentException($"Unexpected unary operation: {op}")
         };
-        private Expression CombineBinary(Operation op, DoubleExpression left, NumberExpression right) => op switch
+        private static Expression CombineBinary(Operation op, DoubleExpression left, NumberExpression right) => op switch
         {
             Operation.Plus => new DoubleExpression(left.Value + right.Value, GetCommonArithmeticType(left.Type, right.Type)),
             Operation.Minus => new DoubleExpression(left.Value - right.Value, GetCommonArithmeticType(left.Type, right.Type)),
@@ -214,7 +214,7 @@ namespace Best_language.src.front
 
             _ => throw new ArgumentException($"Unexpected unary operation: {op}")
         };
-        private Expression CombineBinary(Operation op, DoubleExpression left, DoubleExpression right) => op switch
+        private static Expression CombineBinary(Operation op, DoubleExpression left, DoubleExpression right) => op switch
         {
             Operation.Plus => new DoubleExpression(left.Value + right.Value, GetCommonArithmeticType(left.Type, right.Type)),
             Operation.Minus => new DoubleExpression(left.Value - right.Value, GetCommonArithmeticType(left.Type, right.Type)),
@@ -231,7 +231,7 @@ namespace Best_language.src.front
 
             _ => throw new ArgumentException($"Unexpected unary operation: {op}")
         };
-        private Expression CombineBinary(Operation op, NumberExpression left, DoubleExpression right) => op switch
+        private static Expression CombineBinary(Operation op, NumberExpression left, DoubleExpression right) => op switch
         {
             Operation.Plus => new DoubleExpression(left.Value + right.Value, GetCommonArithmeticType(left.Type, right.Type)),
             Operation.Minus => new DoubleExpression(left.Value - right.Value, GetCommonArithmeticType(left.Type, right.Type)),
@@ -249,7 +249,7 @@ namespace Best_language.src.front
             _ => throw new ArgumentException($"Unexpected unary operation: {op}")
         };
 
-        private bool IsExpression(TokenKind kind) => kind switch
+        private static bool IsExpression(TokenKind kind) => kind switch
         {
             TokenKind.Plus or TokenKind.Minus or TokenKind.Not or TokenKind.BitNot or TokenKind.PlusPlus or TokenKind.MinusMinus => true,
             TokenKind.RightParen => true,
@@ -259,11 +259,11 @@ namespace Best_language.src.front
             _ => false,
         };
 
-        private int GetSizeForStruct(List<TypeSymbol> types, out int alignment)
+        private static int GetSizeForStruct(List<TypeSymbol> types, out int alignment)
         {
             alignment = 0;
 
-            foreach (var type in types) alignment = Math.Max(alignment, typeTable.GetTypeSize(type));
+            foreach (var type in types) alignment = Math.Max(alignment, TypeTable.GetTypeSize(type));
 
             return alignment * types.Count;
         }
@@ -318,7 +318,7 @@ namespace Best_language.src.front
         };
         private TypeSymbol ParseType()
         {
-            List<TokenKind> tmp = new();
+            List<TokenKind> tmp = [];
             while (_tokens[_idx].kind is >= TokenKind.Int and <= TokenKind.UnSigned)
             {
                 tmp.Add(_tokens[_idx++].kind); 

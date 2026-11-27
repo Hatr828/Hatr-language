@@ -1,13 +1,14 @@
 using Best_language.src.front;
 using System.Diagnostics.Metrics;
+using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Best_language.src.middle
 {
     public partial class BoundTree
     {
-        private BoundScopes _scopes = new();
-        private Dictionary<string, int> _gotoLabels = new();
+        private readonly BoundScopes _scopes = new();
+        private readonly Dictionary<string, int> _gotoLabels = [];
         private TypeTable _typeTable = null!;
         private int _labelId;
 
@@ -17,7 +18,7 @@ namespace Best_language.src.middle
 
             PreProcessAst(mainNode.Nodes);
 
-            List<BoundStatement> statements = new();
+            List<BoundStatement> statements = [];
 
             _scopes.AddScope();
             foreach (AstNode node in mainNode.Nodes)
@@ -80,6 +81,13 @@ namespace Best_language.src.middle
         {
             switch (node)
             {
+                case VariableDeclarations variables when _scopes.GetAmountOfScopes() == 1:
+                    {
+                        BoundGlobalVariablesDeclaration variables2 = new();
+                        foreach (var variable in variables.Variables) variables2.Variables.Add((BoundGlobalVariableDeclaration)BindStatement(variable));
+
+                        return variables2;
+                    }
                 case VariableDeclarations variables:
                     {
                         BoundVariablesDeclaration variables2 = new();
@@ -89,8 +97,6 @@ namespace Best_language.src.middle
                     }
                 case VariableDeclaration declaration:
                     {
-                        BoundVariableDeclaration temp;
-
                         var type = ResolveEnumType(declaration.Type);
                         type = ResolveStructType(declaration.Type);
 
@@ -99,38 +105,14 @@ namespace Best_language.src.middle
 
                         if (declaration.Initializer is not null)
                         {
-                            if (declaration.Initializer is ArrayExpression st && type is StructTypeSymbol tmpType)
-                            {
-                                List<BoundExpression> expressions = new();
-
-                                for(int i = tmpType.Types.Count - 1; i > -1; i--)
-                                {
-                                    if (st.Right.Count > i) expressions.Add(BindConversion(BindExpression(st.Right[i]), tmpType.Types[i]));
-                                    else expressions.Add(BindConversion(BindExpression(new NumberExpression(0, tmpType.Types[i])), tmpType.Types[i]));
-                                }
-                                temp = new BoundVariableDeclaration(variable, new BoundArrExpression(expressions, type));
-                            }
-                            else if (declaration.Initializer is ArrayExpression arrEx && type is ArrayTypeSymbol tempType)
-                            {
-                                List<BoundExpression> expressions = new();
-
-                                for (int i = (int)tempType.Size - 1; i > -1; i--)
-                                {
-                                    if (arrEx.Right.Count > i) expressions.Add(BindConversion(BindExpression(arrEx.Right[i]), tempType.Type));
-                                    else expressions.Add(BindConversion(BindExpression(new NumberExpression(0, tempType.Type)), tempType.Type));
-                                }
-                                temp = new BoundVariableDeclaration(variable, new BoundArrExpression(expressions, type));
-                            }
-                            else
-                            {
-                                var initializer = BindExpression(declaration.Initializer);
-                                temp = new BoundVariableDeclaration(variable, BindConversion(initializer, type));
-                            }
+                            var initializer = BindExpression(declaration.Initializer, targetType: type);
+                            if (_scopes.GetAmountOfScopes() == 1)
+                                return new BoundGlobalVariableDeclaration(variable, BindConversion(initializer, type));
+                            else return new BoundVariableDeclaration(variable, BindConversion(initializer, type));
                         }
                         else
-                            temp = new BoundVariableDeclaration(variable, null);
-
-                        return temp;
+                            if (_scopes.GetAmountOfScopes() == 1) return new BoundGlobalVariableDeclaration(variable, null);
+                            else return new BoundVariableDeclaration(variable, null);
                     }
                 case EnumDeclaration @enum:
                     {
@@ -210,14 +192,15 @@ namespace Best_language.src.middle
                     }
                 case FuncDeclaration func:
                     {
-                        List<BoundStatement> codeBlock = new();
-                        List<BoundVariableDeclaration> @params = new();
+                        List<BoundStatement> codeBlock = [];
+                        List<BoundVariableDeclaration> @params = [];
 
                         _scopes.AddScope();
                         foreach (var param in func.Params)
                         {
                             if (param.Initializer is not null) throw new ArgumentException("Cannot have function with default params");
-                            @params.Add((BoundVariableDeclaration)BindStatement(param));
+                            var tmp = (BoundVariableDeclaration)BindStatement(param);
+                            @params.Add(tmp);
                         }
 
                         foreach (var statement in func.CodeBlock) codeBlock.Add(BindStatement(statement));
@@ -286,7 +269,7 @@ namespace Best_language.src.middle
             throw new ArgumentException($"Failed to bind a statement: {node}");
         }
 
-        private BoundExpression BindExpression(Expression expression, bool constantOnly = false)
+        private BoundExpression BindExpression(Expression expression, bool constantOnly = false, TypeSymbol? targetType = null)
         {
             switch (expression)
             {
@@ -327,7 +310,7 @@ namespace Best_language.src.middle
                         if (constantOnly) throw new ArgumentException("Expected constants only");
                         if (!_scopes.TryGetFunction(func.Name, out var type)) throw new ArgumentException("Unknown function");
 
-                        List<BoundExpression> @params = new();
+                        List<BoundExpression> @params = [];
 
                         foreach (var param in func.Params)
                         {
@@ -352,22 +335,51 @@ namespace Best_language.src.middle
                     }
                 case AssignmentExpression assignment:
                     {
-                        BoundExpression right = BindExpression(assignment.Right);
                         BoundExpression left = BindExpression(assignment.Left);
 
                         if (!CanAssign(left)) throw new ArgumentException($"Cannot assign to {left}");
 
-                        if (right.Type is StructTypeSymbol st && left.Type is StructTypeSymbol st2 && st != st2) throw new ArgumentException("Cannot assign two different structs");
-
                         if (assignment.Op is Operation op)
                         {
-                            return new BoundAssignmentExpression(left, right, GetOperationFromCompoundOperation(op));
+                            return new BoundAssignmentExpression(left, BindExpression(assignment.Right), GetOperationFromCompoundOperation(op));
                         }
+
+                        BoundExpression right = BindExpression(assignment.Right, targetType: left.Type);
 
                         if (right.Type != left.Type) right = new BoundConversionExpression(right, left.Type);
 
                         return new BoundAssignmentExpression(left, right);
                     }
+                case ArrayExpression arr:
+                    {
+                        List<BoundExpression> expressions = [];
+
+                        if (targetType is null) throw new ArgumentException("Expected type to be not null.");
+
+                        int count = targetType switch
+                        {
+                            ArrayTypeSymbol arrT => arrT.Size,
+                            PointerTypeSymbol pointer => arr.Right.Count,
+                            StructTypeSymbol st => st.Size,
+                            _ => throw new ArgumentException("Expected struct or array type.")
+                        };
+
+                        for (int i = count - 1; i > -1; i--)
+                        {
+                            TypeSymbol type = targetType switch
+                            {
+                                ArrayTypeSymbol arrT => arrT.Type,
+                                PointerTypeSymbol pointer => pointer.ElementType,
+                                StructTypeSymbol st => st.Types[i],
+                                _ => throw new ArgumentException("Expected struct or array type.")
+                            };
+                            if (arr.Right.Count > i)
+                                expressions.Add(BindConversion(BindExpression(arr.Right[i]), type));
+                            else
+                                expressions.Add(BindConversion(BindExpression(new NumberExpression(0, _typeTable.Int32)), type));
+                        }
+                        return new BoundArrExpression(expressions, targetType);
+                    } 
                 case BoolExpression ex:
                     {
                         return new BoundBoolExpression(ex.Value, ex.Type);
@@ -384,7 +396,7 @@ namespace Best_language.src.middle
             throw new ArgumentException($"Failed to BindExpression: {expression}");
         }
 
-        private BoundStatement BindIf(IfDeclaration @if)
+        private BoundIfDeclaration BindIf(IfDeclaration @if)
         {
             var If = new BoundIfDeclaration(new BoundConversionExpression(BindExpression(@if.Expression), _typeTable.Int32));
 
@@ -396,7 +408,7 @@ namespace Best_language.src.middle
 
             if (@if.ElseIfs is not null)
             {
-                If.ElseIfs ??= new();
+                If.ElseIfs ??= [];
                 foreach (var elseIf in @if.ElseIfs) If.ElseIfs.Add((BoundElseIfDeclaration)BindStatement(elseIf));
             }
             if (@if.Else is not null)
