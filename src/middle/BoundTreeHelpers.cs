@@ -367,15 +367,14 @@ namespace Best_language.src.middle
 
             return type;
         }
-        private TypeSymbol ResolveArrType(TypeSymbol type)
+        private bool CanAssign(BoundExpression ex) => ex switch
         {
-            if (type is PointerTypeSymbol pointer)
-                return _typeTable.GetPointer(ResolveEnumType(pointer.ElementType));
-
-            if (type is ArrayTypeSymbol arr) return _typeTable.GetPointer(arr.Type);
-
-            return type;
-        }
+            BoundVariableExpression => true,
+            BoundArrayAccessExpression => true,
+            BoundUnaryExpression { Op: Operation.Dereference } => true,
+            BoundMemberAccessExpression t => CanAssign(t.Target),
+            _ => false
+        };
         private TypeSymbol ResolveStructType(TypeSymbol type)
         {
             if (type is PointerTypeSymbol pointer)

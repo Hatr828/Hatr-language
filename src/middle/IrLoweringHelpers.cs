@@ -43,6 +43,15 @@ namespace Best_language.src.middle
             throw new InvalidOperationException($"Unknown variable: '{variable.Name}'.");
         }
 
+        private IrValue ConvertIrValue(IrValue val, TypeSymbol targetType)
+        {
+            if (val.Type == targetType) return val;
+
+            var res = NewIrValue(targetType);
+            Emit(new IrConversion(res, val));
+            return res;
+        }
+
         private int GetTypeSize(TypeSymbol type) => type switch
         {
             BoolTypeSymbol => 1,
@@ -51,6 +60,20 @@ namespace Best_language.src.middle
             PointerTypeSymbol => 8,
             _ => throw new ArgumentException()
         };
+
+        private IrValue LowerStruct(BoundExpression ex, StructTypeSymbol type)
+        {
+            if (ex is BoundAssignmentExpression) return LowerExpression(ex);
+
+            var (right, rightOffset) = LowerAddress(ex);
+
+            var left = NewIrValue(type);
+            var res = NewIrValue(_typeTable.GetPointer(type));
+
+            Emit(new IrUnary(Operation.ReferenceOf, left, res));
+            Emit(new IrCopyAggregate(res, 0, right, rightOffset, type.Size));
+            return res;
+        }
 
         private (IrValue address, int offset) LowerAddress(BoundExpression expression)
         {

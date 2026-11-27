@@ -167,61 +167,6 @@ namespace Best_language.src.middle
                     Emit(new IrLabel("user_" + @goto.Id)); return;
                 case BoundGotoStatement @goto:
                     Emit(new IrJump("user_" + @goto.ToId)); return;
-                case BoundAssignmentStatement assignment when assignment.Right is BoundArrExpression st:
-                    {
-                        List<IrValue> Irs = new();
-                        var type = (StructTypeSymbol)st.Type;
-
-                        for (int i = 0; i < st.Right.Count; i++)
-                        {
-                            Irs.Add(LowerExpression(st.Right[i]));
-                        }
-
-                        var res = LowerExpression(assignment.Left);
-
-                        Emit(new IrArray(res, type.Size, Irs));
-                        return;
-                    }
-                case BoundAssignmentStatement { Left: BoundUnaryExpression { Op: Operation.Dereference} } assignment:
-                    {
-                        var (address, offset) = LowerAddress(assignment.Left);
-                        var right = LowerExpression(assignment.Right);
-
-                        Emit(new IrStore(address, offset, right));
-                        return;
-                    }
-                case BoundAssignmentStatement { Left: BoundArrayAccessExpression } assignment:
-                    {
-                        var (address, offset) = LowerAddress(assignment.Left);
-                        var right = LowerExpression(assignment.Right);
-
-                        Emit(new IrStore(address, offset, right));
-                        return;
-                    }
-                case BoundAssignmentStatement assignment:
-                    {
-                        var left = LowerExpression(assignment.Left);
-                        var right = LowerExpression(assignment.Right);
-
-                        Emit(new IrVariable(left, right));
-                        return;
-                    }
-                case BoundArrayAssignment assignment:
-                    {
-                        var (address, offset) = LowerAddress(assignment.Left);
-                        var right = LowerExpression(assignment.Right);
-
-                        Emit(new IrStore(address, offset, right));
-                        return;
-                    }
-                case BoundAssignmentMemberStatement assignment:
-                    {
-                        var (address, offset) = LowerAddress(assignment.Target);
-                        var right = LowerExpression(assignment.Right);
-
-                        Emit(new IrStore(address, offset + assignment.Field.Offset, right));
-                        return;
-                    }
                 case BoundExpressionStatement ex:
                     {
                         LowerExpression(ex.Expression);
@@ -277,6 +222,50 @@ namespace Best_language.src.middle
                         Emit(new IrLoad(res, address, offset));
                         return res;
                     }
+                case BoundAssignmentExpression { Op: Operation op} assignment:
+                    {
+                        var (address, offset) = LowerAddress(assignment.Left);
+                        var tmp = EmitCopy(address);
+
+                        var oldVal = NewIrValue(assignment.Left.Type);
+                        Emit(new IrLoad(oldVal, tmp, offset));
+
+                        var left = ConvertIrValue(oldVal, assignment.Left.Type);
+                        var right = ConvertIrValue(LowerExpression(assignment.Right), assignment.Right.Type);
+
+                        var res = NewIrValue(assignment.Type);
+                        Emit(new IrBinary(op, left, right, res));
+
+                        var val = ConvertIrValue(res, assignment.Left.Type);
+                        Emit(new IrStore(tmp, offset, val));
+
+                        return val;
+                    }
+                case BoundAssignmentExpression assignment when assignment.Left.Type is StructTypeSymbol st:
+                    {
+                        var right = LowerStruct(assignment.Right, st);
+                        var (left, leftOffset) = LowerAddress(assignment.Left);
+
+                        Emit(new IrCopyAggregate(left, leftOffset, right, 0, st.Size));
+
+                        return right;
+                    }
+                case BoundAssignmentExpression assignment:
+                    {
+                        var val = LowerExpression(assignment.Right);
+
+                        if (assignment.Left is BoundVariableExpression variable)
+                        {
+                            Emit(new IrVariable(ResolveVariable(variable.Variable), val));
+                        }
+                        else
+                        {
+                            var (address, offset) = LowerAddress(assignment.Left);
+                            Emit(new IrStore(address, offset, val));
+                        }
+
+                        return val;
+                    }
                 case BoundArrayAccessExpression arrAccess:
                     {
                         var (address, offset) = LowerAddress(arrAccess);
@@ -291,24 +280,25 @@ namespace Best_language.src.middle
                         
                         if (increment)
                         {
-                            if (unary.Right is not BoundVariableExpression variable) throw new ArgumentException("Expected variable");
+                            var (address, offset) = LowerAddress(unary.Right);
 
-                            var target = ResolveVariable(variable.Variable);
-                            var right = EmitCopy(target);
-                            var result = NewIrValue(unary.Type);
+                            var oldVal = NewIrValue(unary.Right.Type);
+                            Emit(new IrLoad(oldVal, address, offset));
 
-                            Emit(new IrUnary(unary.Op, right, result));
-                            Emit(new IrVariable(target, result));
+                            var newVal = NewIrValue(unary.Type);
+                            Emit(new IrUnary(unary.Op, oldVal, newVal));
 
-                            return unary.Op is Operation.PlusPlusRight or Operation.MinusMinusRight ? right : result;
+                            Emit(new IrStore(address, offset, newVal));
+
+                            return unary.Op is Operation.PlusPlusRight or Operation.MinusMinusRight ? oldVal : newVal;
                         }
 
-                        var right_ = LowerExpression(unary.Right);
-                        var result_ = NewIrValue(unary.Type);
+                        var right = LowerExpression(unary.Right);
+                        var result = NewIrValue(unary.Type);
 
-                        Emit(new IrUnary(unary.Op, right_, result_));
+                        Emit(new IrUnary(unary.Op, right, result));
 
-                        return result_;
+                        return result;
                     }
                 case BoundConversionExpression conversion:
                     {
@@ -333,12 +323,13 @@ namespace Best_language.src.middle
             List<string> labels = new();
             for (int i = 0; i < @if.ElseIfs?.Count; i++) labels.Add(NewLabelName("elseIf"));
             string ifLabel = NewLabelName("if");
-            string endLabel = NewLabelName("end");
+            string endLabel = NewLabelName("if_end");
             string elseLabel = NewLabelName("else");
 
             Emit(new IrJumpIfTrue(condition, ifLabel));
 
             for (int i = 0; i < @if.ElseIfs?.Count; i++) Emit(new IrJumpIfTrue(LowerExpression(@if.ElseIfs[i].Expression), labels[i]));
+
             if (@if.Else is not null) Emit(new IrJump(elseLabel));
             else Emit(new IrJump(endLabel));
 
@@ -364,7 +355,7 @@ namespace Best_language.src.middle
                     LowerNode(statement);
             }
 
-            if (@if.Else is null) Emit(new IrLabel(endLabel));
+           Emit(new IrLabel(endLabel));
         }
 
         private void LowerWhile(BoundWhileDeclaration @while)

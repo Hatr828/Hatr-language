@@ -13,37 +13,38 @@ namespace Best_language.src.back.Generators
     {
         private void OperationUnaryGen(IrUnary unary)
         {
-            LoadValue(unary.Right, X64Register.rax);
+            X64Register r = GetRegisterSame(unary.Right.Type);
+            LoadValue(unary.Right, r);
 
             switch (unary.Op)
             {
                 case Operation.Minus:
-                    Emit(new(X64Opcode.neg, X64Operand.Reg(X64Register.rax)));
+                    Emit(new(X64Opcode.neg, X64Operand.Reg(r)));
                     break;
                 case Operation.BitNot:
-                    Emit(new(X64Opcode.not, X64Operand.Reg(X64Register.rax)));
+                    Emit(new(X64Opcode.not, X64Operand.Reg(r)));
                     break;
                 case Operation.Not:
                     Emit(new(X64Opcode.test,
-                         X64Operand.Reg(X64Register.rax),
-                         X64Operand.Reg(X64Register.rax)));
+                         X64Operand.Reg(r),
+                         X64Operand.Reg(r)));
 
                     Emit(new(X64Opcode.sete, X64Operand.Reg(X64Register.al)));
 
                     Emit(new(X64Opcode.movzx,
-                         X64Operand.Reg(X64Register.rax),
+                         X64Operand.Reg(r),
                          X64Operand.Reg(X64Register.al)));
                     break;
                 case Operation.PlusPlusRight:
                 case Operation.PlusPlusLeft:
                     Emit(new(X64Opcode.add,
-                         X64Operand.Reg(X64Register.rax),
+                         X64Operand.Reg(r),
                          X64Operand.Imm(X64Size.word, 1)));
                     break;
                 case Operation.MinusMinusRight:
                 case Operation.MinusMinusLeft:
                     Emit(new(X64Opcode.sub,
-                         X64Operand.Reg(X64Register.rax),
+                         X64Operand.Reg(r),
                          X64Operand.Imm(X64Size.word, 1)));
                     break;
                 default:
@@ -430,6 +431,7 @@ namespace Best_language.src.back.Generators
             FloatTypeSymbol type => (int)type.Size,
             PointerTypeSymbol => 8,
             StructTypeSymbol st => st.Size,
+            ArrayTypeSymbol type => checked((int)type.Size * GetTypeSize(type.Type)),
             _ => throw new ArgumentException()
         };
 
@@ -525,6 +527,15 @@ namespace Best_language.src.back.Generators
             3 => X64Register.xmm2,
             4 => X64Register.xmm3,
             _ => throw new ArgumentException("Expected _idx < 4"),
+        };
+
+        private X64Opcode GetConvertor(X64Register reg) => X64Operand.GetSize(reg) switch
+        {
+            X64Size.qword => X64Opcode.cqo,
+            X64Size.dword => X64Opcode.cdq,
+            X64Size.word => X64Opcode.cwd,
+            X64Size.@byte => X64Opcode.cbw,
+            _ => throw new NotSupportedException()
         };
         private X64Register GetIntegerParamRegister(int idx, X64Size size)
         {

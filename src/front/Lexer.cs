@@ -63,6 +63,18 @@ namespace Best_language.src.front
                     res.Add(new Token(TokenKind.String, s.ToString()));
                     continue;
                 }
+                if (temp is '/' && _code[_idx + 1] is '*')
+                {
+                    while (_code[_idx] is not '*' || _code[_idx + 1] is not '/') _idx++;
+                    _idx += 2;
+                    continue;
+                }
+                if (temp is '/' && _code[_idx + 1] is '/')
+                {
+                    while (_code[_idx] is not '\n') _idx++;
+                    _idx++;
+                    continue;
+                }
                 if (temp is >= '0' and <= '9')
                 {
                     string num = GetNumber();

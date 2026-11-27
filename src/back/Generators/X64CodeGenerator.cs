@@ -4,6 +4,7 @@ using Best_language.src.middle;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Win32;
 using System.Drawing;
+using System.Net;
 using System.Numerics;
 using System.Numerics.Colors;
 using System.Reflection.Emit;
@@ -112,6 +113,8 @@ namespace Best_language.src.back.Generators
 
                             _localOffset = 0;
                             _locals.Clear();
+                            _constants.Clear();
+                            _constantsFP.Clear();
                             _funcEpilogue = func.Name + "_epilogue";
 
                             Emit(new(X64Opcode.label, X64Operand.Label(func.Name)));
@@ -224,9 +227,6 @@ namespace Best_language.src.back.Generators
 
                             (int slot, X64Size size) = GetOrCreateSlot(variable.Left);
 
-                            _constants.Remove(variable.Right);
-                            _constantsFP.Remove(variable.Right);
-
                             Emit(new(opcode,
                                 X64Operand.Mem(X64Register.rbp, -slot, size),
                                 X64Operand.Reg(reg)));
@@ -247,6 +247,37 @@ namespace Best_language.src.back.Generators
                             Emit(new(X64Opcode.mov,
                                 X64Operand.Mem(X64Register.rbp, -slot, size),
                                 X64Operand.Reg(GetRegister(size))));
+                            break;
+                        }
+                    case IrCopyAggregate copy:
+                        {
+                            LoadValue(copy.Right, X64Register.rax);
+                            LoadValue(copy.Left, X64Register.rcx);
+
+                            int copied = 0;
+
+                            while (copied < copy.Size)
+                            {
+                                int chunkSize = (copy.Size - copied) switch
+                                {
+                                    >= 8 => 8,
+                                    >= 4 => 4,
+                                    >= 2 => 2,
+                                    _ => 1,
+                                };
+
+                                var size = GetX64Size(chunkSize);
+                                var reg = GetRegisterSame(size) + 10;
+
+                                Emit(new(X64Opcode.mov,
+                                    X64Operand.Reg(reg),
+                                    X64Operand.Mem(X64Register.rax, copy.RightOffset + copied, size)));
+
+                                Emit(new(X64Opcode.mov,
+                                    X64Operand.Mem(X64Register.rcx, copy.LeftOffset + copied, size),
+                                    X64Operand.Reg(reg)));
+                                copied += chunkSize;
+                            }
                             break;
                         }
                     case IrIndexedAddress address:
@@ -308,8 +339,8 @@ namespace Best_language.src.back.Generators
                             
                             for (int i = 0; i < constant.Right.Count; i++)
                             {
-                                var fieldType = st.Types[i];
-                                var val = constant.Right[i];
+                                var fieldType = st.Types[constant.Right.Count - i - 1];
+                                var val = constant.Right[constant.Right.Count - i - 1];
                                 var size = GetX64Size(fieldType);
 
                                 bool isFloat = fieldType is FloatTypeSymbol;
@@ -319,7 +350,7 @@ namespace Best_language.src.back.Generators
                                 LoadValue(val, reg);
 
                                 Emit(new(opcode,
-                                    X64Operand.Mem(X64Register.rcx, -structOffset + st.Alignment, size),
+                                    X64Operand.Mem(X64Register.rbp, -structOffset + st.Alignment * i, size),
                                     X64Operand.Reg(reg)));
                             }
                             break;
@@ -501,9 +532,6 @@ namespace Best_language.src.back.Generators
                 Emit(new(X64Opcode.mov,
                        X64Operand.Mem(X64Register.rbp, -leftOffset, leftSizeX64), X64Operand.Reg(leftRegister)));
             }
-
-            _constants.Remove(conversion.Left);
-            _constantsFP.Remove(conversion.Left);
         }
 
         private void OperationBinaryFloatGen(IrBinary binary)
@@ -548,14 +576,14 @@ namespace Best_language.src.back.Generators
                     break;
 
                 case Operation.Divide:
-                    Emit(new(X64Opcode.cqo));
+                    Emit(new(GetConvertor(l)));
                     Emit(new(X64Opcode.idiv, X64Operand.Reg(r)));
                     break;
 
                 case Operation.DivisionRem:
-                    Emit(new(X64Opcode.cqo));
+                    Emit(new(GetConvertor(l)));
                     Emit(new(X64Opcode.idiv, X64Operand.Reg(r)));
-                    Emit(new(X64Opcode.mov, X64Operand.Reg(l), X64Operand.Reg(X64Register.rdx)));
+                    Emit(new(X64Opcode.mov, X64Operand.Reg(l), X64Operand.Reg(l + 2)));
                     break;
 
                 case Operation.And:

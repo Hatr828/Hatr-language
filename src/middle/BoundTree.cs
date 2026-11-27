@@ -231,7 +231,7 @@ namespace Best_language.src.middle
                     {
                         _scopes.AddScope();
                         BoundStatement? initializer = null;
-                        BoundExpression? step = null, ex = null;
+                        BoundExpression? ex = null, step = null;
 
                         if (@for.Initializer is not null) initializer = BindStatement(@for.Initializer);
                         if (@for.Step is not null) step = BindExpression(@for.Step);
@@ -271,61 +271,6 @@ namespace Best_language.src.middle
                 case ContinueStatement:
                     {
                         return new BoundContinueStatement();
-                    }
-                case MemberAssignment assignment:
-                    {
-                        BoundExpression ex;
-
-                        if (assignment.Op is Operation op)
-                        {
-                            ex = BindExpression(new BinaryExpression(new VariableExpression(assignment.Name),
-                                GetOperationFromCompoundOperation(op), assignment.Initializer));
-                        }
-                        else ex = BindExpression(assignment.Initializer);
-
-                        var target = BindExpression(assignment.Target);
-
-                        if (target.Type is not StructTypeSymbol structType) throw new ArgumentException("Expected struct"); 
-
-                        if (!TryGetOffsetAndType(structType.Name, assignment.Name, out var offset, out var type)) throw new ArgumentException("Unknown member or struct");
-
-                        return new BoundAssignmentMemberStatement(target, new(assignment.Name, type, offset), ex);
-                    }
-                case AssignmentStatement assignment:
-                    {
-                        BoundExpression right;
-
-                        if (assignment.Op is Operation op)
-                        {
-                            right = BindExpression(new BinaryExpression(assignment.Left, 
-                                GetOperationFromCompoundOperation(op), assignment.Right));
-                        }
-                        else right = BindExpression(assignment.Right);
-
-                        var left = BindExpression(assignment.Left);
-
-                        if (right.Type != left.Type) right = new BoundConversionExpression(right, left.Type);
-
-                        return new BoundAssignmentStatement(left, right);
-                    }
-                case ArrayAssignment assignment:
-                    {
-                        BoundExpression ex;
-
-                        if (assignment.Op is Operation op)
-                        {
-                            ex = BindExpression(new BinaryExpression(assignment.Left,
-                                GetOperationFromCompoundOperation(op), assignment.Right));
-                        }
-                        else ex = BindExpression(assignment.Right);
-
-                        BoundExpression idx = BindExpression(assignment.Idx);
-                        BoundExpression left = BindExpression(assignment.Left);
-
-                        if (idx.Type is not IntegerTypeSymbol) throw new ArgumentException("Expected integer");
-                        if (left.Type is not ArrayTypeSymbol arrType) throw new ArgumentException("Expected array");
-
-                        return new BoundArrayAssignment(left, ex, idx);
                     }
                 case UnaryExpression unary:
                     {
@@ -404,6 +349,24 @@ namespace Best_language.src.middle
 
                         GetVariable(variable.Name, out var variableSymbol);
                         return new BoundVariableExpression(variableSymbol);
+                    }
+                case AssignmentExpression assignment:
+                    {
+                        BoundExpression right = BindExpression(assignment.Right);
+                        BoundExpression left = BindExpression(assignment.Left);
+
+                        if (!CanAssign(left)) throw new ArgumentException($"Cannot assign to {left}");
+
+                        if (right.Type is StructTypeSymbol st && left.Type is StructTypeSymbol st2 && st != st2) throw new ArgumentException("Cannot assign two different structs");
+
+                        if (assignment.Op is Operation op)
+                        {
+                            return new BoundAssignmentExpression(left, right, GetOperationFromCompoundOperation(op));
+                        }
+
+                        if (right.Type != left.Type) right = new BoundConversionExpression(right, left.Type);
+
+                        return new BoundAssignmentExpression(left, right);
                     }
                 case BoolExpression ex:
                     {

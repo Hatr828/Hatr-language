@@ -1,5 +1,6 @@
 using Best_language.src.middle;
 using System.Diagnostics;
+using System.Linq.Expressions;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
 
@@ -73,7 +74,11 @@ namespace Best_language.src.front
                             _idx++;
                             List<AstNode> block = new();
 
-                            GetBlockCode(block);
+                            if (!CheckKind(TokenKind.RightBrace))
+                            {
+                                block.Add(GetAstNode());
+                            }
+                            else GetBlockCode(block);
 
                             Requires(TokenKind.While, TokenKind.RightParen);
 
@@ -93,7 +98,11 @@ namespace Best_language.src.front
 
                             Requires(TokenKind.LeftParen);
 
-                            GetBlockCode(block);
+                            if (!CheckKind(TokenKind.RightBrace))
+                            {
+                                block.Add(GetAstNode());
+                            }
+                            else GetBlockCode(block);
 
                             return new WhileDeclaration(ex, block);
                         }
@@ -121,7 +130,11 @@ namespace Best_language.src.front
 
                             Requires(TokenKind.LeftParen);
 
-                            GetBlockCode(block);
+                            if (!CheckKind(TokenKind.RightBrace))
+                            {
+                                block.Add(GetAstNode());
+                            }
+                            else GetBlockCode(block);
 
                             return new ForDeclaration(initializer, ex, step, block);
                         }
@@ -135,7 +148,11 @@ namespace Best_language.src.front
 
                             Requires(TokenKind.LeftParen);
 
-                            GetBlockCode(block);
+                            if (!CheckKind(TokenKind.RightBrace))
+                            {
+                                block.Add(GetAstNode());
+                            }
+                            else GetBlockCode(block);
 
                             return new ElseIfDeclaration(ex, block);
                         }
@@ -149,62 +166,10 @@ namespace Best_language.src.front
                             Requires(TokenKind.Indent, TokenKind.SemiColon);
                             return new GotoStatement(_tokens[_idx - 2].val!);
                         }
-                    case TokenKind.Indent when _tokens[_idx + 1].kind is TokenKind.Dot or TokenKind.Arrow:
-                        {
-                            string target = _tokens[_idx++].val!;
-                            bool isArrow = CheckKind(TokenKind.Arrow);
-                            string name = _tokens[++_idx].val!;
-                            _idx++;
-
-                            bool equals = false;
-
-                            if (Consume(TokenKind.Equals)) equals = true;
-
-                            Statement res;
-                            if (equals)
-                            {
-                                res = new MemberAssignment(isArrow ? new UnaryExpression(Operation.Dereference, new VariableExpression(target)) 
-                                    : new VariableExpression(target), name, null, GetExpression());
-                            }
-                            else res = new ExpressionStatement(GetExpression());
-
-                            Requires(TokenKind.SemiColon);
-
-                            return res;
-                        }
                     case TokenKind.Indent when _tokens[_idx + 1].kind is TokenKind.Colon:
                         {
                             _idx += 2;
                             return new GotoDeclaration(_tokens[_idx - 2].val!);
-                        }
-                    case TokenKind.Indent or TokenKind.Multiply:
-                        {
-                            Expression ex;
-                            Expression? idx = null;
-                            Expression left;
-                            Operation? op = null;
-
-                            left = GetExpression();
-
-                            if (Consume(TokenKind.RightBracket))
-                            {
-                                idx = GetExpression();
-                                Requires(TokenKind.LeftBracket);
-                            }
-
-                            if (Consume(TokenKind.Equals)) { }
-                            else if (IsOperatorEquals()) op = GetOperatorEquals();
-                            else
-                            {
-                                Requires(TokenKind.SemiColon);
-                                return new ExpressionStatement(left);
-                            }
-
-                            ex = GetExpression();
-                            Requires(TokenKind.SemiColon);
-
-                            if (idx is not null) return new ArrayAssignment(left, idx, op, ex);
-                            else return new AssignmentStatement(left, op, ex);
                         }
                     case TokenKind.Return:
                         {
@@ -220,22 +185,24 @@ namespace Best_language.src.front
                             return new ReturnStatement(ex);
                         }
                     case TokenKind.Break:
-                        {
                             _idx++;
                             Requires(TokenKind.SemiColon);
                             
                             return new BreakStatement();
-                        }
+
                     case TokenKind.Continue:
-                        {
                             _idx++;
                             Requires(TokenKind.SemiColon);
 
                             return new ContinueStatement();
-                        }
+
+                    case TokenKind.SemiColon:
+                            _idx++;
+                            return new EmptyNode();
+
                     case var kind when IsExpression(kind):
                         var tmp = GetExpression();
-                        Requires(TokenKind.SemiColon);
+                        if (!CheckKind(TokenKind.LeftParen)) Requires(TokenKind.SemiColon);
 
                         return new ExpressionStatement(tmp);
 
@@ -325,6 +292,19 @@ namespace Best_language.src.front
                         else left = ParseNumber();
                         break;
                     }
+                case TokenKind.Indent when _tokens[_idx + 1].kind is TokenKind.Dot or TokenKind.Arrow:
+                    {
+                        string target = _tokens[_idx++].val!;
+                        bool isArrow = CheckKind(TokenKind.Arrow);
+                        string name = _tokens[++_idx].val!;
+                        _idx++;
+
+                        var variable = new VariableExpression(target);
+
+                        left = new MemberAccessExpression(isArrow ? new UnaryExpression(Operation.Dereference, variable) : variable, name);
+
+                        break;
+                    }
                 case TokenKind.Indent when _tokens[_idx + 1].kind is TokenKind.RightParen:
                     {
                         string name = _tokens[_idx++].val!;
@@ -337,17 +317,6 @@ namespace Best_language.src.front
                             if (!CheckKind(TokenKind.LeftParen)) Requires(TokenKind.Comma);
                         }
                         left = new FuncExpression(name, @params);
-                        break;
-                    }
-                case TokenKind.Indent when _tokens[_idx + 1].kind is TokenKind.Dot or TokenKind.Arrow:
-                    {
-                        string target = _tokens[_idx++].val!;
-                        bool isArrow = CheckKind(TokenKind.Arrow);
-                        string name = _tokens[++_idx].val!;
-                        _idx++;
-
-                        left = new MemberAccessExpression(isArrow ? new UnaryExpression(Operation.Dereference, new VariableExpression(target))
-                                    : new VariableExpression(target), name);
                         break;
                     }
                 case TokenKind.Indent when _tokens[_idx + 1].kind is TokenKind.RightBracket:
@@ -412,6 +381,13 @@ namespace Best_language.src.front
                 else if (left is NumberExpression && right is DoubleExpression) left = CombineBinary(op, (NumberExpression)left, (DoubleExpression)right);
                 else if (left is DoubleExpression && right is DoubleExpression) left = CombineBinary(op, (DoubleExpression)left, (DoubleExpression)right);
                 else left = tmp;
+            }
+
+            if (priority == 0 && _idx < _tokens.Count)
+            {
+                if (Consume(TokenKind.Equals)) return new AssignmentExpression(left, null, GetExpression());
+
+                if (IsOperatorEquals()) return new AssignmentExpression(left, GetOperatorEquals(), GetExpression());
             }
 
             return left;
@@ -517,9 +493,9 @@ namespace Best_language.src.front
                 bool unknownLength = false;
                 Expression? ex = null;
 
-                if (Consume(TokenKind.Multiply))
+                while (Consume(TokenKind.Multiply))
                 {
-                    subType = typeTable.GetPointer(type!);
+                    subType = typeTable.GetPointer(subType is not null ? subType : type!);
                 }
 
                 name = Requires(true, TokenKind.Indent);
@@ -625,7 +601,7 @@ namespace Best_language.src.front
 
             while (!Consume(TokenKind.LeftBrace))
             {
-                if (Consume(TokenKind.Multiply)) type = typeTable.GetPointer(type);
+                while (Consume(TokenKind.Multiply)) type = typeTable.GetPointer(type);
 
                 names.Add(Requires(true, TokenKind.Indent));
                 types.Add(type);
@@ -650,16 +626,20 @@ namespace Best_language.src.front
             {
                 string name = _tokens[_idx - 2].val!;
 
-                var @params = ParseVariables();
+                VariableDeclarations? @params;
+
+                if (Consume(TokenKind.Void, TokenKind.LeftParen)) @params = null;
+                else @params = ParseVariables();
+
                 List<TypeSymbol> types = new();
 
-                foreach (var param in @params.Variables) types.Add(param.Type);
+                foreach (var param in @params is not null ? @params.Variables : []) types.Add(param.Type);
 
                 List<AstNode> block = new();
 
                 GetBlockCode(block);
 
-                return new FuncDeclaration(new(type, types), name, @params.Variables, block);
+                return new FuncDeclaration(new(type, types), name, @params is not null ? @params.Variables : [], block);
             }
 
             throw new ArgumentException("Not function, expected function");
@@ -673,6 +653,7 @@ namespace Best_language.src.front
             List<AstNode> block = new();
 
             Requires(TokenKind.LeftParen);
+
             if (!CheckKind(TokenKind.RightBrace))
             {
                 block.Add(GetAstNode());

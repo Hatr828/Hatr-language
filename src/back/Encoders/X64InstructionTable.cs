@@ -1048,6 +1048,32 @@ namespace Best_language.src.back.Encoders
                 ]
             });
 
+            // cdq
+            Add(new X64Form
+            {
+                Kind = X64Opcode.cdq,
+                Opcode = 0x99,
+                SizeMode = X64OperandSizeMode.None
+            });
+
+            // cwd
+            Add(new X64Form
+            {
+                Kind = X64Opcode.cwd,
+                Opcode = 0x99,
+                Prefixes = X64Prefixes.OperandSize,
+                SizeMode = X64OperandSizeMode.None
+            });
+
+            // cbw
+            Add(new X64Form
+            {
+                Kind = X64Opcode.cbw,
+                Opcode = 0x98,
+                Prefixes = X64Prefixes.OperandSize,
+                SizeMode = X64OperandSizeMode.None
+            });
+
             // cqo
             Add(new X64Form
             {

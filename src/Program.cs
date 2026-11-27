@@ -5,6 +5,7 @@ using Best_language.src.back.Instructions;
 using Best_language.src.back.Printers;
 using Best_language.src.front;
 using Best_language.src.middle;
+using Microsoft.Extensions.Primitives;
 using System.Diagnostics;
 
 namespace Best_language.src
@@ -13,62 +14,36 @@ namespace Best_language.src
     {
         static void Main(string[] args)
         {
-            string code = @"
-                int add(int a, int b)
-                {
-                    return a + b;
-                }
+            string code;
 
-                int twice(int x)
-                {
-                    return add(x, x);
-                }
+            if (args.Length <= 0)
+            {
+#if !DEBUG
+                throw new ArgumentException("Expected args, at least path to code");
+#else
+                code = @"
+int
+main()
+{
+        int arr[2];
 
-                void set(int *p, int value)
-                {
-                    *p = value;
-                }
+        arr[0] = 1;
+        arr[1] = 2;
 
-                int string_length(char *s)
-                {
-                    int n = 0;
+        return arr[0] + arr[1] - 3;
+}
 
-                    while (s[n] != '\0')
-                    {
-                        n += 1;
-                    }
-
-                    return n;
-                }
-
-                int main()
-                {
-                    if (add(10, 20) != 30)
-                    {
-                        return 1;
-                    }
-
-                    if (twice(7) != 14)
-                    {
-                        return 2;
-                    }
-
-                    int x = 0;
-                    set(&x, 42);
-                    if (x != 42)
-                    {
-                        return 3;
-                    }
-
-                    char word[] = ""Word"";
-                    if (string_length(word) != 4)
-                    {
-                        return 4;
-                    }
-
-                    return 0;
-                }
                 ";
+#endif
+            }
+            else
+            {
+                code = GetCodeFromFile(args[0]);
+            }
+
+            Console.WriteLine(code);
+            Console.WriteLine("\n ---- \n");
+
             var sw = Stopwatch.StartNew();
 
             Lexer lexer = new(code);
@@ -143,6 +118,19 @@ namespace Best_language.src
             var exe = PeWriter.Build(tmp.bytes, tmp.importFixups);
             File.WriteAllBytes("program_.exe", exe);
             RunProcess("program_.exe", "");
+        }
+
+        private static string GetCodeFromFile(string s)
+        {
+            try
+            {
+                return File.ReadAllText(s);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.Write(ex.Message);
+                return "";
+            }
         }
 
         static void BuildAndRun(string assembly)

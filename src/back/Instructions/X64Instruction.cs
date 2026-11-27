@@ -20,7 +20,8 @@
     public enum X64Opcode : short
     {
         // 0 operands
-        cqo, ret,
+        cqo, cdq, cwd, cbw, 
+        ret,
         // 1 operands
         push, pop,
         not, neg,

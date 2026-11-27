@@ -18,8 +18,7 @@ namespace Best_language.src.back.Printers
             {
                 switch (instruction.Opcode)
                 {
-                    case X64Opcode.cqo:
-                    case X64Opcode.ret:
+                    case >= X64Opcode.cqo and <= X64Opcode.ret:
                         _sb.AppendLine($"    {instruction.Opcode} ");
                         break;
 

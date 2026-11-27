@@ -52,27 +52,6 @@ namespace Best_language.src.front
         public override string PrintName => $"{GetType().Name}: {Target}";
         public override IEnumerable<AstNode> Children => [Idx];
     }
-    public class MemberAssignment(Expression target, string memberName, Operation? op, Expression initializer) : Statement
-    {
-        public Expression Target { get; } = target;
-        public string Name { get; } = memberName;
-        public Operation? Op { get; } = op;
-        public Expression Initializer { get; } = initializer;
-
-        public override string PrintName => $"{GetType().Name}: target.{Name} {Op}";
-        public override IEnumerable<AstNode> Children => [Target, Initializer];
-    }
-    public class ArrayAssignment(Expression left, Expression idx, Operation? op, Expression right) : Expression
-    {
-        public Expression Left { get; } = left;
-        public Expression Idx { get; } = idx;
-
-        public Operation? Op = op;
-        public Expression Right { get; } = right;
-
-        public override string PrintName => $"{GetType().Name}: {Op}";
-        public override IEnumerable<AstNode> Children => [Idx, Right, Left];
-    }
     public class BoolExpression(bool value, TypeSymbol type) : Expression
     {
         public bool Value { get; } = value;
@@ -126,7 +105,7 @@ namespace Best_language.src.front
         public override string PrintName => $"{GetType().Name}: {Name} ({Type})";
         public override IEnumerable<AstNode> Children => Initializer is { } t ? [t] : [];
     }
-    public class AssignmentStatement(Expression left, Operation? op, Expression right) : Statement
+    public class AssignmentExpression(Expression left, Operation? op, Expression right) : Expression
     {
         public Expression Left { get; } = left;
         public Operation? Op = op;

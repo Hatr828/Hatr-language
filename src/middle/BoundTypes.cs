@@ -60,19 +60,12 @@ namespace Best_language.src.middle
         public override string PrintName => $"{GetType().Name}: {Variable.Name} ({Variable.Type})";
         public override IEnumerable<BoundNode> Children => Initializer is { } t ? [t] : [];
     }
-    public class BoundAssignmentStatement(BoundExpression left, BoundExpression right) : BoundStatement
+    public class BoundAssignmentExpression(BoundExpression left, BoundExpression right, Operation? op = null) : BoundExpression(left.Type)
     {
+        public Operation? Op { get; } = op;
         public BoundExpression Left { get; } = left;
         public BoundExpression Right { get; } = right;
         public override IEnumerable<BoundNode> Children => [Right, Left];
-    }
-    public class BoundAssignmentMemberStatement(BoundExpression target, FieldSymbol field, BoundExpression right) : BoundStatement
-    {
-        public BoundExpression Target { get; } = target;
-        public FieldSymbol Field { get; } = field;
-        public BoundExpression Right { get; } = right;
-        public override string PrintName => $"{GetType().Name}: {Field} ({Target.Type})";
-        public override IEnumerable<BoundNode> Children => [Target, Right];
     }
     public class BoundIfDeclaration(BoundExpression expression) : BoundStatement
     {
@@ -196,16 +189,6 @@ namespace Best_language.src.middle
 
         public override string PrintName => $"{GetType().Name}: {Variable}";
         public override IEnumerable<BoundNode> Children => [Idx];
-    }
-    public class BoundArrayAssignment(BoundExpression left, BoundExpression idx, BoundExpression right) : BoundStatement
-    {
-        public BoundExpression Left { get; } = left;
-        public BoundExpression Idx { get; } = idx;
-
-        public BoundExpression Right { get; } = right;
-
-        public override string PrintName => $"{GetType().Name}";
-        public override IEnumerable<BoundNode> Children => [Idx, Right, Left];
     }
     public class FieldSymbol(string name, TypeSymbol type, int offset)
     {

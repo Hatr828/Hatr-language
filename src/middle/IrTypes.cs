@@ -44,6 +44,16 @@ namespace Best_language.src.middle
 
         public override string ToString() => $"{GetType().Name}: {Left}, ({string.Join(", ", Right)})({TypeRight})";
     }
+    public class IrCopyAggregate(IrValue left, int leftOffset, IrValue right, int rightOffset, int size) : IrInstruction
+    {
+        public IrValue Left { get; } = left;
+        public int LeftOffset { get; } = leftOffset;
+        public int RightOffset { get; } = rightOffset;
+        public IrValue Right { get; } = right;
+        public int Size { get; } = size;
+
+        public override string ToString() => $"{GetType().Name}: {Left} ({LeftOffset}), {Right}({RightOffset}) size: ({Size})";
+    }
     public class IrFloatConstant(IrValue left, double right, TypeSymbol type) : IrInstruction
     {
         public IrValue Left { get; } = left;
@@ -80,7 +90,7 @@ namespace Best_language.src.middle
 
         public IrValue Result { get; } = result;
 
-        public override string ToString() => $"{GetType().Name}: {Result}, {Left} {Op} {Right}";
+        public override string ToString() => $"{GetType().Name}: {Result} ({Result.Type}), {Left} {Op} {Right}";
     }
     public class IrConversion(IrValue left, IrValue right) : IrInstruction
     {
@@ -103,7 +113,7 @@ namespace Best_language.src.middle
         public IrValue Left { get; } = left;
         public IrValue Right { get; } = right;
 
-        public override string ToString() => $"{GetType().Name}: {Left}, {Right}";
+        public override string ToString() => $"{GetType().Name}: {Left} ({Left.Type}), {Right}({Right.Type})";
     }
     public class IrParam(IrValue left, int idx) : IrInstruction
     {
